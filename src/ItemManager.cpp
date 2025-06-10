@@ -3,6 +3,8 @@
 #include <ctime>
 #include <algorithm>
 
+using namespace std;
+
 ItemManager::ItemManager()
 {
     srand(static_cast<unsigned int>(time(nullptr)));
@@ -22,12 +24,13 @@ ItemManager::~ItemManager()
 
 void ItemManager::initializeItems()
 {
-    Map& map = Map::getInstance();
-    
-    struct ItemInfo {
-        std::string name;
+    Map *map = Map::get_instanse();
+
+    struct ItemInfo
+    {
+        string name;
         int strength;
-        std::string location;
+        string location;
         Color color;
     };
 
@@ -48,10 +51,10 @@ void ItemManager::initializeItems()
         {"Searchlight", 2, "Precinct", Color::blue},
         {"Experiment", 2, "Laboratory", Color::blue},
         {"Analysis", 2, "Institute", Color::blue},
-        {"Beaker", 3, "Institute", Color::blue},
-        {"Coils", 3, "Tower", Color::blue},
-        {"Voltaic", 3, "Tower", Color::blue},
-        {"Mixture", 3, "Inn", Color::blue},
+        {"Rotenone", 3, "Institute", Color::blue},
+        {"Cosmic Ray Diffuser", 3, "Tower", Color::blue},
+        {"Nebularium", 3, "Tower", Color::blue},
+        {"Monocane Mixture", 3, "Inn", Color::blue},
         {"Fossil", 3, "Camp", Color::blue},
 
         {"Flower", 2, "Docks", Color::yellow},
@@ -59,23 +62,23 @@ void ItemManager::initializeItems()
         {"Garlic", 2, "Inn", Color::yellow},
         {"Mirrored Box", 3, "Mansion", Color::yellow},
         {"Stake", 3, "Abbey", Color::yellow},
-        {"Scroll", 4, "Museum", Color::yellow},
+        {"Scroll Of Thoth", 4, "Museum", Color::yellow},
         {"Violin", 3, "Camp", Color::yellow},
         {"Tablet", 3, "Museum", Color::yellow},
         {"Wolfsbane", 4, "Camp", Color::yellow},
-        {"Charm", 4, "Camp", Color::yellow}
-    };
+        {"Charm", 4, "Camp", Color::yellow}};
 
-    for (const auto& i : items) {
-        for (int j = 0; j < 2; ++j) {
-            Location* loc = map.getLocation(i.location);
-            Item* item = new Item(i.strength, i.color, i.name, loc);
-            if (loc) loc->addItem(item);
+    for (const auto &i : items)
+    {
+        for (int j = 0; j < 2; ++j)
+        {
+            Location *loc = map->getLocation(i.location);
+            Item *item = new Item(i.strength, i.color, i.name, loc);
+            if (loc)
+                loc->addItem(item);
             bag.push_back(item);
         }
     }
-}
-
 }
 
 Item *ItemManager::getRandomItem()
