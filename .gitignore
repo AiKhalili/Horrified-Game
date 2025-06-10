@@ -1,0 +1,34 @@
+# فایل‌های کامپایل شده
+*.o
+*.obj
+*.so
+*.exe
+*.dll
+*.out
+*.class
+
+# پوشه‌های بیلد و خروجی
+build/
+bin/
+Debug/
+Release/
+
+# فایل‌های لاگ
+*.log
+
+# فایل‌های تنظیمات IDEها
+.vscode/
+.idea/
+*.code-workspace
+
+# فایل‌های موقتی و بک‌آپ
+*~
+*.swp
+*.tmp
+
+# فایل‌های سیستمی
+.DS_Store
+Thumbs.db
+
+# فایل‌های پوشه مخفی مخصوص گیت
+.git/
