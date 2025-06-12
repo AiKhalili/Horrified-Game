@@ -40,3 +40,8 @@ void Archaeologist::specialAction(const vector<Item *> &neighborItems)
         cout << "No valid items in adjacent locations!\n";
     }
 }
+
+string Archaeologist::getClassName() const
+{
+    return "Archaeologist";
+}
