@@ -4,10 +4,12 @@
 #include "Hero.hpp"
 #include "Map.hpp"
 
-class Mayor : public Hero{
+class Mayor : public Hero
+{
 public:
-    Mayor(const std::string&, Map*);
-    void specialAction(const std::vector<Item*> &)override;
+    Mayor(const std::string &, Map *);
+    void specialAction(const std::vector<Item *> &) override;
+    std::string getClassName() const override;
 };
 
 #endif

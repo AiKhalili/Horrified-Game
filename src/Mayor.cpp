@@ -10,3 +10,7 @@ void Mayor::specialAction(const vector<Item *> &)
 {
     cout << "Mayor has no special ability!\n";
 }
+
+string Mayor::getClassName() const{
+    return "Mayor";
+}
