@@ -102,13 +102,13 @@ void Hero::pickUp(const vector<Item *> &pickedItems)
         }
         else
         {
-            cout << "Item " << item << "is not available at current location: skipped.\n";
+            tui.showMessageScreen("Item " + item->get_name() + "is not available at current location: skipped.");
         }
     }
     if (pickedCount > 0)
     {
         useAction();
-        cout << "Picked up " << pickedCount << " items.\n";
+        tui.showMessageScreen("Picked up " + to_string(pickedCount) + " items.");
     }
     else
     {
@@ -163,7 +163,7 @@ void Hero::advanced(Monster *monster)
     consumeItems(requiredItems);
     monster->advanceMission(location);
     useAction();
-    cout << "Advanced monster's task successfully!\n";
+    tui.showMessageScreen("Advanced monster's task successfully!");
 }
 
 void Hero::defeat(Monster *monster)
@@ -197,7 +197,7 @@ void Hero::defeat(Monster *monster)
     useAction();
     consumeItems(defeatItems);
     monster->set_defeated(true);
-    cout << "Monster defeated successfully!\n";
+    tui.showMessageScreen("Monster defeated successfully!");
 }
 
 void Hero::resetActions()

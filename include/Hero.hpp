@@ -12,6 +12,7 @@
 #include "Monster.hpp"
 #include "ItemManager.hpp"
 #include "PerkCard.hpp"
+#include "TUI.hpp"
 
 class Hero
 {
@@ -22,6 +23,7 @@ protected:
     int actionsLeft;
     std::vector<Item*> items;
     std::vector<PerkCard> perkcards;
+    TUI& tui = TUI::getInstance();
 
 public:
     Hero(const std::string &, Location *, int);
