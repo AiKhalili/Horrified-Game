@@ -33,11 +33,11 @@ void Archaeologist::specialAction(const vector<Item *> &neighborItems)
     if (picked > 0)
     {
         useAction();
-        cout << "Special action: Picked " << picked << " nearby item(s)\n";
+        tui.showMessageScreen("Special action: Picked " + to_string(picked) + " nearby item(s)");
     }
     else
     {
-        cout << "No valid items in adjacent locations!\n";
+        tui.showMessageScreen("No valid items in adjacent locations!");
     }
 }
 
