@@ -8,9 +8,10 @@ Mayor::Mayor(const std::string &name, Map *map)
 
 void Mayor::specialAction(const vector<Item *> &)
 {
-    cout << "Mayor has no special ability!\n";
+    tui.showMessageScreen("Mayor has no special ability!");
 }
 
-string Mayor::getClassName() const{
+string Mayor::getClassName() const
+{
     return "Mayor";
 }
