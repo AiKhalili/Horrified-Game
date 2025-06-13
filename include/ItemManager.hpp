@@ -20,9 +20,10 @@ public:
     ~ItemManager();
     void initializeItems();
     Item *getRandomItem();
-    void recycleItem(Item *); // ذخیره آیتم مصرف شده در خارج از بازی
+    void recycleItemToUsedItems(Item *); // ذخیره آیتم مصرف شده در خارج از بازی
     int ramainingItems() const;
     void recycleUsedItemsToBag();
+    std::vector<Item*> findItemsAtLocation(const std::vector<std::string>&,int);  
 };
 
 #endif

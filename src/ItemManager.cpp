@@ -31,42 +31,42 @@ void ItemManager::initializeItems()
         string name;
         int strength;
         string location;
-        Color color;
+        COlOR color;
     };
 
     std::vector<ItemInfo> items = {
-        {"Dart", 2, "Inn", Color::red},
-        {"Fire Poker", 3, "Mansion", Color::red},
-        {"Rapier", 5, "Theatre", Color::red},
-        {"Shovel", 2, "Graveyard", Color::red},
-        {"Torch", 5, "Barn", Color::red},
-        {"Pitchfork", 4, "Barn", Color::red},
-        {"Rifle", 6, "Barn", Color::red},
-        {"Silver Cane", 6, "Shop", Color::red},
-        {"Knife", 3, "Docks", Color::red},
-        {"Pistol", 6, "Precinct", Color::red},
+        {"Dart", 2, "Inn", COlOR::red},
+        {"Fire Poker", 3, "Mansion", COlOR::red},
+        {"Rapier", 5, "Theatre", COlOR::red},
+        {"Shovel", 2, "Graveyard", COlOR::red},
+        {"Torch", 5, "Barn", COlOR::red},
+        {"Pitchfork", 4, "Barn", COlOR::red},
+        {"Rifle", 6, "Barn", COlOR::red},
+        {"Silver Cane", 6, "Shop", COlOR::red},
+        {"Knife", 3, "Docks", COlOR::red},
+        {"Pistol", 6, "Precinct", COlOR::red},
 
-        {"Research", 2, "Tower", Color::blue},
-        {"Telescope", 2, "Mansion", Color::blue},
-        {"Searchlight", 2, "Precinct", Color::blue},
-        {"Experiment", 2, "Laboratory", Color::blue},
-        {"Analysis", 2, "Institute", Color::blue},
-        {"Rotenone", 3, "Institute", Color::blue},
-        {"Cosmic Ray Diffuser", 3, "Tower", Color::blue},
-        {"Nebularium", 3, "Tower", Color::blue},
-        {"Monocane Mixture", 3, "Inn", Color::blue},
-        {"Fossil", 3, "Camp", Color::blue},
+        {"Research", 2, "Tower", COlOR::blue},
+        {"Telescope", 2, "Mansion", COlOR::blue},
+        {"Searchlight", 2, "Precinct", COlOR::blue},
+        {"Experiment", 2, "Laboratory", COlOR::blue},
+        {"Analysis", 2, "Institute", COlOR::blue},
+        {"Rotenone", 3, "Institute", COlOR::blue},
+        {"Cosmic Ray Diffuser", 3, "Tower", COlOR::blue},
+        {"Nebularium", 3, "Tower", COlOR::blue},
+        {"Monocane Mixture", 3, "Inn", COlOR::blue},
+        {"Fossil", 3, "Camp", COlOR::blue},
 
-        {"Flower", 2, "Docks", Color::yellow},
-        {"Tarot Deck", 3, "Camp", Color::yellow},
-        {"Garlic", 2, "Inn", Color::yellow},
-        {"Mirrored Box", 3, "Mansion", Color::yellow},
-        {"Stake", 3, "Abbey", Color::yellow},
-        {"Scroll Of Thoth", 4, "Museum", Color::yellow},
-        {"Violin", 3, "Camp", Color::yellow},
-        {"Tablet", 3, "Museum", Color::yellow},
-        {"Wolfsbane", 4, "Camp", Color::yellow},
-        {"Charm", 4, "Camp", Color::yellow}};
+        {"Flower", 2, "Docks", COlOR::yellow},
+        {"Tarot Deck", 3, "Camp", COlOR::yellow},
+        {"Garlic", 2, "Inn", COlOR::yellow},
+        {"Mirrored Box", 3, "Mansion", COlOR::yellow},
+        {"Stake", 3, "Abbey", COlOR::yellow},
+        {"Scroll Of Thoth", 4, "Museum", COlOR::yellow},
+        {"Violin", 3, "Camp", COlOR::yellow},
+        {"Tablet", 3, "Museum", COlOR::yellow},
+        {"Wolfsbane", 4, "Camp", COlOR::yellow},
+        {"Charm", 4, "Camp", COlOR::yellow}};
 
     for (const auto &i : items)
     {
@@ -74,8 +74,6 @@ void ItemManager::initializeItems()
         {
             Location *loc = map->getLocation(i.location);
             Item *item = new Item(i.strength, i.color, i.name, loc);
-            if (loc)
-                loc->addItem(item);
             bag.push_back(item);
         }
     }
@@ -98,9 +96,9 @@ Item *ItemManager::getRandomItem()
     return nullptr;
 }
 
-void ItemManager::recycleItem(Item *item)
+void ItemManager::recycleItemToUsedItems(Item *item)
 {
-    if (item)
+    if (item && find(usedItems.begin(), usedItems.end(), item) == usedItems.end())
     {
         item->set_location(nullptr);
         usedItems.push_back(item);
@@ -125,4 +123,39 @@ ItemManager &ItemManager::getInstance()
 {
     static ItemManager instance;
     return instance;
+}
+
+std::vector<Item *> ItemManager::findItemsAtLocation(const std::vector<std::string> &locationNames, int count)
+{
+    std::vector<Item *> result;
+    std::vector<Item *> remaining;
+
+    for (Item *item : bag)
+    {
+        if ((int)result.size() >= count)
+        {
+            remaining.push_back(item);
+            continue;
+        }
+
+        Location *loc = item->get_location();
+        if (!loc)
+        {
+            remaining.push_back(item);
+            continue;
+        }
+
+        std::string locName = loc->get_name();
+        if (std::find(locationNames.begin(), locationNames.end(), locName) != locationNames.end())
+        {
+            result.push_back(item); // یافتن ایتم مد نظر
+        }
+        else
+        {
+            remaining.push_back(item);
+        }
+    }
+
+    bag = remaining; // بقیه آیتم‌ها رو برمی‌گردونیم به bag
+    return result;
 }
