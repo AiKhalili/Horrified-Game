@@ -1,5 +1,7 @@
 #include "Hero.hpp"
+#include "Monster.hpp"
 #include "PerkCard.hpp"
+#include "Map.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -9,7 +11,16 @@ Hero::Hero(const string &name, Location *startingLocation, int maxActions)
     : name(name),
       location(startingLocation),
       maxActions(maxActions),
-      actionsLeft(maxActions) {}
+      actionsLeft(maxActions)
+{
+    if (!startingLocation)
+    {
+        throw GameException("Starting location is null!");
+    }
+
+    // اضافه کردن قهرمان به مکان اولیه
+    startingLocation->addHero(this);
+}
 
 void Hero::move(Location *destination, const vector<Villager *> &villagers)
 {
@@ -24,14 +35,16 @@ void Hero::move(Location *destination, const vector<Villager *> &villagers)
     }
 
     Location *previousLocation = location; // کپی کردن لوکیشن اولیه برای بررسی محلی ها
-    location = destination;                // انتقال قهرمان
+
+    previousLocation->removeHero(this);
+    destination->addHero(this);
 
     for (Villager *v : villagers) // انتقال محلی ها
     {
-        if (v != nullptr && v->getCurrentLocation() == previousLocation)
+        if (v && v->getCurrentLocation() == previousLocation)
         { // محلی معتبر بوده و با قهرمان در یک خانه بوده اند
-
-            v->setLocation(destination);
+            previousLocation->removeVillager(v);
+            destination->addVillager(v);
         }
     }
     useAction();
@@ -97,18 +110,19 @@ void Hero::pickUp(const vector<Item *> &pickedItems)
         if (item && find(availableItems.begin(), availableItems.end(), item) != availableItems.end())
         {
             items.push_back(item);
+            item->set_pickedFrom(location->get_name());
             location->removeItem(item);
             pickedCount++;
         }
         else
         {
-            tui.showMessageScreen("Item " + item->get_name() + "is not available at current location: skipped.");
+            cout << "Item " << item->get_name() << "is not available at current location: skipped.\n";
         }
     }
     if (pickedCount > 0)
     {
         useAction();
-        tui.showMessageScreen("Picked up " + to_string(pickedCount) + " items.");
+        cout << "Picked up " << pickedCount << " items.\n";
     }
     else
     {
@@ -119,51 +133,60 @@ void Hero::pickUp(const vector<Item *> &pickedItems)
 void Hero::advanced(Monster *monster)
 {
     if (!hasActionsLeft())
-    { // بررسی وجود اکشن
         throw GameException("No actions left!\n");
-    }
 
     if (!monster)
-    {
         throw GameException("Invalid monster pointer!\n");
-    }
 
     if (monster->canbedefeated())
-    { // بررسی اینکه آیا همه Advance ها انجام شده اند یا نه
         throw GameException("This monster's task is already complete!\n");
-    }
 
-    const vector<Location *> &validLocation = monster->getAdvanceLocation(); // در چه مکان هایی میتوان Advance انجام داد
-
+    const vector<Location *> &validLocation = monster->getAdvanceLocation();
     if (find(validLocation.begin(), validLocation.end(), location) == validLocation.end())
+        throw GameException("You are not in a valid location to advance this monster's task!\n");
+
+    if (monster->get_name() == "Invisible Man")
     {
-        // بررسی اینکه قهرمان در مکان مجاز به advance هست یا نه
-        throw GameException("You are not in a valid locayion to advance this monster's task!\n");
+        const vector<Item> &reqs = monster->getAdvanceRequirement(); // شامل لوکیشن‌هایی که هنوز advance نشدن
+        bool found = false;
+
+        for (const Item &required : reqs)
+        {
+            string targetLoc = required.get_location()->get_name();
+
+            for (Item *it : items)
+            {
+                if (it && it->get_pickedFrom() == targetLoc)
+                {
+                    Location *advanceLoc = Map::get_instanse()->getLocation(targetLoc);
+                    if (!advanceLoc)
+                        throw GameException("Advance location not found: " + targetLoc + "\n");
+
+                    // فقط اگر اون لوکیشن هنوز Advance نشده
+                    if (monster->isAdvanceLocation(targetLoc))
+                    {
+                        monster->advanceMission(advanceLoc);
+                        consumeItems({Item(0, COlOR::red, "AdvanceToken", advanceLoc)});
+                        useAction();
+                        cout << "✅ Advanced Invisible Man for location: " << targetLoc << "\n";
+                        return;
+                    }
+                }
+            }
+        }
+
+        throw GameException("1111You don't have the required items to advance this monster's task!\n");
     }
 
-    const vector<Item> &requiredItems = monster->getAdvanceRequirement(); // آیتم های مورد نیاز برای Advance
-
+    // حالت عادی برای هیولاهای دیگه
+    const vector<Item> &requiredItems = monster->getAdvanceRequirement();
     if (!hasRequiredItems(requiredItems))
-    { // بررسی اینکه قهرمان آیتم های مورد نیاز رو داره یا نه
         throw GameException("You don't have the required items to advance this monster's task!\n");
-    }
-    if (!requiredItems[0].get_location())
-    {
-        throw GameException("AdavnceToken has no valid location!");
-    }
-
-    if (monster->get_name() == "InvisibleMan" && requiredItems.size() == 1 &&
-        requiredItems[0].get_name() == "AdvanceToken" && requiredItems[0].get_location())
-    { // تیک مربوطه اگه هیولا مرد نامرییه
-
-        Location *origin = requiredItems[0].get_location();
-        monster->advanceMission(origin);
-    }
 
     consumeItems(requiredItems);
     monster->advanceMission(location);
     useAction();
-    tui.showMessageScreen("Advanced monster's task successfully!");
+    cout << "✅ Advanced monster's task successfully!\n";
 }
 
 void Hero::defeat(Monster *monster)
@@ -197,7 +220,7 @@ void Hero::defeat(Monster *monster)
     useAction();
     consumeItems(defeatItems);
     monster->set_defeated(true);
-    tui.showMessageScreen("Monster defeated successfully!");
+    cout << "Monster defeated successfully!\n";
 }
 
 void Hero::resetActions()
@@ -240,10 +263,17 @@ vector<Item *> Hero::getItems() const
 
 bool Hero::hasRequiredItems(const std::vector<Item> &required) const
 {
+    if (required.empty())
+    {
+        return false;
+    }
+
+    std::string tag = required[0].get_name();
+
     if (required.size() == 1)
     {
-        std::string tag = required[0].get_name();
-        if (tag == "AnyRedItemSum6") // Advance دراکولا
+        // Advance دراکولا: آیتم‌های قرمز مجموع ≥ 6
+        if (tag == "AnyRedItemSum6")
         {
             int total = 0;
             for (Item *item : items)
@@ -251,15 +281,9 @@ bool Hero::hasRequiredItems(const std::vector<Item> &required) const
                     total += item->get_strength();
             return total >= 6;
         }
-        if (tag == "AdvanceToken" && required[0].get_location()) // Advance مرد نامرئی
-        {
-            std::string origin = required[0].get_location()->get_name();
-            for (Item *item : items)
-                if (item && item->get_location() && item->get_location()->get_name() == origin)
-                    return true;
-            return false;
-        }
-        if (tag == "DefeatDracula") // Defeat دراکولا
+
+        // Defeat دراکولا: آیتم زرد مجموع ≥ 6
+        if (tag == "DefeatDracula")
         {
             int total = 0;
             for (Item *item : items)
@@ -267,7 +291,9 @@ bool Hero::hasRequiredItems(const std::vector<Item> &required) const
                     total += item->get_strength();
             return total >= 6;
         }
-        if (tag == "DefeatInvisible") // Defeat مرد نامرئی
+
+        // Defeat مرد نامرئی: آیتم قرمز مجموع ≥ 9
+        if (tag == "DefeatInvisible")
         {
             int total = 0;
             for (Item *item : items)
@@ -276,6 +302,31 @@ bool Hero::hasRequiredItems(const std::vector<Item> &required) const
             return total >= 9;
         }
     }
+
+    // Advance مرد نامرئی: آیتمی که از یکی از مکان‌های خاص برداشته شده باشد
+    if (tag == "AdvanceToken" && required[0].get_location())
+    {
+        string requiredOrigin = required[0].get_location()->get_name();
+        cout << "🧪 [Debug] Checking for AdvanceToken picked from: " << requiredOrigin << endl;
+
+        for (Item *item : items)
+        {
+            cout << ">> Hero Inventory: " << item->get_name()
+                 << " | pickedFrom: " << item->get_pickedFrom()
+                 << " | strength: " << item->get_strength()
+                 << " | color: " << item->get_color_to_string()
+                 << endl;
+
+            if (item && item->get_pickedFrom() == requiredOrigin)
+            {
+                cout << "✅ Found matching item for advance!" << endl;
+                return true;
+            }
+        }
+        cout << "❌ No matching item found for advance!" << endl;
+        return false;
+    }
+
     return false;
 }
 
@@ -283,9 +334,9 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
 {
     ItemManager &itemManager = ItemManager::getInstance();
 
+    //  حالت خاص: Dracula - AnyRedItemSum6
     if (requiredItems.size() == 1 && requiredItems[0].get_name() == "AnyRedItemSum6")
     {
-        // مصرف آیتم‌های قرمز مجموع ≥ 6 برای Advance دراکولا
         std::vector<Item *> redItems;
         for (Item *item : items)
         {
@@ -293,7 +344,6 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
                 redItems.push_back(item);
         }
 
-        // مرتب‌سازی بر اساس قدرت از کم به زیاد
         std::sort(redItems.begin(), redItems.end(), [](Item *a, Item *b)
                   { return a->get_strength() < b->get_strength(); });
 
@@ -310,7 +360,6 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         if (total < 6)
             throw GameException("Red item power not enough to consume for Dracula!\n");
 
-        // حذف آیتم‌ها
         for (Item *item : toConsume)
         {
             itemManager.recycleItemToUsedItems(item);
@@ -319,26 +368,27 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         return;
     }
 
+    //  حالت خاص: Invisible Man - AdvanceToken + pickedFrom
     if (requiredItems.size() == 1 &&
         requiredItems[0].get_name() == "AdvanceToken" &&
         requiredItems[0].get_location())
     {
-        // برای Advance مرد نامریی (بر اساس مکان)
-        std::string requiredOrigin = requiredItems[0].get_location()->get_name();
+        string requiredOrigin = requiredItems[0].get_location()->get_name();
 
-        for (auto it = items.begin(); it != items.end(); ++it)
+        // پیدا کردن اولین آیتم با pickedFrom همون location
+        for (Item *item : items)
         {
-            if ((*it)->get_location() && (*it)->get_location()->get_name() == requiredOrigin)
+            if (item && item->get_pickedFrom() == requiredOrigin)
             {
-                itemManager.recycleItemToUsedItems(*it);
-                items.erase(it);
+                itemManager.recycleItemToUsedItems(item);
+                items.erase(find(items.begin(), items.end(), item));
                 return;
             }
         }
         throw GameException("No matching item found to consume for Invisible Man!\n");
     }
 
-    // مصرف آیتم‌ها در defeatها یا سایر موارد معمول
+    // حالت کلی defeat یا سایر هیولاها
     for (const Item &required : requiredItems)
     {
         COlOR targetColor = required.get_color();
@@ -347,7 +397,6 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         std::vector<Item *> matchedItems;
         int totalPower = 0;
 
-        // جمع‌آوری آیتم‌های مناسب
         for (Item *item : items)
         {
             if (item && item->get_color() == targetColor)
@@ -362,7 +411,6 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         if (totalPower < targetPower)
             throw GameException("Not enough item power to meet the requirement!\n");
 
-        // حذف آیتم‌ها (دقیقاً به اندازه نیاز)
         int remainingPower = targetPower;
         for (Item *item : matchedItems)
         {
@@ -392,19 +440,30 @@ vector<PerkCard> Hero::getPerkCard() const
 
 string Hero::getItemSummary() const
 {
-    if (perkcards.empty())
+    if (items.empty())
     {
-        return "None";
+        return "None\n";
     }
 
     string result = "";
 
-    for (const auto &item : items)
+    for (size_t i = 0; i < items.size(); i++)
     {
-        result += item->get_name();
+        result += items[i]->get_name();
         result += "(";
-        result += to_string(item->get_strength());
-        result += ")\n";
+        result += to_string(items[i]->get_strength());
+        result += ")";
+        result += "[";
+        result += items[i]->get_color_to_string();
+        result += "]";
+        if (i == items.size() - 1)
+        {
+            result += "\n";
+        }
+        else
+        {
+            result += "\n\t\t";
+        }
     }
     return result;
 }
@@ -416,17 +475,26 @@ int Hero::getMaxActions() const
 
 string Hero::getPerkSummary() const
 {
-    if (items.empty())
+    if (perkcards.empty())
     {
-        return "None";
+        return "None\n";
     }
 
     string result = "";
 
-    for (const auto &perk : perkcards)
+    for (size_t i = 0; i < perkcards.size(); i++)
     {
-        result += perk.getName();
-        result += "\n";
+        result += to_string(i + 1);
+        result += ".";
+        result += perkcards[i].getName();
+        if (i == perkcards.size() - 1)
+        {
+            result += "\n";
+        }
+        else
+        {
+            result += "\n\t\t";
+        }
     }
     return result;
 }

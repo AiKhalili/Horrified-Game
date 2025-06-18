@@ -9,10 +9,10 @@
 #include "GameException.hpp"
 #include "Villager.hpp"
 #include "Location.hpp"
-#include "Monster.hpp"
 #include "ItemManager.hpp"
 #include "PerkCard.hpp"
-#include "TUI.hpp"
+
+class Monster;
 
 class Hero
 {
@@ -23,10 +23,10 @@ protected:
     int actionsLeft;
     std::vector<Item*> items;
     std::vector<PerkCard> perkcards;
-    TUI& tui = TUI::getInstance();
 
 public:
     Hero(const std::string &, Location *, int);
+    virtual ~Hero() = default;
     virtual void move(Location *, const std::vector<Villager *> &);
     virtual void pickUp(const std::vector<Item*> &);
     virtual void guide(std::vector<Villager *>, Location*);
