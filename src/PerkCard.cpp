@@ -4,6 +4,8 @@ using namespace std;
 
 PerkCard::PerkCard(PerkType type) : type(type) {}
 
+PerkCard::PerkCard() {}
+
 PerkType PerkCard::getType() const
 {
     return type;

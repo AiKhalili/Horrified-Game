@@ -20,6 +20,7 @@ private:
     PerkType type;
 
 public:
+    PerkCard();
     PerkCard(PerkType);
     PerkType getType() const;
     std::string getName() const;
