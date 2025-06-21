@@ -1,6 +1,7 @@
 #include "ItemManager.hpp"
 #include "Map.hpp"
 #include <ctime>
+#include <unordered_set>
 #include <algorithm>
 
 using namespace std;
@@ -12,14 +13,7 @@ ItemManager::ItemManager()
 
 ItemManager::~ItemManager()
 {
-    for (Item *item : bag)
-    {
-        delete item;
-    }
-    for (Item *item : usedItems)
-    {
-        delete item;
-    }
+    clear();
 }
 
 void ItemManager::initializeItems()
@@ -98,10 +92,21 @@ Item *ItemManager::getRandomItem()
 
 void ItemManager::recycleItemToUsedItems(Item *item)
 {
-    if (item && find(usedItems.begin(), usedItems.end(), item) == usedItems.end())
+    if (item)
     {
-        item->set_location(nullptr);
-        usedItems.push_back(item);
+        // حذف از bag اگه وجود داره
+        auto it = find(bag.begin(), bag.end(), item);
+        if (it != bag.end())
+        {
+            bag.erase(it);
+        }
+
+        // اضافه به usedItems اگه قبلاً اضافه نشده
+        if (find(usedItems.begin(), usedItems.end(), item) == usedItems.end())
+        {
+            item->set_location(nullptr);
+            usedItems.push_back(item);
+        }
     }
 }
 
@@ -125,37 +130,49 @@ ItemManager &ItemManager::getInstance()
     return instance;
 }
 
-std::vector<Item *> ItemManager::findItemsAtLocation(const std::vector<std::string> &locationNames, int count)
+vector<Item *> ItemManager::findItemsAtLocation(const vector<string> &locationNames)
 {
-    std::vector<Item *> result;
-    std::vector<Item *> remaining;
+    vector<Item *> result;
 
-    for (Item *item : bag)
+    for (size_t i = 0; i < locationNames.size(); i++)
     {
-        if ((int)result.size() >= count)
+        for (size_t j = 0; j < bag.size(); j++)
         {
-            remaining.push_back(item);
-            continue;
-        }
-
-        Location *loc = item->get_location();
-        if (!loc)
-        {
-            remaining.push_back(item);
-            continue;
-        }
-
-        std::string locName = loc->get_name();
-        if (std::find(locationNames.begin(), locationNames.end(), locName) != locationNames.end())
-        {
-            result.push_back(item); // یافتن ایتم مد نظر
-        }
-        else
-        {
-            remaining.push_back(item);
+            if (locationNames[i] == bag[j]->get_location()->get_name())
+            {
+                result.push_back(bag[j]);
+                bag.erase(bag.begin() + j);
+                break;
+            }
         }
     }
 
-    bag = remaining; // بقیه آیتم‌ها رو برمی‌گردونیم به bag
     return result;
+}
+
+void ItemManager::clear()
+{
+    std::unordered_set<Item *> deleted;
+
+    for (Item *&item : bag)
+    {
+        if (item && deleted.find(item) == deleted.end())
+        {
+            delete item;
+            deleted.insert(item);
+            item = nullptr;
+        }
+    }
+    bag.clear();
+
+    for (Item *&item : usedItems)
+    {
+        if (item && deleted.find(item) == deleted.end())
+        {
+            delete item;
+            deleted.insert(item);
+            item = nullptr;
+        }
+    }
+    usedItems.clear();
 }
