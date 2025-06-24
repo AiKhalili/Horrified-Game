@@ -2,6 +2,7 @@
 #include "Monster.hpp"
 #include "PerkCard.hpp"
 #include "Map.hpp"
+#include "Game.hpp"
 #include <algorithm>
 #include <iostream>
 
@@ -69,15 +70,18 @@ void Hero::guide(vector<Villager *> villager, Location *destination)
 
     if (villagerLocation->isNeighbor(location) && destination == location)
     { // بررسی مجاور بودن محلی نسبت به قهرمان
-        villager[0]->setLocation(location);
-
+        villager[0]->getCurrentLocation()->removeVillager(villager[0]);
+        location->addVillager(villager[0]);
         useAction();
+        cout << "The select villager move to the hero's place!\n";
     }
 
     else if (villagerLocation == location && location->isNeighbor(destination))
     { // بررسی هم مکان بودن محلی و قهرمان
-        villager[0]->setLocation(destination);
+        villager[0]->getCurrentLocation()->removeVillager(villager[0]);
+        location->addVillager(villager[0]);
         useAction();
+        cout << "The select villager move to the select place!\n";
     }
     else
     {
@@ -133,17 +137,26 @@ void Hero::pickUp(const vector<Item *> &pickedItems)
 void Hero::advanced(Monster *monster)
 {
     if (!hasActionsLeft())
+    {
         throw GameException("No actions left!\n");
+    }
 
     if (!monster)
+    {
         throw GameException("Invalid monster pointer!\n");
+    }
 
     if (monster->canbedefeated())
+    {
         throw GameException("This monster's task is already complete!\n");
+    }
 
     const vector<Location *> &validLocation = monster->getAdvanceLocation();
+
     if (find(validLocation.begin(), validLocation.end(), location) == validLocation.end())
+    {
         throw GameException("You are not in a valid location to advance this monster's task!\n");
+    }
 
     if (monster->get_name() == "Invisible Man")
     {
@@ -160,7 +173,9 @@ void Hero::advanced(Monster *monster)
                 {
                     Location *advanceLoc = Map::get_instanse()->getLocation(targetLoc);
                     if (!advanceLoc)
+                    {
                         throw GameException("Advance location not found: " + targetLoc + "\n");
+                    }
 
                     // فقط اگر اون لوکیشن هنوز Advance نشده
                     if (monster->isAdvanceLocation(targetLoc))
@@ -168,25 +183,27 @@ void Hero::advanced(Monster *monster)
                         monster->advanceMission(advanceLoc);
                         consumeItems({Item(0, COlOR::red, "AdvanceToken", advanceLoc)});
                         useAction();
-                        cout << "✅ Advanced Invisible Man for location: " << targetLoc << "\n";
+                        cout << "Advanced Invisible Man for location: " << targetLoc << "\n";
                         return;
                     }
                 }
             }
         }
 
-        throw GameException("1111You don't have the required items to advance this monster's task!\n");
+        throw GameException("You don't have the required items to advance this monster's task!\n");
     }
 
     // حالت عادی برای هیولاهای دیگه
     const vector<Item> &requiredItems = monster->getAdvanceRequirement();
     if (!hasRequiredItems(requiredItems))
+    {
         throw GameException("You don't have the required items to advance this monster's task!\n");
+    }
 
     consumeItems(requiredItems);
     monster->advanceMission(location);
     useAction();
-    cout << "✅ Advanced monster's task successfully!\n";
+    cout << "Advanced monster's task successfully!\n";
 }
 
 void Hero::defeat(Monster *monster)
@@ -205,6 +222,11 @@ void Hero::defeat(Monster *monster)
         throw GameException("cannot defeat this monster : Advance task not complete!\n");
     }
 
+    if (monster->is_defeated())
+    {
+        throw GameException("This monster is already defeated!\n");
+    }
+
     if (location != monster->get_location())
     { // آیا هیولا و قهرمان برای Defeat کردن  در یک مکان هستند
         throw GameException("Monster is not at your location!\n");
@@ -220,6 +242,11 @@ void Hero::defeat(Monster *monster)
     useAction();
     consumeItems(defeatItems);
     monster->set_defeated(true);
+
+    if (monster == Game::getInstance().getFrenzy())
+    {
+        Game::getInstance().updateFrenzy();
+    }
     cout << "Monster defeated successfully!\n";
 }
 
@@ -261,14 +288,14 @@ vector<Item *> Hero::getItems() const
     return items;
 }
 
-bool Hero::hasRequiredItems(const std::vector<Item> &required) const
+bool Hero::hasRequiredItems(const vector<Item> &required) const
 {
     if (required.empty())
     {
         return false;
     }
 
-    std::string tag = required[0].get_name();
+    string tag = required[0].get_name();
 
     if (required.size() == 1)
     {
@@ -307,26 +334,16 @@ bool Hero::hasRequiredItems(const std::vector<Item> &required) const
     if (tag == "AdvanceToken" && required[0].get_location())
     {
         string requiredOrigin = required[0].get_location()->get_name();
-        cout << "🧪 [Debug] Checking for AdvanceToken picked from: " << requiredOrigin << endl;
 
         for (Item *item : items)
         {
-            cout << ">> Hero Inventory: " << item->get_name()
-                 << " | pickedFrom: " << item->get_pickedFrom()
-                 << " | strength: " << item->get_strength()
-                 << " | color: " << item->get_color_to_string()
-                 << endl;
-
             if (item && item->get_pickedFrom() == requiredOrigin)
             {
-                cout << "✅ Found matching item for advance!" << endl;
                 return true;
             }
         }
-        cout << "❌ No matching item found for advance!" << endl;
         return false;
     }
-
     return false;
 }
 
@@ -337,18 +354,18 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
     //  حالت خاص: Dracula - AnyRedItemSum6
     if (requiredItems.size() == 1 && requiredItems[0].get_name() == "AnyRedItemSum6")
     {
-        std::vector<Item *> redItems;
+        vector<Item *> redItems;
         for (Item *item : items)
         {
             if (item && item->get_color() == COlOR::red)
                 redItems.push_back(item);
         }
 
-        std::sort(redItems.begin(), redItems.end(), [](Item *a, Item *b)
-                  { return a->get_strength() < b->get_strength(); });
+        sort(redItems.begin(), redItems.end(), [](Item *a, Item *b)
+             { return a->get_strength() < b->get_strength(); });
 
         int total = 0;
-        std::vector<Item *> toConsume;
+        vector<Item *> toConsume;
         for (Item *item : redItems)
         {
             if (total >= 6)
@@ -363,7 +380,7 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         for (Item *item : toConsume)
         {
             itemManager.recycleItemToUsedItems(item);
-            items.erase(std::find(items.begin(), items.end(), item));
+            items.erase(find(items.begin(), items.end(), item));
         }
         return;
     }
@@ -394,7 +411,7 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         COlOR targetColor = required.get_color();
         int targetPower = required.get_strength();
 
-        std::vector<Item *> matchedItems;
+        vector<Item *> matchedItems;
         int totalPower = 0;
 
         for (Item *item : items)
@@ -415,7 +432,7 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         for (Item *item : matchedItems)
         {
             itemManager.recycleItemToUsedItems(item);
-            items.erase(std::find(items.begin(), items.end(), item));
+            items.erase(find(items.begin(), items.end(), item));
             remainingPower -= item->get_strength();
             if (remainingPower <= 0)
                 break;
@@ -428,7 +445,7 @@ void Hero::setLocation(Location *newLocation)
     location = newLocation;
 }
 
-void Hero::addPerkCard(const PerkCard &card)
+void Hero::setPerkCard(const PerkCard &card)
 {
     perkcards.push_back(card);
 }
