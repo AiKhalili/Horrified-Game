@@ -5,7 +5,7 @@
 using namespace std;
 
 Archaeologist::Archaeologist(const std::string &name, Map *map)
-    : Hero(name, map->getLocation("Docks"), 4) {}
+    : Hero(name, map ? map->getLocation("Docks") : throw GameException("Map is null!"), 4) {}
 
 void Archaeologist::specialAction(const vector<Item *> &neighborItems)
 {
@@ -33,11 +33,11 @@ void Archaeologist::specialAction(const vector<Item *> &neighborItems)
     if (picked > 0)
     {
         useAction();
-        tui.showMessageScreen("Special action: Picked " + to_string(picked) + " nearby item(s)");
+        cout << "Special action: Picked " + to_string(picked) + " nearby item(s)\n";
     }
     else
     {
-        tui.showMessageScreen("No valid items in adjacent locations!");
+        cout << "No valid items in adjacent locations!\n";
     }
 }
 
