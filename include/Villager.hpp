@@ -8,10 +8,10 @@ class Villager
 {
 private:
     std::string name;
-    Location *currentLocation;
-    Location *safeLocation;
-    bool alive = true;
-    bool rescue = false;
+    Location *currentLocation; // مکان فعلی محلی
+    Location *safeLocation; // مکان امن محلی
+    bool alive = true; // زنده است یا نه؟
+    bool rescue = false; // نجات یافته یا نه؟
 
 public:
     Villager(const std::string &, Location *, Location *);
