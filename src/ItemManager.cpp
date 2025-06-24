@@ -130,29 +130,9 @@ ItemManager &ItemManager::getInstance()
     return instance;
 }
 
-vector<Item *> ItemManager::findItemsAtLocation(const vector<string> &locationNames)
-{
-    vector<Item *> result;
-
-    for (size_t i = 0; i < locationNames.size(); i++)
-    {
-        for (size_t j = 0; j < bag.size(); j++)
-        {
-            if (locationNames[i] == bag[j]->get_location()->get_name())
-            {
-                result.push_back(bag[j]);
-                bag.erase(bag.begin() + j);
-                break;
-            }
-        }
-    }
-
-    return result;
-}
-
 void ItemManager::clear()
 {
-    std::unordered_set<Item *> deleted;
+    unordered_set<Item *> deleted;
 
     for (Item *&item : bag)
     {
