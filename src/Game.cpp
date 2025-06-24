@@ -441,7 +441,7 @@ void Game::setupPerkCards()
         Hero *h = heroes[i];
         if (!perkDeck.empty())
         {
-            h->addPerkCard(perkDeck.back());
+            h->setPerkCard(perkDeck.back());
             perkDeck.pop_back();
         }
     }
@@ -553,7 +553,7 @@ void Game::rescueVillagerIfSafe(Hero *hero)
                 try
                 {
                     PerkCard reward = drawPerkCard();
-                    hero->addPerkCard(reward);
+                    hero->setPerkCard(reward);
                     cout << v->getName() << " was rescued and gave you a Perk Card!\n";
                 }
                 catch (const GameException &e)
