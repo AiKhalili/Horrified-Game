@@ -849,12 +849,28 @@ Monster *Game::askMonsterChoice(const vector<Monster *> &mon)
         return nullptr;
     }
 
+    vector<Monster *> ans;
+    for (Monster *m : mon)
+    {
+        if (!m->is_defeated())
+        {
+            ans.push_back(m);
+        }
+    }
+
+    if (ans.empty())
+    {
+        cout << "All monsters are defeated.\n";
+        boundary();
+        return nullptr;
+    }
+
     while (true)
     {
         cout << "Available Monsters:\n";
-        for (size_t i = 0; i < mon.size(); ++i)
+        for (size_t i = 0; i < ans.size(); ++i)
         {
-            cout << "  " << i + 1 << ". " << mon[i]->get_name() << '\n';
+            cout << "  " << i + 1 << ". " << ans[i]->get_name() << '\n';
         }
 
         cout << "\nChoose one of the monsters by number: ";
@@ -866,17 +882,17 @@ Monster *Game::askMonsterChoice(const vector<Monster *> &mon)
         {
             size_t pos;
             index = stoi(input, &pos);
-            if (pos != input.size() || index < 1 || index > (int)mon.size())
+            if (pos != input.size() || index < 1 || index > (int)ans.size())
             {
                 throw invalid_argument("Out of range");
             }
 
             boundary();
-            return mon[index - 1];
+            return ans[index - 1];
         }
         catch (...)
         {
-            cout << "Invalid input! Please enter a valid number between 1 and " << mon.size() << ".\n";
+            cout << "Invalid input! Please enter a valid number between 1 and " << ans.size() << ".\n";
         }
     }
 }
