@@ -3,34 +3,29 @@
 #include "Monster.hpp"
 #include "GameException.hpp"
 #include <iostream>
+#include <vector>
 #include <new>
 #include <map>
 
 class Location;
 class Villager;
 
-class Invisible_Man:public Monster{
-    private:
-    std::map<std::string, bool> evidence;
-    std::map<std::string, bool> advanceTracker;
+class Invisible_Man : public Monster
+{
+private:
+    std::map<std::string, bool> evidence; // مپ برای نگهداری جاهایی که مدارک مبنی بر وجود مردنامريی قرار داره
+    std::map<std::string, bool> advanceTracker; // برای مشخص کردن پیشرفت مأموریت در هر مکان (تکمیل یا ناقص) است
 
-    public:
+public:
     Invisible_Man();
-    virtual std::vector<Location*> getAdvanceLocation() override;
-    virtual void advanceMission(Location*) override; 
-    virtual bool canbedefeated()const override;
-    virtual void defeat(Location*) override;
-    void StalkUnseen(Location*, Villager*);
+    virtual std::vector<Location *> getAdvanceLocation() override;
+    virtual void advanceMission(Location *) override;
+    virtual bool canbedefeated() const override;
+    void specialPower(Hero *) override; // استفاده از قدرت برای هیولا
     virtual std::vector<Item> getAdvanceRequirement() const override;
-    virtual void markAdvanceComplete(const std::string&) override;
-    bool Invisible_Man::isAdvanceLocation(const std::string&) const;
-    bool Invisible_Man::isAdvanceCompleted(const std::string&) const;
-    virtual vector<Item> getDefeatRequirement() const override;
+    virtual std::vector<Item> getDefeatRequirement() const override;
     virtual int getCounter() const override;
+    virtual bool isAdvanceLocation(const std::string &) const override;
 };
-
-
-
-
 
 #endif

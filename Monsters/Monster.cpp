@@ -5,45 +5,53 @@
 #include <iostream>
 using namespace std;
 
-Monster::Monster(std::string name){
+Monster::Monster(std::string name)
+{
     this->name = name;
-    this->location = location;
     this->defeated = false;
 }
-string Monster::get_name()const{return name;}
-Location* Monster::get_location()const{return location;}
-bool Monster::is_defeated()const{return defeated;}
+string Monster::get_name() const { return name; }
+Location *Monster::get_location() const { return location; }
+bool Monster::is_defeated() const { return defeated; }
 
-void Monster::set_location(Location* location){
+void Monster::set_location(Location *location)
+{
     this->location = location;
 }
 
-void Monster::set_defeated(bool defeated){
+void Monster::set_defeated(bool defeated)
+{
     this->defeated = defeated;
 }
 // تابع کمکی پیدا کردن مسیر کوتاه‌ترین مسیر بین دو Location
-std::vector<Location*> Monster::findShortestPath(Location* start, Location* goal) {
-    std::queue<Location*> q;
-    std::unordered_map<Location*, Location*> parent;
-    std::vector<Location*> path;
+vector<Location *> Monster::findShortestPath(Location *start, Location *goal)
+{
+    queue<Location *> q;
+    unordered_map<Location *, Location *> parent;
+    vector<Location *> path;
 
     q.push(start);
     parent[start] = nullptr;
 
-    while (!q.empty()) {
-        Location* current = q.front();
+    while (!q.empty())
+    {
+        Location *current = q.front();
         q.pop();
 
-        if (current == goal) {
-            for (Location* at = goal; at != nullptr; at = parent[at]) {
+        if (current == goal)
+        {
+            for (Location *at = goal; at != nullptr; at = parent[at])
+            {
                 path.push_back(at);
             }
             std::reverse(path.begin(), path.end());
             return path;
         }
 
-        for (Location* neighbor : current->get_neighbors()) {
-            if (neighbor && parent.find(neighbor) == parent.end()) {
+        for (Location *neighbor : current->get_neighbors())
+        {
+            if (neighbor && parent.find(neighbor) == parent.end())
+            {
                 parent[neighbor] = current;
                 q.push(neighbor);
             }
@@ -52,82 +60,115 @@ std::vector<Location*> Monster::findShortestPath(Location* start, Location* goal
     return path; // مسیر خالی اگر پیدا نشد
 }
 
-#include <queue>
-#include <climits>
-#include <algorithm>
+Location *Monster::moveTowardTarget(vector<Hero *> heroes, vector<Villager *> villagers, int maxSteps)
+{
+    Location *currentLocation = this->get_location();
 
-MoveResult Monster::moveTowardTarget(std::vector<Hero*> heroes, std::vector<Villager*> villagers, int maxSteps) {
-    Location* currentLocation = this->get_location();
-
-    // 1. اگه هیولا الان روی قهرمان باشه، حرکت نمی‌کنه و همونجا می‌مونه
-    for (Hero* h : heroes) {
-        if (h->getLocation() == currentLocation) {
-            return MoveResult::ReachedHero;
+    // 1. اگه هیولا الان روی قهرمان یا روستایی باشه، حرکت نمی‌کنه
+    for (Hero *h : heroes)
+    {
+        if (h->getLocation() == currentLocation)
+        {
+            return currentLocation;
         }
     }
 
-    // 2. یا روی روستایی باشه
-    for (Villager* v : villagers) {
-        if (v->getCurrentLocation() == currentLocation) {
-            return MoveResult::ReachedVillager;
+    for (Villager *v : villagers)
+    {
+        if (v->getCurrentLocation() == currentLocation)
+        {
+            return currentLocation;
         }
     }
 
-    // 3. پیدا کردن نزدیک‌ترین هدف با اولویت قهرمان‌ها
-    Location* targetLocation = nullptr;
-    std::vector<Location*> shortestPath;
-    int minDistance = INT_MAX;
-    bool foundHero = false;
+    // 2. پیدا کردن نزدیک‌ترین هدف
+    Location *heroTarget = nullptr;
+    Location *villagerTarget = nullptr;
+    vector<Location *> heroPath;
+    vector<Location *> villagerPath;
 
-    for (Hero* h : heroes) {
-        std::vector<Location*> path = findShortestPath(currentLocation, h->getLocation());
-        if (!path.empty()) {
-            int dist = path.size();
-            if (dist < minDistance || (dist == minDistance && !foundHero)) {
-                minDistance = dist;
-                shortestPath = path;
-                targetLocation = h->getLocation();
-                foundHero = true;
-            }
+    size_t minHeroDistance = INT_MAX;
+    size_t minVillagerDistance = INT_MAX;
+
+    // پیدا کردن مسیر به نزدیک‌ترین قهرمان
+    for (Hero *h : heroes)
+    {
+        vector<Location *> path = findShortestPath(currentLocation, h->getLocation());
+        if (!path.empty() && path.size() < minHeroDistance)
+        {
+            minHeroDistance = path.size();
+            heroPath = path;
+            heroTarget = h->getLocation();
         }
     }
 
-    if (!foundHero) {
-        for (Villager* v : villagers) {
-            std::vector<Location*> path = findShortestPath(currentLocation, v->getCurrentLocation());
-            if (!path.empty() && path.size() < minDistance) {
-                minDistance = path.size();
-                shortestPath = path;
-                targetLocation = v->getCurrentLocation();
-            }
+    // پیدا کردن مسیر به نزدیک‌ترین روستایی
+    for (Villager *v : villagers)
+    {
+        vector<Location *> path = findShortestPath(currentLocation, v->getCurrentLocation());
+        if (!path.empty() && path.size() < minVillagerDistance)
+        {
+            minVillagerDistance = path.size();
+            villagerPath = path;
+            villagerTarget = v->getCurrentLocation();
         }
     }
 
-    // 4. اگر هدفی پیدا نشد یا هیولا نمی‌تونه حرکت کنه (راهی نیست یا هدف همینجاست)
-    if (shortestPath.empty() || shortestPath.size() <= 1) {
-        return MoveResult::NoTarget;
+    // 3. مقایسه‌ی فاصله‌ها و تصمیم برای حرکت
+    vector<Location *> chosenPath;
+    Location *finalTarget = nullptr;
+
+    if (minHeroDistance < minVillagerDistance)
+    {
+        chosenPath = heroPath;
+        finalTarget = heroTarget;
+    }
+    else if (minVillagerDistance < minHeroDistance)
+    {
+        chosenPath = villagerPath;
+        finalTarget = villagerTarget;
+    }
+    else if (minHeroDistance != INT_MAX)
+    { // فاصله‌ها برابرن و مسیر هست
+        // اولویت با قهرمان
+        chosenPath = heroPath;
+        finalTarget = heroTarget;
+    }
+    else
+    {
+        // نه قهرمانی هست، نه روستایی‌ای که بهش برسیم
+        return nullptr;
     }
 
-    // 5. حرکت هیولا تا حد مجاز
-    int stepsToMove = std::min(maxSteps, (int)shortestPath.size() - 1);
-    Location* newLocation = shortestPath[stepsToMove];
+    // 4. حرکت به سمت هدف
+    if ((int)chosenPath.size() <= maxSteps + 1)
+    {
+        // می‌رسه به هدف
+        Location *destination = finalTarget;
 
-    currentLocation->removeMonster(this);
-    newLocation->addMonster(this);
+        this->get_location()->removeMonster(this);
+        this->set_location(destination);
+        destination->addMonster(this);
 
-    // 6. بررسی وضعیت پس از حرکت: آیا رسید به قهرمان یا روستایی؟
-    for (Hero* h : heroes) {
-        if (h->getLocation() == newLocation) {
-            return MoveResult::ReachedHero;
-        }
+        return destination;
     }
+    else
+    {
+        // نمی‌رسه، فقط تا حداکثر استپ جلو می‌ره
+        Location *intermediate = chosenPath[maxSteps];
 
-    for (Villager* v : villagers) {
-        if (v->getCurrentLocation()== newLocation) {
-            return MoveResult::ReachedVillager;
-        }
+        this->get_location()->removeMonster(this);
+        this->set_location(intermediate);
+        intermediate->addMonster(this);
+
+        return nullptr;
     }
+}
 
-    // 7. هیولا حرکت کرده ولی به هدف نرسیده
-    return MoveResult::MovedOnly;
+void Monster::setFrenzyOrder(int order){
+    frenzyOrder = order;
+}
+
+int Monster::getFrenzyOrder() const{
+    return frenzyOrder;
 }

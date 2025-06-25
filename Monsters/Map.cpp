@@ -5,10 +5,11 @@
 #include <iostream>
 using namespace std;
 
-Map* Map::mapPtr = nullptr;
+Map *Map::mapPtr = nullptr;
 
-Map::Map() {
-   
+Map::Map()
+{
+
     locations["Camp"] = new Location("Camp");
     locations["Cave"] = new Location("Cave");
     locations["Precinct"] = new Location("Precinct");
@@ -18,7 +19,6 @@ Map::Map() {
     locations["Tower"] = new Location("Tower");
     locations["Theatre"] = new Location("Theatre");
     locations["Docks"] = new Location("Docks");
-    locations["Waterfront"] = new Location("Waterfront");
     locations["Institute"] = new Location("Institute");
     locations["Laboratory"] = new Location("Laboratory");
     locations["Shop"] = new Location("Shop");
@@ -29,28 +29,27 @@ Map::Map() {
     locations["Museum"] = new Location("Museum");
     locations["Crypt"] = new Location("Crypt");
     locations["Abbey"] = new Location("Abbey");
-    locations["Lagoon"] = new Location("Lagoon");
 
-    
     locations["Camp"]->addNeighbors(locations["Cave"]);
     locations["Camp"]->addNeighbors(locations["Precinct"]);
-    locations["Camp"]->addNeighbors(locations["Lagoon"]);
+    locations["Camp"]->addNeighbors(locations["Mansion"]);
+    locations["Camp"]->addNeighbors(locations["Inn"]);
+    locations["Camp"]->addNeighbors(locations["Theatre"]);
 
     locations["Cave"]->addNeighbors(locations["Camp"]);
-    locations["Lagoon"]->addNeighbors(locations["Camp"]);
 
     locations["Precinct"]->addNeighbors(locations["Camp"]);
     locations["Precinct"]->addNeighbors(locations["Inn"]);
     locations["Precinct"]->addNeighbors(locations["Theatre"]);
+    locations["Precinct"]->addNeighbors(locations["Mansion"]);
 
     locations["Inn"]->addNeighbors(locations["Precinct"]);
-    locations["Inn"]->addNeighbors(locations["Barn"]);
+    locations["Inn"]->addNeighbors(locations["Mansion"]);
     locations["Inn"]->addNeighbors(locations["Theatre"]);
+    locations["Inn"]->addNeighbors(locations["Camp"]);
 
-    locations["Barn"]->addNeighbors(locations["Inn"]);
-    locations["Barn"]->addNeighbors(locations["Dungeon"]);
+    locations["Barn"]->addNeighbors(locations["Theatre"]);
 
-    locations["Dungeon"]->addNeighbors(locations["Barn"]);
     locations["Dungeon"]->addNeighbors(locations["Tower"]);
 
     locations["Tower"]->addNeighbors(locations["Dungeon"]);
@@ -61,138 +60,199 @@ Map::Map() {
     locations["Theatre"]->addNeighbors(locations["Inn"]);
     locations["Theatre"]->addNeighbors(locations["Tower"]);
     locations["Theatre"]->addNeighbors(locations["Shop"]);
+    locations["Theatre"]->addNeighbors(locations["Barn"]);
+    locations["Theatre"]->addNeighbors(locations["Camp"]);
+    locations["Theatre"]->addNeighbors(locations["Mansion"]);
 
     locations["Docks"]->addNeighbors(locations["Tower"]);
-    locations["Docks"]->addNeighbors(locations["Waterfront"]);
 
-    locations["Waterfront"]->addNeighbors(locations["Docks"]);
-    locations["Waterfront"]->addNeighbors(locations["Institute"]);
-
-    locations["Institute"]->addNeighbors(locations["Waterfront"]);
     locations["Institute"]->addNeighbors(locations["Laboratory"]);
-    locations["Institute"]->addNeighbors(locations["Graveyard"]);
 
     locations["Laboratory"]->addNeighbors(locations["Institute"]);
     locations["Laboratory"]->addNeighbors(locations["Shop"]);
-    locations["Laboratory"]->addNeighbors(locations["Graveyard"]);
 
     locations["Shop"]->addNeighbors(locations["Laboratory"]);
     locations["Shop"]->addNeighbors(locations["Theatre"]);
     locations["Shop"]->addNeighbors(locations["Church"]);
+    locations["Shop"]->addNeighbors(locations["Mansion"]);
+    locations["Shop"]->addNeighbors(locations["Museum"]);
 
-    locations["Graveyard"]->addNeighbors(locations["Institute"]);
-    locations["Graveyard"]->addNeighbors(locations["Laboratory"]);
     locations["Graveyard"]->addNeighbors(locations["Church"]);
 
     locations["Church"]->addNeighbors(locations["Shop"]);
     locations["Church"]->addNeighbors(locations["Graveyard"]);
     locations["Church"]->addNeighbors(locations["Hospital"]);
     locations["Church"]->addNeighbors(locations["Museum"]);
+    locations["Church"]->addNeighbors(locations["Mansion"]);
 
     locations["Hospital"]->addNeighbors(locations["Church"]);
-    locations["Hospital"]->addNeighbors(locations["Mansion"]);
 
-    locations["Mansion"]->addNeighbors(locations["Hospital"]);
+    locations["Mansion"]->addNeighbors(locations["Shop"]);
     locations["Mansion"]->addNeighbors(locations["Museum"]);
+    locations["Mansion"]->addNeighbors(locations["Church"]);
+    locations["Mansion"]->addNeighbors(locations["Camp"]);
+    locations["Mansion"]->addNeighbors(locations["Theatre"]);
     locations["Mansion"]->addNeighbors(locations["Abbey"]);
+    locations["Mansion"]->addNeighbors(locations["Precinct"]);
+    locations["Mansion"]->addNeighbors(locations["Inn"]);
 
     locations["Museum"]->addNeighbors(locations["Church"]);
     locations["Museum"]->addNeighbors(locations["Mansion"]);
-    locations["Museum"]->addNeighbors(locations["Crypt"]);
+    locations["Museum"]->addNeighbors(locations["Shop"]);
 
-    locations["Crypt"]->addNeighbors(locations["Museum"]);
+    locations["Crypt"]->addNeighbors(locations["Abbey"]);
+
     locations["Abbey"]->addNeighbors(locations["Mansion"]);
+    locations["Abbey"]->addNeighbors(locations["Crypt"]);
 }
 
-Map* Map::get_instanse(){
-    if(mapPtr == nullptr){
+Map *Map::get_instanse()
+{
+    if (mapPtr == nullptr)
+    {
         mapPtr = new Map();
     }
     return mapPtr;
 }
 
-Map::~Map(){
-    for (auto& pair : locations){ 
-        delete pair.second;
+Map::~Map()
+{
+    for (auto &pair : locations)
+    {
+        if (pair.second != nullptr)
+        {
+            delete pair.second;
+            pair.second = nullptr;
+        }
     }
 }
 
-Location* Map::getLocation(const std::string& name){
+Location *Map::getLocation(const std::string &name)
+{
     if (locations.count(name))
         return locations[name];
-    else{
+    else
+    {
         throw GameException("Location '" + name + "' not found on the map!");
     }
 }
 
-void Map::addItemTo(const string& locationName, Item* item) {
-    if (locations.count(locationName)) {
+void Map::addItemTo(const string &locationName, Item *item)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->addItem(item);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::addMonsterTo(const string& locationName, Monster* monster) {
-    if (locations.count(locationName)) {
+void Map::addMonsterTo(const string &locationName, Monster *monster)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->addMonster(monster);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::removeMonsterFrom(const string& locationName, Monster* monster) {
-    if (locations.count(locationName)) {
+void Map::removeMonsterFrom(const string &locationName, Monster *monster)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->removeMonster(monster);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::removeItemFrom(const string& locationName, Item* item) {
-    if (locations.count(locationName)) {
+void Map::removeItemFrom(const string &locationName, Item *item)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->removeItem(item);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::addHeroTo(const string& locationName, Hero* hero){
-    if (locations.count(locationName)) {
+void Map::addHeroTo(const string &locationName, Hero *hero)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->addHero(hero);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::removeHeroFrom(const string& locationName, Hero* hero){
-    if (locations.count(locationName)) {
+void Map::removeHeroFrom(const string &locationName, Hero *hero)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->removeHero(hero);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::addVillager(const string& locationName, Villager* villager){
-    if (locations.count(locationName)) {
+void Map::addVillager(const string &locationName, Villager *villager)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->addVillager(villager);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
 }
 
-void Map::removeVillagerFrom(const string& locationName, Villager* villager){
-    if (locations.count(locationName)) {
+void Map::removeVillagerFrom(const string &locationName, Villager *villager)
+{
+    if (locations.count(locationName))
+    {
         locations[locationName]->removeVillager(villager);
     }
-    else{
+    else
+    {
         throw GameException("Location '" + locationName + "' not found on the map!");
     }
+}
+
+vector<Location *> Map::getAllLocations() const
+{
+    vector<Location *> allLocations;
+    for (const auto &pair : locations)
+    {
+        allLocations.push_back(pair.second);
+    }
+    return allLocations;
+}
+
+vector<Villager *> Map::getAllVillagers() const
+{
+    vector<Villager *> allVillagers;
+
+    for (const auto &pair : locations)
+    {
+        Location *loc = pair.second;
+        std::vector<Villager *> villagersAtLoc = loc->get_villagers();
+        allVillagers.insert(allVillagers.end(), villagersAtLoc.begin(), villagersAtLoc.end());
+    }
+
+    return allVillagers;
 }

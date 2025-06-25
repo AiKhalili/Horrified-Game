@@ -12,45 +12,49 @@ class Location;
 class Hero;
 class Villager;
 
-enum class TargetType { None, Hero, Villager };
-
-enum class MoveResult {
-    ReachedHero,
-    ReachedVillager,
-    MovedOnly,
-    NoTarget
+enum class TargetType
+{
+    None,
+    Hero,
+    Villager
 };
 
-class Monster{
-    private:
+class Monster
+{
+private:
     std::string name;
-    Location* location;
+    Location *location;
     bool defeated;
+    int frenzyOrder;
 
-    public:
+public:
     Monster(std::string);
+
+    //توابع get
     std::string get_name() const;
-    Location* get_location() const;
-    const int get_asMark() const;
+    Location *get_location() const;
+    int getFrenzyOrder() const;
     bool is_defeated() const;
-    virtual std::vector<Location*> getAdvanceLocation() = 0;
-    void set_location(Location*);
+    
+    // توابع set
+    void set_location(Location *);
     void set_defeated(bool);
-    virtual void advanceMission(Location*) = 0;
-    virtual bool canbedefeated()const = 0;
-    virtual void defeat(Location*) = 0;
-    virtual std::vector<Item> getAdvanceRequirement() const = 0;
-    virtual void markAdvanceComplete(const std::string&) = 0;
-    virtual std::vector<Item> getDefeatRequirement() const = 0;
-    virtual int getCounter() const =  0;
-    std::vector<Location*> findShortestPath(Location*, Location*);
-    MoveResult moveTowardTarget(std::vector<Hero*>, std::vector<Villager*>, int);
+    void setFrenzyOrder(int);
+
+    std::vector<Location *> findShortestPath(Location *, Location *);
+    Location *moveTowardTarget(std::vector<Hero *>, std::vector<Villager *>, int);
     virtual ~Monster() = default;
+    
+    virtual std::vector<Location *> getAdvanceLocation() = 0;
+    virtual void advanceMission(Location *) = 0;
+    virtual bool canbedefeated() const = 0;
+    virtual std::vector<Item> getAdvanceRequirement() const = 0;
+    virtual std::vector<Item> getDefeatRequirement() const = 0;
+    virtual int getCounter() const = 0;
+    virtual void specialPower(Hero *) = 0;
+    virtual bool isAdvanceLocation(const std::string &) const = 0;
 
+    
 };
-
-
-
-
 
 #endif

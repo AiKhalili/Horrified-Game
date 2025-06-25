@@ -6,114 +6,139 @@
 #include <iostream>
 using namespace std;
 
-Invisible_Man::Invisible_Man() : Monster("Invisible Man") {
-        evidence = { {"Inn", false}, {"Barn", false}, {"Laboratory", false}, {"Institute", false}, {"Mansion", false} };
-        Map::get_instanse()->addMonsterTo("Inn", this);
+Invisible_Man::Invisible_Man() : Monster("Invisible Man")
+{
+    setFrenzyOrder(6);
+    evidence = {{"Inn", false}, {"Barn", false}, {"Laboratory", false}, {"Institute", false}, {"Mansion", false}};
+    Map::get_instanse()->addMonsterTo("Inn", this);
 
-        advanceTracker = {{"Inn", false},{"Barn", false},{"Institute", false},{"Laboratory", false},{"Mansion", false}};
+    advanceTracker = {{"Inn", false}, {"Barn", false}, {"Institute", false}, {"Laboratory", false}, {"Mansion", false}};
 }
 
-vector<Location*> Invisible_Man::getAdvanceLocation(){
-    vector<Location*> vecloc;
-    for (const auto& pair : evidence) {
-        const string& locName = pair.first;
-        vecloc.push_back(Map::get_instanse()->getLocation(locName));
-    }
-    return vecloc;
+bool Invisible_Man::isAdvanceLocation(const std::string &location) const
+{
+    return advanceTracker.count(location) > 0; // بررسی می‌کند که آیا یک مکان خاص جزء مکان‌هایی است که باید در آن مدرک پیدا شود یا نه
 }
 
-void Invisible_Man::advanceMission(Location* l) {
-
-    if (((l->get_items()).size() != 0 ) && evidence[l->get_name()] == false){
-        evidence[l->get_name()] = true;
-    }
-    else if(l->get_items().size() == 0){
-        throw GameException("There is no item in this location where we can find evidence of the Invisible Man's existence!\n");
-    }
-    else if(evidence[l->get_name()] != false){
-        throw GameException("Evidence item proving the existence of the Invisible Man has been found at this location before!\n");
-    }
-    for (const auto& item : l->get_items()){
-        ItemManager::getInstance().recycleItem(item);
-        l->removeItem(item);
-    }
-    
+vector<Location *> Invisible_Man::getAdvanceLocation()
+{
+    return {Map::get_instanse()->getLocation("Precinct")};
 }
 
-bool Invisible_Man::canbedefeated() const {
-    for (const auto& pair : evidence){
-        if ((pair.second)==false){ 
+void Invisible_Man::advanceMission(Location *l)
+{
+    if (!isAdvanceLocation(l->get_name())) // اگر جزو اون مکان ها بود
+    {
+        throw GameException("This is not a valid location to advance the Invisible Man mission.\n");
+    }
+
+    if (evidence[l->get_name()]) // اگر قبلا مدرک این مکان برداشته شده بود
+    {
+        throw GameException("Evidence already found at this location!\n");
+    }
+
+    // Mark as complete
+    evidence[l->get_name()] = true;
+}
+
+bool Invisible_Man::canbedefeated() const
+{
+    for (const auto &pair : evidence)
+    {
+        if ((pair.second) == false)
+        {
             return false;
         }
     }
-        return true;
+    return true;
 }
 
-void Invisible_Man::defeat(Location* l) {
-    int sum = 0;
-    for (const auto& item : l->get_items()){
-        if (item->get_color() == Color::red){
-            sum += item->get_strength();
+void Invisible_Man::specialPower(Hero *)
+{
+    Villager *dummyVillager;
+    Location *currentLoc = this->get_location();
+    vector<Villager *> villagers = Map::get_instanse()->getAllVillagers();
+
+    if (villagers.empty())
+        return;
+
+    Location *targetLoc = nullptr;
+    vector<Location *> shortestPath;
+    size_t minDist = INT_MAX;
+
+    // پیدا کردن نزدیک‌ترین Villager
+    for (Villager *v : villagers)
+    {
+        if (!v->isAlive())
+        {
+            continue;
+        }
+        vector<Location *> path = findShortestPath(currentLoc, v->getCurrentLocation());
+        if (!path.empty() && path.size() < minDist)
+        {
+            minDist = path.size();
+            shortestPath = path;
+            targetLoc = v->getCurrentLocation();
+            dummyVillager = v;
         }
     }
-    if (sum >= 9 && canbedefeated() == true) {
-        set_defeated(true);
-        for (const auto& item : l->get_items()){
-            ItemManager::getInstance().recycleItem(item);
-            l->removeItem(item);
-        }
-    }
-    else{
-        throw GameException("There are no conditions for InvisibleMan's destruction!\n");
+
+    // اگر Villager نداشت یا بهش راه نبود
+    if (targetLoc == nullptr || shortestPath.empty())
+        return;
+
+    // بررسی اینکه آیا هیولا همین حالا در مکان Villager هست
+    bool alreadyThere = (currentLoc == targetLoc);
+
+    // تعداد گام‌هایی که قرار است برداشته شود (حداکثر 2)
+    int steps = std::min(2, (int)shortestPath.size() - 1); // چون اولین مکان خودشه
+
+    // پیدا کردن مکان جدید پس از حرکت
+    Location *newLocation = (steps > 0) ? shortestPath[steps] : currentLoc;
+
+    // به‌روزرسانی موقعیت هیولا
+    currentLoc->removeMonster(this);
+    this->set_location(newLocation);
+    newLocation->addMonster(this);
+
+    // اگر به Villager رسیدیم و قبلاً در آن مکان بودیم، او را بکشیم
+    if (newLocation == dummyVillager->getCurrentLocation() && alreadyThere)
+    {
+        dummyVillager->kill();
     }
 }
 
-void Invisible_Man::StalkUnseen(Location* Newloc, Villager* villager){
-
-    if(this->get_location() == villager->getCurrentLocation()){
-        villager->kill();
-    }
-    else{
-        this->set_location(Newloc);
-    }
-}
-
-vector<Item> Invisible_Man::getAdvanceRequirement() const {
+vector<Item> Invisible_Man::getAdvanceRequirement() const
+{
     vector<Item> result;
 
-    for (const auto& pair : advanceTracker) {
-        if (!pair.second) {
-            result.push_back(Item(0, Color::red, "AdvanceToken", Map::get_instanse()->getLocation(pair.first)));
+    for (const auto &pair : advanceTracker)
+    {
+        if (!pair.second)
+        {
+            Location *loc = Map::get_instanse()->getLocation(pair.first);
+            if (!loc)
+                cout << "Location not found in map for advance requirement: " << pair.first << endl;
+
+            result.push_back(Item(0, COlOR::red, "AdvanceToken", loc));
         }
     }
-
     return result;
 }
 
-void Invisible_Man::markAdvanceComplete(const string& locationName) {
-    if (advanceTracker.count(locationName)) {
-        advanceTracker[locationName] = true;
-    }
+vector<Item> Invisible_Man::getDefeatRequirement() const
+{
+
+    return {Item(9, COlOR::red, "DefeatInvisible", nullptr)};
 }
 
-bool Invisible_Man::isAdvanceLocation(const string& location) const {
-    return advanceTracker.count(location) > 0;
-}
-
-bool Invisible_Man::isAdvanceCompleted(const string& location) const {
-    auto it = advanceTracker.find(location);
-    return it != advanceTracker.end() && it->second;
-}
-
-vector<Item> Invisible_Man::getDefeatRequirement() const {
-
-     return {Item(9, Color::red, "DefeatToken", nullptr)};
-}
-
-int Invisible_Man::getCounter()const{
+int Invisible_Man::getCounter() const
+{
     int count = 0;
-    for (const auto& pair : evidence){
-        if ((pair.second)==true){ 
+    for (const auto &pair : evidence)
+    {
+        if ((pair.second) == true)
+        {
             count++;
         }
     }
