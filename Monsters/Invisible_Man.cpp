@@ -55,58 +55,61 @@ bool Invisible_Man::canbedefeated() const
 
 void Invisible_Man::specialPower(Hero *)
 {
-    Villager *dummyVillager;
-    Location *currentLoc = this->get_location();
-    vector<Villager *> villagers = Map::get_instanse()->getAllVillagers();
+    Location* currentLoc = this->get_location();
+    vector<Villager*> villagers = Map::get_instanse()->getAllVillagers();
 
-    if (villagers.empty())
-        return;
+    if (villagers.empty()) return;
 
-    Location *targetLoc = nullptr;
-    vector<Location *> shortestPath;
+    // ------------------------------------------
+    // مرحله ۱: بررسی اینکه قبل از حرکت، مرد نامرئی با محلی (Villager) هم‌مکان است یا نه
+    // اگر هم‌مکان هستند، ویلیجر کشته می‌شود و حرکت انجام نمی‌شود
+    // ------------------------------------------
+    for (Villager* v : villagers)
+    {
+        if (v->isAlive() && v->getCurrentLocation() == currentLoc)
+        {
+            v->kill();
+            cout << v->getName() << " was killed by Invisible Man (Power effect)!\n";
+            currentLoc->removeVillager(v);
+            v->setLocation(nullptr);
+            return; // بلافاصله بعد از کشتن، تابع تمام می‌شود و حرکت انجام نمی‌شود
+        }
+    }
+
+    // ------------------------------------------
+    // مرحله ۲: پیدا کردن نزدیک‌ترین ویلیجر زنده برای حرکت به سمت او
+    // حرکت حداکثر دو قدم انجام می‌شود
+    // ------------------------------------------
+    Villager* closest = nullptr;
+    vector<Location*> shortestPath;
     size_t minDist = INT_MAX;
 
-    // پیدا کردن نزدیک‌ترین Villager
-    for (Villager *v : villagers)
+    for (Villager* v : villagers)
     {
-        if (!v->isAlive())
-        {
-            continue;
-        }
-        vector<Location *> path = findShortestPath(currentLoc, v->getCurrentLocation());
+        if (!v->isAlive()) continue;
+
+        vector<Location*> path = findShortestPath(currentLoc, v->getCurrentLocation());
         if (!path.empty() && path.size() < minDist)
         {
             minDist = path.size();
             shortestPath = path;
-            targetLoc = v->getCurrentLocation();
-            dummyVillager = v;
+            closest = v;
         }
     }
 
-    // اگر Villager نداشت یا بهش راه نبود
-    if (targetLoc == nullptr || shortestPath.empty())
-        return;
+    if (!closest || shortestPath.empty()) return;
 
-    // بررسی اینکه آیا هیولا همین حالا در مکان Villager هست
-    bool alreadyThere = (currentLoc == targetLoc);
+    int steps = std::min(2, (int)shortestPath.size() - 1);
+    Location* newLoc = (steps > 0) ? shortestPath[steps] : currentLoc;
 
-    // تعداد گام‌هایی که قرار است برداشته شود (حداکثر 2)
-    int steps = std::min(2, (int)shortestPath.size() - 1); // چون اولین مکان خودشه
-
-    // پیدا کردن مکان جدید پس از حرکت
-    Location *newLocation = (steps > 0) ? shortestPath[steps] : currentLoc;
-
-    // به‌روزرسانی موقعیت هیولا
+    // ------------------------------------------
+    // مرحله ۳: جابه‌جایی مرد نامرئی به مکان جدید
+    // ------------------------------------------
     currentLoc->removeMonster(this);
-    this->set_location(newLocation);
-    newLocation->addMonster(this);
-
-    // اگر به Villager رسیدیم و قبلاً در آن مکان بودیم، او را بکشیم
-    if (newLocation == dummyVillager->getCurrentLocation() && alreadyThere)
-    {
-        dummyVillager->kill();
-    }
+    this->set_location(newLoc);
+    newLoc->addMonster(this);
 }
+
 
 vector<Item> Invisible_Man::getAdvanceRequirement() const
 {
