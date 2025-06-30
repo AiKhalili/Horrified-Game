@@ -1320,6 +1320,8 @@ Hero *Game::askHeroChoice()
 
 void Game::monsterPhase()
 {
+    int invisibleManPowerCount = 0;
+    Invisible_Man *invisibleMan = nullptr;
     map = Map::get_instanse();
     ItemManager &itemManager = ItemManager::getInstance();
 
@@ -1488,11 +1490,26 @@ void Game::monsterPhase()
             else if (face == Face::POWER)
             {
                 cout << targetMonster->get_name() << " activates their special power.\n";
-                targetMonster->specialPower(getCurrentHero());
+                if (targetMonster->get_name() == "Invisible Man")
+                {
+                    invisibleManPowerCount++;
+                    invisibleMan = dynamic_cast<Invisible_Man *>(targetMonster);
+                }
+                else
+                {
+                    targetMonster->specialPower(getCurrentHero());
+                }
             }
             // EMPTY : هیچ اتفاقی نمی‌افتد
         }
         cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+    }
+    if (invisibleMan != nullptr && invisibleManPowerCount > 0)
+    {
+        for (int i = 0; i < invisibleManPowerCount; i++)
+        {
+            invisibleMan->specialPower(getCurrentHero());
+        }
     }
 }
 
