@@ -1455,6 +1455,7 @@ void Game::monsterPhase()
                                 targetHero->getLocation()->removeHero(targetHero); // حذف قهرمان از لوکیشن قبلی
                                 map->getLocation("Hospital")->addHero(targetHero); // اضافه کردن قهرمان به لوکیشن فعلی
                                 cout << targetHero->getName() << " took damage and was sent to the Hospital!\n";
+                                CONTINUE = false; //  برای پایان فاز مانستر
                                 break;
                             }
                             else
@@ -1472,9 +1473,8 @@ void Game::monsterPhase()
                         targetHero->getLocation()->removeHero(targetHero);
                         map->getLocation("Hospital")->addHero(targetHero);
                         cout << targetHero->getName() << " had no items and was sent to the Hospital!\n";
+                        CONTINUE = false; //  برای پایان فاز مانستر
                     }
-
-                    CONTINUE = false; //  برای پایان فاز مانستر
                 }
                 //  اگر هیرو در مکان نبود، بررسی حمله به ویلیجر
                 else if (targetVillager)
