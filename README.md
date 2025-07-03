@@ -37,12 +37,22 @@ make
 .
 ├── src/                    
 │   ├── Game.cpp / 
-│   ├── Hero.cpp /  
-│   ├── Monster.cpp /  
+│   ├── Hero.cpp /   
 │   ├── Villager.cpp /  
 │   ├── ItemManager.cpp /  
 │   └── ...
-├── include/                
+├── Monsters/
+│   ├── Dracula.cpp / 
+│   ├── Dracula.hpp /  
+│   ├── Monster.cpp /  
+│   ├── Monster.hpp /  
+│   └── ...
+├── include/
+│   ├── Game.hpp / 
+│   ├── Hero.hpp /   
+│   ├── Villager.hpp /  
+│   ├── ItemManager.hpp /  
+│   └── ...                
 ├── CMakeLists.txt        
 ├── README.md                       
 └── build/                
