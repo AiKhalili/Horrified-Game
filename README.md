@@ -41,12 +41,6 @@ make
 │   ├── Villager.cpp /  
 │   ├── ItemManager.cpp /  
 │   └── ...
-├── Monsters/
-│   ├── Dracula.cpp / 
-│   ├── Dracula.hpp /  
-│   ├── Monster.cpp /  
-│   ├── Monster.hpp /  
-│   └── ...
 ├── include/
 │   ├── Game.hpp / 
 │   ├── Hero.hpp /   
