@@ -1,5 +1,5 @@
-#include "ItemManager.hpp"
-#include "Map.hpp"
+#include "core/ItemManager.hpp"
+#include "core/Map.hpp"
 #include <ctime>
 #include <unordered_set>
 #include <algorithm>

@@ -1,7 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
-#include "Game.hpp"
+#include "core/Game.hpp"
 
 using namespace std;
 

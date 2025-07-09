@@ -1,7 +1,7 @@
-#include "Monster.hpp"
-#include "Location.hpp"
-#include "Hero.hpp"
-#include "Villager.hpp"
+#include "core/Monster.hpp"
+#include "core/Location.hpp"
+#include "core/Hero.hpp"
+#include "core/Villager.hpp"
 #include <iostream>
 using namespace std;
 

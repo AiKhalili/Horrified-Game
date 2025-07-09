@@ -1,7 +1,7 @@
 #ifndef INVISIBLE_MAN_HPP
 #define INVISIBLE_MAN_HPP
-#include "Monster.hpp"
-#include "GameException.hpp"
+#include "core/Monster.hpp"
+#include "core/GameException.hpp"
 #include <iostream>
 #include <vector>
 #include <new>

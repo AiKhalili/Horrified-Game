@@ -1,7 +1,7 @@
 #ifndef MAYOR_HPP
 #define MAYOR_HPP
 
-#include "Hero.hpp"
+#include "core/Hero.hpp"
 
 class Map;
 

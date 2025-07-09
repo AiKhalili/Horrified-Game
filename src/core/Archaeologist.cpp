@@ -1,4 +1,4 @@
-#include "Archaeologist.hpp"
+#include "core/Archaeologist.hpp"
 #include <iostream>
 #include <algorithm>
 

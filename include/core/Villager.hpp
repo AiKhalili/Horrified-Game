@@ -2,7 +2,7 @@
 #define VILLAGER_HPP
 
 #include <string>
-#include "Location.hpp"
+#include "core/Location.hpp"
 
 class Villager
 {

@@ -1,8 +1,8 @@
-#include "Dracula.hpp"
-#include "Location.hpp"
-#include "Map.hpp"
-#include "Hero.hpp"
-#include "ItemManager.hpp"
+#include "core/Dracula.hpp"
+#include "core/Location.hpp"
+#include "core/Map.hpp"
+#include "core/Hero.hpp"
+#include "core/ItemManager.hpp"
 #include <iostream>
 using namespace std;
 

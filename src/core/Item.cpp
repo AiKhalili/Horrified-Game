@@ -1,5 +1,5 @@
-#include "Item.hpp"
-#include "Location.hpp"
+#include "core/Item.hpp"
+#include "core/Location.hpp"
 #include <iostream>
 using namespace std;
 

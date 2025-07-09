@@ -5,12 +5,12 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
-#include "Item.hpp"
-#include "GameException.hpp"
-#include "Villager.hpp"
-#include "Location.hpp"
-#include "ItemManager.hpp"
-#include "PerkCard.hpp"
+#include "core/Item.hpp"
+#include "core/GameException.hpp"
+#include "core/Villager.hpp"
+#include "core/Location.hpp"
+#include "core/ItemManager.hpp"
+#include "core/PerkCard.hpp"
 
 class Monster;
 

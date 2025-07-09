@@ -1,8 +1,8 @@
-#include "Invisible_Man.hpp"
-#include "Location.hpp"
-#include "Map.hpp"
-#include "Villager.hpp"
-#include "ItemManager.hpp"
+#include "core/Invisible_Man.hpp"
+#include "core/Location.hpp"
+#include "core/Map.hpp"
+#include "core/Villager.hpp"
+#include "core/ItemManager.hpp"
 #include <iostream>
 using namespace std;
 

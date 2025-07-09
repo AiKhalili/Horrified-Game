@@ -1,8 +1,8 @@
-#include "Hero.hpp"
-#include "Monster.hpp"
-#include "PerkCard.hpp"
-#include "Map.hpp"
-#include "Game.hpp"
+#include "core/Hero.hpp"
+#include "core/Monster.hpp"
+#include "core/PerkCard.hpp"
+#include "core/Map.hpp"
+#include "core/Game.hpp"
 #include <algorithm>
 #include <iostream>
 

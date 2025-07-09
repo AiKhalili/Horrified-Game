@@ -1,9 +1,9 @@
 #ifndef LOCATION_HPP
 #define LOCATION_HPP
 #include <iostream>
-#include "Item.hpp"
-#include "Monster.hpp"
-#include "GameException.hpp"
+#include "core/Item.hpp"
+#include "core/Monster.hpp"
+#include "core/GameException.hpp"
 #include <vector>
 #include <algorithm>
 

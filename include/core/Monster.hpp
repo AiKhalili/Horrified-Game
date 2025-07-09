@@ -1,6 +1,6 @@
 #ifndef MONSTER_HPP
 #define MONSTER_HPP
-#include "Item.hpp"
+#include "core/Item.hpp"
 #include <iostream>
 #include <vector>
 #include <algorithm>

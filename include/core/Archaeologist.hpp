@@ -1,8 +1,8 @@
 #ifndef ARCHAEOLOGIST_HPP
 #define ARCHAEOLOGIST_HPP
 
-#include "Hero.hpp"
-#include "Map.hpp"
+#include "core/Hero.hpp"
+#include "core/Map.hpp"
 
 class Archaeologist : public Hero{
 public:

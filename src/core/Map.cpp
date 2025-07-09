@@ -1,6 +1,6 @@
-#include "Map.hpp"
-#include "Hero.hpp"
-#include "Villager.hpp"
+#include "core/Map.hpp"
+#include "core/Hero.hpp"
+#include "core/Villager.hpp"
 #include <algorithm>
 #include <iostream>
 using namespace std;

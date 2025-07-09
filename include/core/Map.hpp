@@ -1,6 +1,6 @@
 #ifndef MAP_HPP
 #define MAP_HPP
-#include "Location.hpp"
+#include "core/Location.hpp"
 #include <unordered_map>
 #include <vector>
 #include <queue>

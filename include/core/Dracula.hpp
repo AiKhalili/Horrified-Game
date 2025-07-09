@@ -1,7 +1,7 @@
 #ifndef DRACULA_HPP
 #define DRACULA_HPP
-#include "Monster.hpp"
-#include "GameException.hpp"
+#include "core/Monster.hpp"
+#include "core/GameException.hpp"
 #include <iostream>
 #include <new>
 #include <map>

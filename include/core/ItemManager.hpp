@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
-#include "Item.hpp"
+#include "core/Item.hpp"
 
 class ItemManager
 {

@@ -4,19 +4,19 @@
 #include <vector>
 #include <string>
 #include <iomanip>
-#include "Map.hpp"
-#include "Hero.hpp"
-#include "Archaeologist.hpp"
-#include "Mayor.hpp"
-#include "Monster.hpp"
-#include "Villager.hpp"
-#include "Item.hpp"
-#include "Dracula.hpp"
-#include "Invisible_Man.hpp"
-#include "ItemManager.hpp"
-#include "PerkCard.hpp"
-#include "MonsterCard.hpp"
-#include "GameException.hpp"
+#include "core/Map.hpp"
+#include "core/Hero.hpp"
+#include "core/Archaeologist.hpp"
+#include "core/Mayor.hpp"
+#include "core/Monster.hpp"
+#include "core/Villager.hpp"
+#include "core/Item.hpp"
+#include "core/Dracula.hpp"
+#include "core/Invisible_Man.hpp"
+#include "core/ItemManager.hpp"
+#include "core/PerkCard.hpp"
+#include "core/MonsterCard.hpp"
+#include "core/GameException.hpp"
 
 class Game
 {
