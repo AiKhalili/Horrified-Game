@@ -10,7 +10,7 @@ Dracula::Dracula() : Monster("Dracula")
 {
     setFrenzyOrder(1);
     coffins = {{"Cave", false}, {"Crypt", false}, {"Dungeon", false}, {"Graveyard", false}};
-    Map::get_instanse()->addMonsterTo("Cave", this);
+    Map::get_instanse()->addMonsterTo("Crypt", this);
 }
 
 vector<Location *> Dracula::getAdvanceLocation()
