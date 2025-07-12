@@ -26,6 +26,7 @@ public:
     virtual std::vector<Item> getDefeatRequirement() const override;
     virtual int getCounter() const override;
     virtual bool isAdvanceLocation(const std::string &) const override;
+    virtual std::string serialize() const override;
 };
 
 #endif
