@@ -3,6 +3,7 @@
 #include <random>
 #include <cstdlib>
 #include <stdexcept>
+#include <unordered_map>
 
 using namespace std;
 
@@ -338,30 +339,54 @@ void Game::setupHeroes()
         map = Map::get_instanse();
     }
     heroes.clear();
-
-    Hero *hero1 = nullptr; // ساخت قهرمان اول
-    Hero *hero2 = nullptr; // ساخت قهرمان دوم
-
+    Hero *hero1 = nullptr;
+    Hero *hero2 = nullptr;
+    // ساخت هیروی بازیکن اول
     if (player1.heroClass == "Mayor")
     {
         hero1 = new Mayor(player1.name, map);
     }
-    else
+    else if (player1.heroClass == "Archaeologist")
     {
         hero1 = new Archaeologist(player1.name, map);
     }
+    else if (player1.heroClass == "Courier")
+    {
+        hero1 = new Courier(player1.name, map);
+    }
+    else if (player1.heroClass == "Scientist")
+    {
+        hero1 = new Scientist(player1.name, map);
+    }
+    else
+    {
+        throw GameException("Invalid hero class for Player 1!");
+    }
 
+    // ساخت هیروی بازیکن دوم
     if (player2.heroClass == "Mayor")
     {
         hero2 = new Mayor(player2.name, map);
     }
-    else
+    else if (player2.heroClass == "Archaeologist")
     {
         hero2 = new Archaeologist(player2.name, map);
     }
-
+    else if (player2.heroClass == "Courier")
+    {
+        hero2 = new Courier(player2.name, map);
+    }
+    else if (player2.heroClass == "Scientist")
+    {
+        hero2 = new Scientist(player2.name, map);
+    }
+    else
+    {
+        throw GameException("Invalid hero class for Player 2!");
+    }
+    // ترتیب نوبت‌دهی
     if (currentHeroIndex == 0)
-    { // ترتیب نوبت دهی قهرمان ها
+    {
         heroes.push_back(hero1);
         heroes.push_back(hero2);
     }
@@ -587,6 +612,7 @@ string Game::actionMenu()
     cout << "[D]efeat                     " << "|\t" << "[U]se Perk\n";
     cout << "[H]elp                       " << "|\t" << "[Q]uit\n";
     cout << "[S]pecial(for Archaeologist)\n";
+    cout << "[F]inish hero phase\n";
     boundary();
 
     cout << "Enter your choice[As string]:\t";
@@ -772,7 +798,7 @@ Item *Game::askItemToDefend(const std::vector<Item *> &ITEM)
 vector<Item *> Game::askItemSelection(const vector<Item *> &ITEM)
 {
     boundary();
-    vector<Item *> selectedItems;
+    vector<Item *> selectedItems = {};
 
     if (ITEM.empty())
     {
@@ -897,6 +923,181 @@ Monster *Game::askMonsterChoice(const vector<Monster *> &mon)
     }
 }
 
+void Game::handleMove(Hero *hero)
+{
+    // مکان های مجاور رو به کاربر نشون میده
+    Location *dest = askLocationChoice(getCurrentHero()->getLocation()->get_neighbors());
+    if (dest)
+    {
+        // انتخاب از بین محلی های خانه فعلی
+        vector<Villager *> toMove = askVillagerChoice(getCurrentHero()->getLocation()->get_villagers());
+        hero->move(dest, toMove);
+    }
+}
+
+void Game::handlePickUP(Hero *hero)
+{
+    auto items = askItemSelection(getCurrentHero()->getLocation()->get_items());
+    if (!items.empty())
+    {
+        hero->pickUp(items);
+    }
+}
+
+void Game::handleGuide(Hero *hero)
+{
+    // انتخاب محلی
+    vector<Villager *> v = askVillagerChoice(getCurrentHero()->getLocation()->getNearByVillagers());
+    if (v.empty())
+    {
+        cout << "No villager is selected!\n";
+        return;
+    }
+    if (v.size() != 1)
+    {
+        cout << "You should select only one villager!\n";
+        return;
+    }
+    // انتخاب مقصد مجاور
+    if (v[0]->getCurrentLocation()->isNeighbor(hero->getLocation()))
+    { // بررسی مجاور بودن محلی نسبت به قهرمان
+        hero->guide(v, hero->getLocation());
+    }
+    else
+    {
+        Location *dest = askLocationChoice(getCurrentHero()->getLocation()->get_neighbors());
+        if (dest && !v.empty())
+        {
+            hero->guide(v, dest);
+        }
+    }
+}
+
+void Game::handleAdvance(Hero *hero)
+{
+    auto *whichMonster = askMonsterChoice(monsters);
+    auto items = askItemSelection(getCurrentHero()->getLocation()->get_items());
+    if (whichMonster && !items.empty())
+    {
+        if (auto *sci = dynamic_cast<Scientist *>(hero))
+        {
+            cout << "Do you want to activate Scientist ability? (y/n):\t";
+            string choice;
+            getline(cin, choice);
+            if (choice == "y" || choice == "Y")
+            {
+                sci->activateAbility();
+            }
+        }
+        hero->advanced(whichMonster, items);
+    }
+}
+
+void Game::handleDefeat(Hero *hero)
+{
+    auto *whichMonster = askMonsterChoice(monsters);
+    auto items = askItemSelection(getCurrentHero()->getLocation()->get_items());
+    if (whichMonster && !items.empty())
+    {
+        if (auto *sci = dynamic_cast<Scientist *>(hero))
+        {
+            cout << "Do you want to activate Scientist ability? (y/n):\t";
+            string choice;
+            getline(cin, choice);
+            if (choice == "y" || choice == "Y")
+            {
+                sci->activateAbility();
+            }
+        }
+        hero->defeat(whichMonster, items);
+        //  حذف از مکان فعلی
+        if (hero->getLocation())
+        {
+            hero->getLocation()->removeMonster(whichMonster);
+            whichMonster->set_location(nullptr);
+        }
+    }
+}
+
+void Game::handleSpecialAction(Hero *hero)
+{
+    if (auto *arch = dynamic_cast<Archaeologist *>(hero))
+    {
+        Location *selectLocation = askLocationChoice(getCurrentHero()->getLocation()->get_neighbors());
+        auto neiborItems = selectLocation->get_items();
+        arch->specialAction(neiborItems);
+    }
+    else if (auto *courier = dynamic_cast<Courier *>(hero))
+    {
+        courier->specialAction({});
+    }
+    else
+    {
+        cout << "This hero doesn't have a special action.\n";
+    }
+}
+
+void Game::handleHelp()
+{
+    cout << "\n Available actions:\n";
+    cout << "  M - Move\n";
+    cout << "  G - Guide\n";
+    cout << "  P - Pick Up\n";
+    cout << "  A - Advance\n";
+    cout << "  D - Defeat\n";
+    cout << "  S - Special Action\n";
+    cout << "  U - Use Perk\n";
+    cout << "  Q - Quit\n";
+    cout << "  H - Help\n";
+
+    cout << "\nEnter the letter of the action you want help with: ";
+    string helpChoice;
+    cin >> helpChoice;
+    cin.clear();
+    cin.ignore(1000, '\n');
+
+    if (helpChoice == "M")
+    {
+        cout << "Move: Move to one of the neighboring locations.\n";
+    }
+    else if (helpChoice == "G")
+    {
+        cout << "Guide: Guide one or more villagers to a neighboring location.\n";
+    }
+    else if (helpChoice == "P")
+    {
+        cout << "Pick Up: Pick up items from your current location.\n";
+    }
+    else if (helpChoice == "A")
+    {
+        cout << "Advance: Attempt to progress a monster's mission if you're in a valid location and have required items.\n";
+    }
+    else if (helpChoice == "D")
+    {
+        cout << "Defeat: Try to defeat a monster if its mission is complete and you're in the same location.\n";
+    }
+    else if (helpChoice == "S")
+    {
+        cout << "Special Action: Use your hero's unique ability (if available).\n";
+    }
+    else if (helpChoice == "U")
+    {
+        cout << "Use Perk: Use one of your Perk cards. This does not cost an action.\n";
+    }
+    else if (helpChoice == "Q")
+    {
+        cout << "Quit: Exit the game.\n";
+    }
+    else if (helpChoice == "H")
+    {
+        cout << "Help: Show this help menu.\n";
+    }
+    else
+    {
+        cout << "Invalid help option selected.\n";
+    }
+}
+
 void Game::heroPhase(Hero *hero)
 {
     bool endPhase = false;
@@ -909,84 +1110,27 @@ void Game::heroPhase(Hero *hero)
         {
             if (Choice == "M")
             {
-                // مکان های مجاور رو به کاربر نشون میده
-                Location *dest = askLocationChoice(getCurrentHero()->getLocation()->get_neighbors());
-                if (dest)
-                {
-                    // انتخاب از بین محلی های خانه فعلی
-                    vector<Villager *> toMove = askVillagerChoice(getCurrentHero()->getLocation()->get_villagers());
-                    hero->move(dest, toMove);
-                }
+                handleMove(hero);
             }
             else if (Choice == "G")
             {
-                // انتخاب محلی
-                vector<Villager *> v = askVillagerChoice(getCurrentHero()->getLocation()->getNearByVillagers());
-                if (v.empty())
-                {
-                    continue;
-                }
-                if (v.size() != 1)
-                {
-                    cout << "You should select only one villager!\n";
-                    continue;
-                }
-                // انتخاب مقصد مجاور
-                if (v[0]->getCurrentLocation()->isNeighbor(hero->getLocation()))
-                { // بررسی مجاور بودن محلی نسبت به قهرمان
-                    hero->guide(v, hero->getLocation());
-                }
-                else
-                {
-                    Location *dest = askLocationChoice(getCurrentHero()->getLocation()->get_neighbors());
-                    if (dest && !v.empty())
-                    {
-                        hero->guide(v, dest);
-                    }
-                }
+                handleGuide(hero);
             }
             else if (Choice == "P")
             {
-                auto items = askItemSelection(getCurrentHero()->getLocation()->get_items());
-                if (!items.empty())
-                {
-                    hero->pickUp(items);
-                }
+                handlePickUP(hero);
             }
             else if (Choice == "A")
             {
-                auto *whichMonster = askMonsterChoice(monsters);
-                if (whichMonster)
-                {
-                    hero->advanced(whichMonster);
-                }
+                handleAdvance(hero);
             }
             else if (Choice == "D")
             {
-                auto *whichMonster = askMonsterChoice(monsters);
-                if (whichMonster)
-                {
-                    hero->defeat(whichMonster);
-                    //  حذف از مکان فعلی
-                    if (hero->getLocation())
-                    {
-                        hero->getLocation()->removeMonster(whichMonster);
-                        whichMonster->set_location(nullptr);
-                    }
-                }
+                handleDefeat(hero);
             }
             else if (Choice == "S")
             {
-                if (auto *arch = dynamic_cast<Archaeologist *>(hero))
-                {
-                    Location *selectLocation = askLocationChoice(getCurrentHero()->getLocation()->get_neighbors());
-                    auto neiborItems = selectLocation->get_items();
-                    arch->specialAction(neiborItems);
-                }
-                else
-                {
-                    cout << "This hero doesn't have a special action.\n";
-                }
+                handleSpecialAction(hero);
             }
             else if (Choice == "Q")
             {
@@ -995,67 +1139,16 @@ void Game::heroPhase(Hero *hero)
             }
             else if (Choice == "H")
             {
-                cout << "\n Available actions:\n";
-                cout << "  M - Move\n";
-                cout << "  G - Guide\n";
-                cout << "  P - Pick Up\n";
-                cout << "  A - Advance\n";
-                cout << "  D - Defeat\n";
-                cout << "  S - Special Action\n";
-                cout << "  U - Use Perk\n";
-                cout << "  Q - Quit\n";
-                cout << "  H - Help\n";
-
-                cout << "\nEnter the letter of the action you want help with: ";
-                string helpChoice;
-                cin >> helpChoice;
-                cin.clear();
-                cin.ignore(1000, '\n');
-
-                if (helpChoice == "M")
-                {
-                    cout << "Move: Move to one of the neighboring locations.\n";
-                }
-                else if (helpChoice == "G")
-                {
-                    cout << "Guide: Guide one or more villagers to a neighboring location.\n";
-                }
-                else if (helpChoice == "P")
-                {
-                    cout << "Pick Up: Pick up items from your current location.\n";
-                }
-                else if (helpChoice == "A")
-                {
-                    cout << "Advance: Attempt to progress a monster's mission if you're in a valid location and have required items.\n";
-                }
-                else if (helpChoice == "D")
-                {
-                    cout << "Defeat: Try to defeat a monster if its mission is complete and you're in the same location.\n";
-                }
-                else if (helpChoice == "S")
-                {
-                    cout << "Special Action: Use your hero's unique ability (if available).\n";
-                }
-                else if (helpChoice == "U")
-                {
-                    cout << "Use Perk: Use one of your Perk cards. This does not cost an action.\n";
-                }
-                else if (helpChoice == "Q")
-                {
-                    cout << "Quit: Exit the game.\n";
-                }
-                else if (helpChoice == "H")
-                {
-                    cout << "Help: Show this help menu.\n";
-                }
-                else
-                {
-                    cout << "Invalid help option selected.\n";
-                }
+                handleHelp();
             }
             else if (Choice == "U")
             { // کارت پرک بدون کم کردن اکشن اجرا میشه
                 usePerkCard();
+            }
+            else if (Choice == "F")
+            {
+                cout << "Hero phase has ended.\n";
+                endPhase = true;
             }
             else
             {
@@ -1320,8 +1413,6 @@ Hero *Game::askHeroChoice()
 
 void Game::monsterPhase()
 {
-    int invisibleManPowerCount = 0;
-    Invisible_Man *invisibleMan = nullptr;
     map = Map::get_instanse();
     ItemManager &itemManager = ItemManager::getInstance();
 
@@ -1343,7 +1434,8 @@ void Game::monsterPhase()
     //  کشیدن کارت
     MonsterCard card = monsterDeck.back();
     monsterDeck.pop_back();
-    cout << "Monster Card: " << card.get_name() << '\n';
+    cout << "\n========== Monster Card Drawn ==========\n";
+    cout << "\tName: " << card.get_name() << '\n';
     cout << "\tCard's Event: " << card.get_event() << '\n';
 
     // قرار دادن آیتم‌ها روی نقشه
@@ -1367,7 +1459,7 @@ void Game::monsterPhase()
     for (size_t j = 0; j < strike.size() && CONTINUE; j++)
     {
         if (strike[j] == "Frenzied Monster")
-        {
+        { // حرکت
             targetMonster = frenzy;
             Location *prev = frenzy->get_location();
             frenzy->moveTowardTarget(heroes, villagers, movement);
@@ -1405,112 +1497,104 @@ void Game::monsterPhase()
                 }
             }
         }
-        for (int i = 0; i < card.get_diceCount() && CONTINUE; ++i)
-        {
-            Location *current = targetMonster->get_location();
 
+        unordered_map<Face, int> diceCount;
+
+        for (int i = 0; i < card.get_diceCount(); ++i)
+        {
             Face face = card.rollDie();
             cout << "Dice for " << targetMonster->get_name() + ": " << card.faceToString(face) << '\n';
+            diceCount[face]++;
+        }
 
-            if (face == Face::STRIKE)
+        cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
+
+        for (int i = 0; i < diceCount[Face::STRIKE] && CONTINUE; ++i)
+        {
+            Location *current = targetMonster->get_location();
+            Hero *targetHero = nullptr;
+            Villager *targetVillager = nullptr;
+
+            // فقط اولین هیرویی که در این مکان قرار دارد انتخاب می‌شود
+            for (Hero *h : heroes)
             {
-                Hero *targetHero = nullptr;
-                Villager *targetVillager = nullptr;
-
-                // فقط اولین هیرویی که در این مکان قرار دارد انتخاب می‌شود
-                for (Hero *h : heroes)
+                if (h->getLocation() == current)
                 {
-                    if (h->getLocation() == current)
+                    targetHero = h;
+                    break;
+                }
+            }
+
+            // اگر هیرو نبود، دنبال ویلیجر بگرد
+            if (!targetHero)
+            {
+                for (Villager *v : villagers)
+                {
+                    if (v->isAlive() && v->getCurrentLocation() == current)
                     {
-                        targetHero = h;
+                        targetVillager = v;
                         break;
                     }
                 }
+            }
 
-                // اگر هیرو نبود، دنبال ویلیجر بگرد
-                if (!targetHero)
+            // اگر هیرو هدف پیدا شد، حمله انجام می‌شود
+            if (targetHero)
+            {
+                vector<Item *> items = targetHero->getItems();
+                if (!items.empty())
                 {
-                    for (Villager *v : villagers)
+                    while (true)
                     {
-                        if (v->isAlive() && v->getCurrentLocation() == current)
+                        Item *choice = askItemToDefend(items);
+                        if (!choice)
                         {
-                            targetVillager = v;
+                            terrorLevel++;
+                            targetHero->getLocation()->removeHero(targetHero); // حذف قهرمان از لوکیشن قبلی
+                            map->getLocation("Hospital")->addHero(targetHero); // اضافه کردن قهرمان به لوکیشن فعلی
+                            cout << targetHero->getName() << " took damage and was sent to the Hospital!\n";
+                            CONTINUE = false; //  برای پایان فاز مانستر
+                            break;
+                        }
+                        else
+                        {
+                            targetHero->removeItem(choice);
+                            itemManager.recycleItemToUsedItems(choice);
+                            cout << targetHero->getName() << " used " << choice->get_name() << " to block the attack!\n";
                             break;
                         }
                     }
                 }
-
-                // اگر هیرو هدف پیدا شد، حمله انجام می‌شود
-                if (targetHero)
-                {
-                    vector<Item *> items = targetHero->getItems();
-                    if (!items.empty())
-                    {
-                        while (true)
-                        {
-                            Item *choice = askItemToDefend(items);
-                            if (!choice)
-                            {
-                                terrorLevel++;
-                                targetHero->getLocation()->removeHero(targetHero); // حذف قهرمان از لوکیشن قبلی
-                                map->getLocation("Hospital")->addHero(targetHero); // اضافه کردن قهرمان به لوکیشن فعلی
-                                cout << targetHero->getName() << " took damage and was sent to the Hospital!\n";
-                                CONTINUE = false; //  برای پایان فاز مانستر
-                                break;
-                            }
-                            else
-                            {
-                                targetHero->removeItem(choice);
-                                itemManager.recycleItemToUsedItems(choice);
-                                cout << targetHero->getName() << " used " << choice->get_name() << " to block the attack!\n";
-                                break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        terrorLevel++;
-                        targetHero->getLocation()->removeHero(targetHero);
-                        map->getLocation("Hospital")->addHero(targetHero);
-                        cout << targetHero->getName() << " had no items and was sent to the Hospital!\n";
-                        CONTINUE = false; //  برای پایان فاز مانستر
-                    }
-                }
-                //  اگر هیرو در مکان نبود، بررسی حمله به ویلیجر
-                else if (targetVillager)
-                {
-                    targetVillager->kill();
-                    terrorLevel++;
-                    cout << targetVillager->getName() << " was killed by " << targetMonster->get_name() << "!\n";
-                    targetVillager->getCurrentLocation()->removeVillager(targetVillager);
-                    targetVillager->setLocation(nullptr);
-                    CONTINUE = false;
-                }
-            }
-            else if (face == Face::POWER)
-            {
-                cout << targetMonster->get_name() << " activates their special power.\n";
-                if (targetMonster->get_name() == "Invisible Man")
-                {
-                    invisibleManPowerCount++;
-                    invisibleMan = dynamic_cast<Invisible_Man *>(targetMonster);
-                }
                 else
                 {
-                    targetMonster->specialPower(getCurrentHero());
+                    terrorLevel++;
+                    targetHero->getLocation()->removeHero(targetHero);
+                    map->getLocation("Hospital")->addHero(targetHero);
+                    cout << targetHero->getName() << " had no items and was sent to the Hospital!\n";
+                    CONTINUE = false; //  برای پایان فاز مانستر
                 }
             }
-            // EMPTY : هیچ اتفاقی نمی‌افتد
+            //  اگر هیرو در مکان نبود، بررسی حمله به ویلیجر
+            else if (targetVillager)
+            {
+                targetVillager->kill();
+                terrorLevel++;
+                cout << targetVillager->getName() << " was killed by " << targetMonster->get_name() << "!\n";
+                targetVillager->getCurrentLocation()->removeVillager(targetVillager);
+                targetVillager->setLocation(nullptr);
+                CONTINUE = false;
+            }
+            cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
         }
-        cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
-    }
-    if (invisibleMan != nullptr && invisibleManPowerCount > 0)
-    {
-        for (int i = 0; i < invisibleManPowerCount; i++)
+
+        for (int i = 0; i < diceCount[Face::POWER] && CONTINUE; ++i)
         {
-            invisibleMan->specialPower(getCurrentHero());
+            cout << targetMonster->get_name() << " activates their special power.\n";
+            targetMonster->specialPower(getCurrentHero());
+            cout << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
         }
     }
+    cout << "========== Monster Phase Ends ==========\n";
 }
 
 void Game::useMonsterCard(const string &NAME)
@@ -2024,4 +2108,9 @@ void Game::updateFrenzy()
     {
         frenzy = *it;
     }
+}
+
+vector<Hero *> Game::getAllHeroes() const
+{
+    return heroes;
 }
