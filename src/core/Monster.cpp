@@ -3,6 +3,10 @@
 #include "core/Hero.hpp"
 #include "core/Villager.hpp"
 #include <iostream>
+#include <sstream>
+#include "core/Map.hpp"
+#include "core/Dracula.hpp"
+#include "core/Invisible_Man.hpp"
 using namespace std;
 
 Monster::Monster(std::string name)
@@ -171,4 +175,66 @@ void Monster::setFrenzyOrder(int order){
 
 int Monster::getFrenzyOrder() const{
     return frenzyOrder;
+}
+
+Monster* Monster::deserialize(const string& line) {
+    stringstream ss(line);
+    string part;
+
+    getline(ss, part, '|');
+    string type = part;
+
+    getline(ss, part, '|');
+    Location* location = Map::get_instanse()->getLocation(part);
+
+    getline(ss, part, '|');
+    bool defeated = (part == "1");
+
+    getline(ss, part, '|');
+    string extra = part;
+
+    Monster* monster = nullptr;
+
+    if (type == "Dracula") {
+        Dracula* d = new Dracula();
+        d->set_location(location);
+        d->set_defeated(defeated);
+
+        stringstream coffins(extra);
+        string token;
+        while (getline(coffins, token, ',')) {
+            if (token.empty()) continue;
+            size_t pos = token.find(':');
+            string loc = token.substr(0, pos);
+            bool destroyed = (token.substr(pos + 1) == "1");
+            d->advanceMission(Map::get_instanse()->getLocation(loc));
+            if (!destroyed)
+                d->advanceMission(Map::get_instanse()->getLocation(loc)); // یا هر منطقی برای false
+        }
+
+        monster = d;
+    }
+    else if (type == "Invisible_Man") {
+        Invisible_Man* im = new Invisible_Man();
+        im->set_location(location);
+        im->set_defeated(defeated);
+
+        stringstream evid(extra);
+        string token;
+        while (std::getline(evid, token, ',')) {
+            if (token.empty()) continue;
+            size_t pos = token.find(':');
+            string loc = token.substr(0, pos);
+            bool found = (token.substr(pos + 1) == "1");
+            if (found)
+                im->advanceMission(Map::get_instanse()->getLocation(loc));
+        }
+
+        monster = im;
+    }
+    else {
+        throw GameException("Unknown monster type: " + type);
+    }
+
+    return monster;
 }
