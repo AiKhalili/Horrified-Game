@@ -148,3 +148,15 @@ int Invisible_Man::getCounter() const
     }
     return count;
 }
+
+string Invisible_Man::serialize() const {
+    string data = "Invisible_Man|";
+    data += get_location()->get_name() + "|";
+    data += is_defeated() ? "1|" : "0|";
+
+    for (const auto& pair : evidence) {
+        data += pair.first + ":" + (pair.second ? "1" : "0") + ",";
+    }
+
+    return data;
+}
