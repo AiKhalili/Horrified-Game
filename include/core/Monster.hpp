@@ -11,6 +11,8 @@
 class Location;
 class Hero;
 class Villager;
+class Dracula;
+class Invisible_Man;
 
 enum class TargetType
 {
@@ -53,6 +55,10 @@ public:
     virtual int getCounter() const = 0;
     virtual void specialPower(Hero *) = 0;
     virtual bool isAdvanceLocation(const std::string &) const = 0;
+
+    virtual std::string serialize() const = 0; // مخصوص هر هیولا
+    static Monster* deserialize(const std::string& line); // تابع اصلی که خط فایل رو می‌خونه و هیولا می‌سازه
+
 
     
 };
