@@ -95,13 +95,13 @@ private:
     void boundary() const;
 
     // توابع اکشن هیرو
-    void handleMove(Hero*);
-    void handlePickUP(Hero*);
-    void handleAdvance(Hero*);
-    void handleDefeat(Hero*);
-    void handleGuide(Hero*);
+    void handleMove(Hero *);
+    void handlePickUP(Hero *);
+    void handleAdvance(Hero *);
+    void handleDefeat(Hero *);
+    void handleGuide(Hero *);
     void handleHelp();
-    void handleSpecialAction(Hero*);
+    void handleSpecialAction(Hero *);
 
 public:
     static Game &getInstance();
