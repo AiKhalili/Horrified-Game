@@ -82,3 +82,15 @@ int Dracula::getCounter() const
     }
     return count; // تعداد تابوت های نابود شده
 }
+
+string Dracula::serialize() const {
+    string data = "Dracula|";
+    data += get_location()->get_name() + "|";
+    data += is_defeated() ? "1|" : "0|";
+
+    for (const auto& pair : coffins) {
+        data += pair.first + ":" + (pair.second ? "1" : "0") + ",";
+    }
+
+    return data;
+}
