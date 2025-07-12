@@ -46,3 +46,8 @@ string Item::get_color_to_string()
         return "yellow";
     }
 }
+
+void Item::set_strength(int st)
+{
+    strength = st;
+}
