@@ -134,7 +134,7 @@ void Hero::pickUp(const vector<Item *> &pickedItems)
     }
 }
 
-void Hero::advanced(Monster *monster)
+void Hero::advanced(Monster *monster, const vector<Item *> &selectedItems)
 {
     if (!hasActionsLeft())
     {
@@ -144,6 +144,11 @@ void Hero::advanced(Monster *monster)
     if (!monster)
     {
         throw GameException("Invalid monster pointer!\n");
+    }
+
+    if (selectedItems.empty())
+    {
+        throw GameException("Selected items are empty!\n");
     }
 
     if (monster->canbedefeated())
@@ -161,13 +166,11 @@ void Hero::advanced(Monster *monster)
     if (monster->get_name() == "Invisible Man")
     {
         const vector<Item> &reqs = monster->getAdvanceRequirement(); // شامل لوکیشن‌هایی که هنوز advance نشدن
-        bool found = false;
-
         for (const Item &required : reqs)
         {
             string targetLoc = required.get_location()->get_name();
 
-            for (Item *it : items)
+            for (Item *it : selectedItems)
             {
                 if (it && it->get_pickedFrom() == targetLoc)
                 {
@@ -181,7 +184,7 @@ void Hero::advanced(Monster *monster)
                     if (monster->isAdvanceLocation(targetLoc))
                     {
                         monster->advanceMission(advanceLoc);
-                        consumeItems({Item(0, COlOR::red, "AdvanceToken", advanceLoc)});
+                        consumeItems({Item(0, COlOR::red, "AdvanceToken", advanceLoc)}, selectedItems);
                         useAction();
                         cout << "Advanced Invisible Man for location: " << targetLoc << "\n";
                         return;
@@ -195,18 +198,18 @@ void Hero::advanced(Monster *monster)
 
     // حالت عادی برای هیولاهای دیگه
     const vector<Item> &requiredItems = monster->getAdvanceRequirement();
-    if (!hasRequiredItems(requiredItems))
+    if (!hasRequiredItems(requiredItems, selectedItems))
     {
         throw GameException("You don't have the required items to advance this monster's task!\n");
     }
 
-    consumeItems(requiredItems);
+    consumeItems(requiredItems, selectedItems);
     monster->advanceMission(location);
     useAction();
     cout << "Advanced monster's task successfully!\n";
 }
 
-void Hero::defeat(Monster *monster)
+void Hero::defeat(Monster *monster, const vector<Item *> &selectedItems)
 {
     if (!hasActionsLeft())
     { // بررسی وجود اکشن
@@ -215,6 +218,10 @@ void Hero::defeat(Monster *monster)
     if (!monster)
     {
         throw GameException("Invalid monster pointer!\n");
+    }
+    if (selectedItems.empty())
+    {
+        throw GameException("Selected items are empty!\n");
     }
 
     if (!monster->canbedefeated())
@@ -234,13 +241,13 @@ void Hero::defeat(Monster *monster)
 
     const vector<Item> &defeatItems = monster->getDefeatRequirement();
 
-    if (!hasRequiredItems(defeatItems))
+    if (!hasRequiredItems(defeatItems, selectedItems))
     { // بررسی وجود آیتم های لازم برای Defeat
         throw GameException("You don't have the required items to defeat this monster!\n");
     }
 
     useAction();
-    consumeItems(defeatItems);
+    consumeItems(defeatItems, selectedItems);
     monster->set_defeated(true);
 
     if (monster == Game::getInstance().getFrenzy())
@@ -288,9 +295,9 @@ vector<Item *> Hero::getItems() const
     return items;
 }
 
-bool Hero::hasRequiredItems(const vector<Item> &required) const
+bool Hero::hasRequiredItems(const vector<Item> &required, const vector<Item *> &selectedItems) const
 {
-    if (required.empty())
+    if (required.empty() || selectedItems.empty())
     {
         return false;
     }
@@ -303,7 +310,7 @@ bool Hero::hasRequiredItems(const vector<Item> &required) const
         if (tag == "AnyRedItemSum6")
         {
             int total = 0;
-            for (Item *item : items)
+            for (Item *item : selectedItems)
                 if (item && item->get_color() == COlOR::red)
                     total += item->get_strength();
             return total >= 6;
@@ -313,7 +320,7 @@ bool Hero::hasRequiredItems(const vector<Item> &required) const
         if (tag == "DefeatDracula")
         {
             int total = 0;
-            for (Item *item : items)
+            for (Item *item : selectedItems)
                 if (item && item->get_color() == COlOR::yellow)
                     total += item->get_strength();
             return total >= 6;
@@ -323,7 +330,7 @@ bool Hero::hasRequiredItems(const vector<Item> &required) const
         if (tag == "DefeatInvisible")
         {
             int total = 0;
-            for (Item *item : items)
+            for (Item *item : selectedItems)
                 if (item && item->get_color() == COlOR::red)
                     total += item->get_strength();
             return total >= 9;
@@ -335,7 +342,7 @@ bool Hero::hasRequiredItems(const vector<Item> &required) const
     {
         string requiredOrigin = required[0].get_location()->get_name();
 
-        for (Item *item : items)
+        for (Item *item : selectedItems)
         {
             if (item && item->get_pickedFrom() == requiredOrigin)
             {
@@ -347,7 +354,7 @@ bool Hero::hasRequiredItems(const vector<Item> &required) const
     return false;
 }
 
-void Hero::consumeItems(const std::vector<Item> &requiredItems)
+void Hero::consumeItems(const vector<Item> &requiredItems, const vector<Item *> &selectedItems)
 {
     ItemManager &itemManager = ItemManager::getInstance();
 
@@ -355,29 +362,22 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
     if (requiredItems.size() == 1 && requiredItems[0].get_name() == "AnyRedItemSum6")
     {
         vector<Item *> redItems;
-        for (Item *item : items)
+        for (Item *item : selectedItems)
         {
             if (item && item->get_color() == COlOR::red)
                 redItems.push_back(item);
         }
 
-        sort(redItems.begin(), redItems.end(), [](Item *a, Item *b)
-             { return a->get_strength() < b->get_strength(); });
-
         int total = 0;
-        vector<Item *> toConsume;
         for (Item *item : redItems)
         {
-            if (total >= 6)
-                break;
             total += item->get_strength();
-            toConsume.push_back(item);
         }
 
         if (total < 6)
             throw GameException("Red item power not enough to consume for Dracula!\n");
 
-        for (Item *item : toConsume)
+        for (Item *item : redItems)
         {
             itemManager.recycleItemToUsedItems(item);
             items.erase(find(items.begin(), items.end(), item));
@@ -393,7 +393,7 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         string requiredOrigin = requiredItems[0].get_location()->get_name();
 
         // پیدا کردن اولین آیتم با pickedFrom همون location
-        for (Item *item : items)
+        for (Item *item : selectedItems)
         {
             if (item && item->get_pickedFrom() == requiredOrigin)
             {
@@ -414,28 +414,24 @@ void Hero::consumeItems(const std::vector<Item> &requiredItems)
         vector<Item *> matchedItems;
         int totalPower = 0;
 
-        for (Item *item : items)
+        for (Item *item : selectedItems)
         {
             if (item && item->get_color() == targetColor)
             {
                 matchedItems.push_back(item);
                 totalPower += item->get_strength();
-                if (totalPower >= targetPower)
-                    break;
             }
         }
 
         if (totalPower < targetPower)
+        {
             throw GameException("Not enough item power to meet the requirement!\n");
+        }
 
-        int remainingPower = targetPower;
         for (Item *item : matchedItems)
         {
             itemManager.recycleItemToUsedItems(item);
             items.erase(find(items.begin(), items.end(), item));
-            remainingPower -= item->get_strength();
-            if (remainingPower <= 0)
-                break;
         }
     }
 }

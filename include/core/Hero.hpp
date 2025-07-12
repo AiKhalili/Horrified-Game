@@ -25,8 +25,8 @@ protected:
     std::vector<PerkCard> perkcards;
 
 private:
-    bool hasRequiredItems(const std::vector<Item> &) const; // بررسی وجود آیتم های مدنظر
-    void consumeItems(const std::vector<Item> &);           // مصرف آیتم از ایتم های قهرمان
+    bool hasRequiredItems(const std::vector<Item> &, const std::vector<Item *> &) const; // بررسی وجود آیتم های مدنظر
+    void consumeItems(const std::vector<Item> &, const std::vector<Item *> &);           // مصرف آیتم از ایتم های قهرمان
 
 public:
     Hero(const std::string &, Location *, int);
@@ -36,11 +36,11 @@ public:
     virtual void move(Location *, const std::vector<Villager *> &);
     virtual void pickUp(const std::vector<Item *> &);
     virtual void guide(std::vector<Villager *>, Location *);
-    virtual void advanced(Monster *);
-    virtual void defeat(Monster *);
+    virtual void advanced(Monster *, const std::vector<Item *> &);
+    virtual void defeat(Monster *, const std::vector<Item *> &);
     virtual void specialAction(const std::vector<Item *> &) = 0;
 
-    void resetActions(); // پس از هر فاز هیولا تعداد امشن ها reset می شود
+    void resetActions(); // پس از هر فاز هیولا تعداد اکشن ها reset می شود
     void useAction();
     bool hasActionsLeft() const; // آیا اکشنی برای استفاده مانده یا نه؟
 
@@ -61,7 +61,7 @@ public:
     void setPerkCard(const PerkCard &);
 
     PerkCard usePerkCard(int);
-    void addAction(int); // اضافه کردن به تعداد اکشن ها
+    void addAction(int);     // اضافه کردن به تعداد اکشن ها
     void removeItem(Item *); // استفاده از آیتم های قهرمان
 };
 
