@@ -30,5 +30,6 @@ public:
     std::string get_pickedFrom() const;
     void set_location(Location *);
     void set_pickedFrom(const std::string &);
+    void set_strength(int);
 };
 #endif
