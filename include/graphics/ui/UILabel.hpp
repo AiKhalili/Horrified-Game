@@ -14,12 +14,15 @@ private:
     Color color;                // رنگ متن
     Font font;                  // فونت متن
     bool useCustomFont = false; // آیا از فونت سفارشی استفاده بشه یا نه؟
+    float duration = 0.0f;      // چند ثانیه نمایش داده بشه
+    float timer = 0.0f;         // شمارنده زمان سپری شده
 
 public:
-    UILabel(Vector2 pos, const std::string &text, int fontSize = 20, Color color = BLACK);
+    UILabel(Vector2 pos, const std::string &text, int fontSize = 20, Color color = BLACK, float duration = 0.0f);
     void render() override;
-    void update() override {}
+    void update() override;
     void setFont(Font);
+    bool isExoired() const;
 };
 
 #endif
