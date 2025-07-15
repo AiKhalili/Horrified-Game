@@ -24,6 +24,12 @@ public:
     int ramainingItems() const; // تعداد آیتم های باقی مانده در bag
     void recycleUsedItemsToBag(); // برگرداندن آیتم هااز خارج بازی به داخل(bag)
     void clear(); 
+
+    std::string serializeBag() const;
+    std::string serializeUsed() const;
+    void deserializeBag(const std::string&);
+    void deserializeUsed(const std::string&);
+
 };
 
 #endif
