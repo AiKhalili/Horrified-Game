@@ -3,6 +3,8 @@
 #include <ctime>
 #include <unordered_set>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -155,4 +157,92 @@ void ItemManager::clear()
         }
     }
     usedItems.clear();
+}
+
+std::string ItemManager::serializeBag() const
+{
+    std::string result = "ItemBag|";
+    for (const Item* item : bag)
+    {
+        result += item->get_name() + "-" +
+                  std::to_string(item->get_strength()) + "-" +
+                  item->get_color_to_string() + "-" +
+                  item->get_pickedFrom() + ",";
+    }
+    return result;
+}
+
+std::string ItemManager::serializeUsed() const
+{
+    std::string result = "ItemUsed|";
+    for (const Item* item : usedItems)
+    {
+        result += item->get_name() + "-" +
+                  std::to_string(item->get_strength()) + "-" +
+                  item->get_color_to_string() + "-" +
+                  item->get_pickedFrom() + ",";
+    }
+    return result;
+}
+
+void ItemManager::deserializeBag(const std::string& line)
+{
+    bag.clear();
+    if (line.rfind("ItemBag|", 0) != 0)
+        return;
+
+    std::string content = line.substr(8); // بعد از "ItemBag|"
+    std::stringstream ss(content);
+    std::string token;
+
+    while (std::getline(ss, token, ','))
+    {
+        if (token.empty()) continue;
+
+        std::stringstream part(token);
+        std::string name, str, colorStr, pickedFrom;
+
+        std::getline(part, name, '-');
+        std::getline(part, str, '-');
+        std::getline(part, colorStr, '-');
+        std::getline(part, pickedFrom, '-');
+
+        COlOR color = Item::stringToColor(colorStr);
+        Location* loc = Map::get_instanse()->getLocation(pickedFrom);
+
+        Item* item = new Item(std::stoi(str), color, name, loc);
+        item->set_pickedFrom(pickedFrom);
+        bag.push_back(item);
+    }
+}
+
+void ItemManager::deserializeUsed(const std::string& line)
+{
+    usedItems.clear();
+    if (line.rfind("ItemUsed|", 0) != 0)
+        return;
+
+    std::string content = line.substr(9); // بعد از "ItemUsed|"
+    std::stringstream ss(content);
+    std::string token;
+
+    while (std::getline(ss, token, ','))
+    {
+        if (token.empty()) continue;
+
+        std::stringstream part(token);
+        std::string name, str, colorStr, pickedFrom;
+
+        std::getline(part, name, '-');
+        std::getline(part, str, '-');
+        std::getline(part, colorStr, '-');
+        std::getline(part, pickedFrom, '-');
+
+        COlOR color = Item::stringToColor(colorStr);
+        Location* loc = Map::get_instanse()->getLocation(pickedFrom);
+
+        Item* item = new Item(std::stoi(str), color, name, loc);
+        item->set_pickedFrom(pickedFrom);
+        usedItems.push_back(item);
+    }
 }
