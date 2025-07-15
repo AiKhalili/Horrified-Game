@@ -46,7 +46,7 @@ public:
     std::string getName() const;
     Location *getLocation() const;
     int getActionsLeft() const;
-    std::vector<Item *> &getItems() const;
+    std::vector<Item *> & getItems();
     std::vector<PerkCard> getPerkCard() const;
     virtual std::string getClassName() const = 0;
     std::string getItemSummary() const;
