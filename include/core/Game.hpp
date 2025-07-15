@@ -170,6 +170,8 @@ public:
     void setSkipNextMonsterPhase(bool);
     void setFrenzyMonster(Monster*);
 
+    void handleGameOver();
+
 
 };
 
