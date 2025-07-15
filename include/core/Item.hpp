@@ -25,7 +25,7 @@ public:
     Item(int, COlOR, std::string, Location *);
     int get_strength() const;
     COlOR get_color() const;
-    std::string get_color_to_string();
+    std::string get_color_to_string() const;
     std::string get_name() const;
     Location *get_location() const;
     std::string get_pickedFrom() const;
