@@ -151,7 +151,7 @@ int Invisible_Man::getCounter() const
 
 string Invisible_Man::serialize() const {
     string data = "Invisible_Man|";
-    data += get_location()->get_name() + "|";
+    data += (get_location() ? get_location()->get_name() : "null") + "|";
     data += is_defeated() ? "1|" : "0|";
 
     for (const auto& pair : evidence) {
@@ -160,3 +160,8 @@ string Invisible_Man::serialize() const {
 
     return data;
 }
+
+void Invisible_Man::setEvidence(const std::map<std::string, bool>& newEvidence) {
+    evidence = newEvidence;
+}
+
