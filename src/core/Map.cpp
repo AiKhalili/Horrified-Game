@@ -256,3 +256,15 @@ vector<Villager *> Map::getAllVillagers() const
 
     return allVillagers;
 }
+
+vector<Item*> Map::getAllItems() const
+{
+    vector<Item*> result;
+    for (const auto& pair : locations)
+    {
+        const auto& items = pair.second->get_items();
+        result.insert(result.end(), items.begin(), items.end());
+    }
+    return result;
+}
+
