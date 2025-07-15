@@ -85,7 +85,7 @@ int Dracula::getCounter() const
 
 string Dracula::serialize() const {
     string data = "Dracula|";
-    data += get_location()->get_name() + "|";
+    data += (get_location() ? get_location()->get_name() : "null") + "|";
     data += is_defeated() ? "1|" : "0|";
 
     for (const auto& pair : coffins) {
@@ -94,3 +94,8 @@ string Dracula::serialize() const {
 
     return data;
 }
+
+void Dracula::setCoffins(const std::map<std::string, bool>& newCoffins) {
+    coffins = newCoffins;
+}
+
