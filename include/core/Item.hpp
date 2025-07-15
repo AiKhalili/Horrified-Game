@@ -3,6 +3,7 @@
 #include <iostream>
 
 class Location;
+class Map;
 
 enum class COlOR
 {
@@ -30,5 +31,11 @@ public:
     std::string get_pickedFrom() const;
     void set_location(Location *);
     void set_pickedFrom(const std::string &);
+    void set_strength(int);
+
+    static COlOR stringToColor(const std::string&);
+    
+    std::string serialize() const;
+    static Item* deserialize(const std::string& );
 };
 #endif
