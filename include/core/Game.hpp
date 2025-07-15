@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <iomanip>
+#include <cstdio>
 #include "core/Map.hpp"
 #include "core/Hero.hpp"
 #include "core/Archaeologist.hpp"
@@ -49,6 +50,12 @@ private:
     int maxTerror;                     // حداکثر ترس مجاز
     bool skipNextMonsterPhase = false; // رد کردن فاز هیولای بعدی
 
+    int Slot = 0;
+    int currentSaveSlot = 1;
+    bool isLoadedFromFile = false;
+    bool firstHeroPhaseAfterLoad = false;
+
+
     // مقدار دهی اولیه
     void setup();
     void setupMonsters();
@@ -92,6 +99,15 @@ private:
     void info();
     void boundary() const;
 
+    // توابع اکشن هیرو
+    void handleMove(Hero*);
+    void handlePickUP(Hero*);
+    void handleAdvance(Hero*);
+    void handleDefeat(Hero*);
+    void handleGuide(Hero*);
+    void handleHelp();
+    void handleSpecialAction(Hero*);
+
 public:
     static Game &getInstance();
 
@@ -106,15 +122,55 @@ public:
     int getTime2() const;
     Hero *getCurrentHero();
     Monster *getFrenzy() const;
+    std::vector<Hero *> getAllHeroes() const;
 
     // شروع بازی
     void assignHeroes(const std::string &, const std::string &, const std::string &);
-    void start();
+    void startNewGame();
+    void startLoadedGame();
+    void startLoop();
+
     void setupHeroes();
 
     void updateFrenzy(); // تغییر نشان فرنزی
 
     void reset();
+
+    void setSlot(int); 
+    int findNextFreeSlot() const;
+    void setCurrentSaveSlot(int slot);
+    int getCurrentSaveSlot() const;
+    void setLoadedFromFile(bool b);
+    bool getLoadedFromFile() const;
+
+    std::vector<Hero*> getHeroes() const;
+    std::vector<Monster*> getMonsters() const;
+    std::vector<Villager*> getVillagers() const;
+    std::vector<PerkCard> getPerkDeck() const;
+    std::vector<MonsterCard> getMonsterDeck() const;
+
+    int getSlot() const;
+    int getTerrorLevel() const;
+    int getCurrentHeroIndex() const;
+    int getPlayer1Time() const;
+    int getPlayer2Time() const;
+    bool getSkipNextMonsterPhase() const;
+    Monster* getFrenzyMonster() const;
+
+
+    void setHeroes(const std::vector<Hero*>&);
+    void setMonsters(const std::vector<Monster*>&);
+    void setVillagers(const std::vector<Villager*>&);
+    void setPerkDeck(const std::vector<PerkCard>&);
+    void setMonsterDeck(const std::vector<MonsterCard>&);
+
+    void setTerrorLevel(int);
+    void setCurrentHeroIndex(int);
+    void setPlayerTimes(int time1, int time2);
+    void setSkipNextMonsterPhase(bool);
+    void setFrenzyMonster(Monster*);
+
+
 };
 
 #endif
