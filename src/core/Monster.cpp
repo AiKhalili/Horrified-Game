@@ -177,59 +177,64 @@ int Monster::getFrenzyOrder() const{
     return frenzyOrder;
 }
 
-Monster* Monster::deserialize(const string& line) {
-    stringstream ss(line);
-    string part;
+Monster* Monster::deserialize(const std::string& line) {
+    std::stringstream ss(line);
+    std::string type, locationName, defeatedStr, extra;
 
-    getline(ss, part, '|');
-    string type = part;
-
-    getline(ss, part, '|');
-    Location* location = Map::get_instanse()->getLocation(part);
-
-    getline(ss, part, '|');
-    bool defeated = (part == "1");
-
-    getline(ss, part, '|');
-    string extra = part;
+    std::getline(ss, type, '|');      
+    std::getline(ss, locationName, '|'); 
+    if (locationName == "null") {
+        // هیولا هیچ مکانی نداره یعنی مرده، لود نشه
+        return nullptr;
+    }
+    std::getline(ss, defeatedStr, '|');  
+    std::getline(ss, extra, '|');        
+    
+    Location* location = Map::get_instanse()->getLocation(locationName);
+    bool defeated = (defeatedStr == "1");
 
     Monster* monster = nullptr;
 
     if (type == "Dracula") {
         Dracula* d = new Dracula();
-        d->set_location(location);
+           Map::get_instanse()->removeMonsterFrom(d->get_location()->get_name(), d);
+        Map::get_instanse()->addMonsterTo(location->get_name(), d);
         d->set_defeated(defeated);
 
-        stringstream coffins(extra);
-        string token;
-        while (getline(coffins, token, ',')) {
+        std::map<std::string, bool> customCoffins;
+        std::stringstream coffins(extra);
+        std::string token;
+
+        while (std::getline(coffins, token, ',')) {
             if (token.empty()) continue;
             size_t pos = token.find(':');
-            string loc = token.substr(0, pos);
+            std::string loc = token.substr(0, pos);
             bool destroyed = (token.substr(pos + 1) == "1");
-            d->advanceMission(Map::get_instanse()->getLocation(loc));
-            if (!destroyed)
-                d->advanceMission(Map::get_instanse()->getLocation(loc)); // یا هر منطقی برای false
+            customCoffins[loc] = destroyed;
         }
 
+        d->setCoffins(customCoffins);
         monster = d;
     }
     else if (type == "Invisible_Man") {
         Invisible_Man* im = new Invisible_Man();
-        im->set_location(location);
+        Map::get_instanse()->removeMonsterFrom(im->get_location()->get_name(), im);
+        Map::get_instanse()->addMonsterTo(location->get_name(), im);
         im->set_defeated(defeated);
 
-        stringstream evid(extra);
-        string token;
+        std::map<std::string, bool> customEvidence;
+        std::stringstream evid(extra);
+        std::string token;
+
         while (std::getline(evid, token, ',')) {
             if (token.empty()) continue;
             size_t pos = token.find(':');
-            string loc = token.substr(0, pos);
+            std::string loc = token.substr(0, pos);
             bool found = (token.substr(pos + 1) == "1");
-            if (found)
-                im->advanceMission(Map::get_instanse()->getLocation(loc));
+            customEvidence[loc] = found;
         }
 
+        im->setEvidence(customEvidence);
         monster = im;
     }
     else {
