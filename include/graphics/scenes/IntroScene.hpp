@@ -12,8 +12,8 @@ private:
     float progress = 0.0f;
 
 public:
-    IntroScene();
-    ~IntroScene();
+    IntroScene() = default;
+    ~IntroScene() = default;
     void update(float deleteTime) override;
     void render() override;
     void onEnter() override;
