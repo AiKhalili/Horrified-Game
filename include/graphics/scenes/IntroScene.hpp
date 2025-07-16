@@ -16,6 +16,8 @@ public:
     ~IntroScene();
     void update(float deleteTime) override;
     void render() override;
+    void onEnter() override;
+    void onExit() override;
 };
 
 #endif
