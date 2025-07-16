@@ -1,30 +1,24 @@
 #include "graphics/scenes/IntroScene.hpp"
 #include "graphics/scenes/SceneManager.hpp"
+#include "audio/AudioManager.hpp"
 
-IntroScene::IntroScene()
+void IntroScene::onEnter()
 {
     background = LoadTexture("assets/images/intro_bg.png");
-    introMusic = LoadMusicStream("assets/audio/music/intro_theme.mp3");
-    SetMusicVolume(introMusic, 0.7f);
+    AudioManager::getInstance().playIntroMusic();
 }
 
-IntroScene::~IntroScene()
+void IntroScene::onExit()
 {
     UnloadTexture(background);
-    UnloadMusicStream(introMusic);
+    AudioManager::getInstance().stopIntroMusic();
 }
 
 void IntroScene::update(float deleteTime)
 {
     timer += deleteTime;
 
-    if (!musicStarted)
-    { // play for the first time
-        PlayMusicStream(introMusic);
-        musicStarted = true;
-    }
-
-    UpdateMusicStream(introMusic);
+    AudioManager::getInstance().update();
 
     if (progress < 1.0f)
     {
@@ -32,7 +26,6 @@ void IntroScene::update(float deleteTime)
     }
     if (timer >= 7.0f)
     {
-        StopMusicStream(introMusic);
         SceneManager::getInstance().goTo("MainMenu"); // change the scene and go to the next one
     }
 }
@@ -43,8 +36,7 @@ void IntroScene::render()
     DrawTexture(background, 0, 0, WHITE);
     float barWidth = 400;
     float barHeight = 20;
-    float barX = GetScreenWidth() / 2 - barWidth / 2;
-    barX -= 80;
+    float barX = GetScreenWidth() / 2 - barWidth / 2 - 80;
     float barY = GetScreenHeight() - 130;
     Color horrorRed = {170, 20, 20, 255};
     DrawRectangle(barX, barY, barWidth, barHeight, DARKGRAY);
