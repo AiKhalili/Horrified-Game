@@ -21,7 +21,15 @@ void SceneManager::goTo(const std::string &name)
     auto it = scenes.find(name);
     if (it != scenes.end())
     { // if the scene was registered befor , change the scene
+        if (currentScene)
+        {
+            currentScene->onExit(); // before change the scene
+        }
         currentScene = it->second.get();
+        if (currentScene)
+        {
+            currentScene->onEnter(); // after change the scene
+        }
     }
     else
     {
