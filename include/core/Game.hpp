@@ -9,6 +9,8 @@
 #include "core/Hero.hpp"
 #include "core/Archaeologist.hpp"
 #include "core/Mayor.hpp"
+#include "core/Scientist.hpp"
+#include "core/Courier.hpp"
 #include "core/Monster.hpp"
 #include "core/Villager.hpp"
 #include "core/Item.hpp"
@@ -171,8 +173,7 @@ public:
     void setFrenzyMonster(Monster*);
 
     void handleGameOver();
-
-
+    void loadOrStartFromSave();
 };
 
 #endif
