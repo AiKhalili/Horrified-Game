@@ -7,7 +7,7 @@ public:
     virtual void update(float deleteTime) = 0;
     virtual void render() = 0;
     virtual void onEnter() {} // when you enter the scene
-    virtual void inExit() {}  // when you exit the scene
+    virtual void onExit() {}  // when you exit the scene
     virtual ~Scene() = default;
 };
 
