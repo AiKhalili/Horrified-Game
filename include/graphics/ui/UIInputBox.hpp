@@ -20,6 +20,9 @@ private:
     Font font;
     bool useCustomFont = false;
     int fontSize = 20;
+    bool backspaceHeld = false;
+    float backspaceTimer = 0.0f;
+    float backspaceDelay = 0.1f;
 
 public:
     UIInputBox(Rectangle bounds, int fontSize = 24, int maxLength = 20,
@@ -28,8 +31,8 @@ public:
     void render() override;
 
     std::string getText() const;
-    
-    void setText(const std::string&);
+
+    void setText(const std::string &);
     void setFocus(bool);
     void setFont(Font);
     void setMaxLength(int);
