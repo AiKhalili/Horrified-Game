@@ -13,7 +13,7 @@ void AudioManager::init()
     introMusic = LoadMusicStream("assets/audio/music/intro_theme.mp3");
     SetMusicVolume(introMusic, musicVolume);
     backgroundMusic = LoadMusicStream("assets/audio/music/main_music.mp3");
-    soundsEffects[""] = LoadSound("assets/audio/sounds/click.mp3");
+    soundsEffects["click"] = LoadSound("assets/audio/sounds/click.mp3");
     SetMusicVolume(backgroundMusic, musicVolume);
 }
 
