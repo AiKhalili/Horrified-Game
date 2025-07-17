@@ -17,6 +17,7 @@ private:
     Color textColor;  // رنگ متن درون دکمه
     Color bgColor;    // رنگ دکمه در حالت عادی
     Color hoverColor; // رنگ دکمه وفتی کلیک شده روش
+    Color cadreColor;
 
     bool isHovered = false;     // آیا موس روی دکمه کیبورد قرار داره یا نه؟
     bool isFocused = false;     // آیا دکمه با کیبورد انتخاب شده؟
@@ -27,7 +28,7 @@ private:
 public:
     UIButton(Rectangle bounds, const std::string &text,
              int fontSize = 20, Color textColor = BLACK,
-             Color bgColor = GRAY, Color hoverColor = DARKGRAY);
+             Color bgColor = GRAY, Color hoverColor = DARKGRAY , Color cadre = RED);
 
     void render() override; // رسم دکمه
     void update() override; // بررسی وضعیت موس و کلیک
