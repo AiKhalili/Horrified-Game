@@ -2,9 +2,9 @@
 
 UIButton::UIButton(Rectangle bds, const std::string &txt,
                    int sz, Color txtColor,
-                   Color bg, Color hover)
+                   Color bg, Color hover, Color cdr)
     : bounds(bds), text(txt), fontSize(sz),
-      textColor(txtColor), bgColor(bg), hoverColor(hover) {}
+      textColor(txtColor), bgColor(bg), hoverColor(hover), cadreColor(cdr) {}
 
 void UIButton::setOnClick(std::function<void()> callback)
 { // تابع روی کلید به متغیر onClick انتساب داده میشه
@@ -16,7 +16,8 @@ void UIButton::setFocus(bool f)
     isFocused = f;
 }
 
-void UIButton::setFont(Font f){
+void UIButton::setFont(Font f)
+{
     font = f;
     useCustomFont = true;
 }
@@ -51,7 +52,7 @@ void UIButton::render()
 
     if (isFocused)
     { // کشیدن کادر رنگی دور مستطیل
-        DrawRectangleLinesEx(bounds, 3, RED);
+        DrawRectangleLinesEx(bounds, 3, cadreColor);
     }
 
     Vector2 textSize; // اندازی گیری سایز متن برای اینکه دقیقا وسط کادر باشه
