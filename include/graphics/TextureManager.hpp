@@ -14,8 +14,7 @@ private:
 
 public:
     static TextureManager &getInstance();
-    void loadTexture(const std::string &name, const std::string &fileName);
-    Texture2D &getTexture(const std::string &name);
+    Texture2D &getOrLoadTexture(const std::string &name, const std::string &fileName);
     void unloadAll();
     TextureManager(const TextureManager &) = delete;
     void operator=(const TextureManager) = delete;
