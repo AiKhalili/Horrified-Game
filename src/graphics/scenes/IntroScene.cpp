@@ -1,16 +1,16 @@
 #include "graphics/scenes/IntroScene.hpp"
 #include "graphics/scenes/SceneManager.hpp"
 #include "audio/AudioManager.hpp"
+#include "graphics/TextureManager.hpp"
 
 void IntroScene::onEnter()
 {
-    background = LoadTexture("assets/images/intro_bg.png");
+    background = TextureManager::getInstance().getOrLoadTexture("intro", "assets/images/intro_bg.png");
     AudioManager::getInstance().playIntroMusic();
 }
 
 void IntroScene::onExit()
 {
-    UnloadTexture(background);
     AudioManager::getInstance().stopIntroMusic();
 }
 
