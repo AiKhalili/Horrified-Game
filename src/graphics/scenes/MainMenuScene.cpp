@@ -1,10 +1,11 @@
 #include "graphics/scenes/MainMenuScene.hpp"
 #include "graphics/scenes/SceneManager.hpp"
 #include "audio/AudioManager.hpp"
+#include "graphics/TextureManager.hpp"
 
 void MainMenuScene::onEnter()
 {
-    background = LoadTexture("assets/images/main_menu.png");
+    background = TextureManager::getInstance().getOrLoadTexture("main", "assets/images/main_menu.png");
     titleFont = LoadFontEx("assets/fonts/spooky.otf", 100, 0, 0);
     SetTextureFilter(titleFont.texture, TEXTURE_FILTER_BILINEAR);
     normalFont = LoadFont("assets/fonts/simple.ttf");
@@ -34,7 +35,6 @@ void MainMenuScene::onEnter()
 
 void MainMenuScene::onExit()
 {
-    UnloadTexture(background);
     UnloadFont(titleFont);
     UnloadFont(normalFont);
     ui.clear();
