@@ -7,7 +7,7 @@
 #include <iostream>
 #include <core/Map.hpp>
 
-void SaveManager::saveGameToSlot(int slotNumber, const Game& game)
+void SaveManager::saveGameToSlot(int slotNumber, Game& game)
 {
     if (slotNumber < 1)
         throw GameException("slotNumber can not be less than 1!\n");
@@ -34,12 +34,20 @@ void SaveManager::saveGameToSlot(int slotNumber, const Game& game)
 
     savePerkDeckToFile(filename, game.getPerkDeck());
 
+    writeSaveTimestamp(filename);
+
+    game.setSlot(slotNumber);
+    game.setCurrentSaveSlot(slotNumber);
+
+
 }
 
 void SaveManager::loadGameFromSlot(int slotNumber, Game& game)
 {
     if (slotNumber < 1)
        throw GameException("slotNumber can not be less than 1!\n");
+    
+    game.reset();
 
     std::string filename = "save" + std::to_string(slotNumber) + ".txt";
 
@@ -85,6 +93,8 @@ void SaveManager::loadGameFromSlot(int slotNumber, Game& game)
 
     game.setLoadedFromFile(true);
 
+    game.setSlot(slotNumber);                   
+    game.setCurrentSaveSlot(slotNumber);
 
 }
 
@@ -472,4 +482,52 @@ std::pair<int, int> SaveManager::loadCurrentHeroStateFromFile(const std::string&
     }
 
     throw GameException("CurrentHeroState not found in save file!");
+}
+
+void SaveManager::writeSaveTimestamp(const std::string& filename)
+{
+    std::ofstream outFile(filename, std::ios::app);  // حالت append یعنی اضافه کردن به آخر فایل
+    if (!outFile.is_open())
+        throw std::runtime_error("Failed to open save file for writing timestamp");
+
+    std::time_t now = std::time(nullptr);
+    std::tm localTime = *std::localtime(&now);
+    outFile << "SaveDateTime: " << std::put_time(&localTime, "%Y-%m-%d %H:%M:%S") << "\n";
+}
+
+std::string SaveManager::readSaveTimestamp(const std::string& filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        throw std::runtime_error("Failed to open save file for reading timestamp");
+
+    std::string line;
+    while (std::getline(inFile, line))
+    {
+        if (line.find("SaveDateTime: ") == 0)  // اگر خط با این رشته شروع شد
+        {
+            // جدا کردن قسمت تاریخ و ساعت
+            return line.substr(std::string("SaveDateTime: ").length());
+        }
+    }
+
+    // اگر تاریخ پیدا نشد، رشته خالی برگردون یا خطا بده
+    return "";
+}
+
+std::vector<std::pair<int, std::string>> SaveManager::getAllSaveSlotsWithTimestamps() {
+    std::vector<std::pair<int, std::string>> result;
+
+    int i = 1;
+    while (true) {
+        std::string filename = "save" + std::to_string(i) + ".txt";
+        std::ifstream file(filename);
+        if (!file.good()) break;  // اگر فایل وجود نداشت، تموم کنیم
+
+        std::string timestamp = readSaveTimestamp(filename);
+        result.push_back({i, timestamp});
+        ++i;
+    }
+
+    return result;
 }
