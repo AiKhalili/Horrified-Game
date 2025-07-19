@@ -103,3 +103,8 @@ void UIInputBox::render()
         DrawText(displayText.c_str(), (int)textPos.x, (int)textPos.y, fontSize, textColor);
     }
 }
+
+void UIInputBox::setMaxLength(int len)
+{
+    maxLength = len;
+}
