@@ -6,11 +6,12 @@ TextureManager &TextureManager::getInstance()
     return instance;
 }
 
-void TextureManager::loadTexture(const std::string &name, const std::string &fileName)
+Texture2D &TextureManager::getOrLoadTexture(const std::string &name, const std::string &fileName)
 {
-    if (textures.find(name) != textures.end())
+    auto it = textures.find(name);
+    if (it != textures.end())
     {
-        return;
+        return it->second;
     }
 
     Texture2D tex = LoadTexture(fileName.c_str());
@@ -21,16 +22,7 @@ void TextureManager::loadTexture(const std::string &name, const std::string &fil
     }
 
     textures[name] = tex;
-}
-
-Texture2D &TextureManager::getTexture(const std::string &name)
-{
-    auto it = textures.find(name);
-    if (it == textures.end())
-    {
-        throw std::runtime_error("Texture not found: " + name);
-    }
-    return it->second;
+    return textures[name];
 }
 
 void TextureManager::unloadAll()
