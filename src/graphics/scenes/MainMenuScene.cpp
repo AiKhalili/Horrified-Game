@@ -5,7 +5,7 @@
 
 void MainMenuScene::onEnter()
 {
-    background = TextureManager::getInstance().getOrLoadTexture("main", "assets/images/main_menu.png");
+    background = TextureManager::getInstance().getOrLoadTexture("main", "assets/images/background/main_menu.png");
     titleFont = LoadFontEx("assets/fonts/spooky.otf", 100, 0, 0);
     SetTextureFilter(titleFont.texture, TEXTURE_FILTER_BILINEAR);
     normalFont = LoadFont("assets/fonts/simple.ttf");
