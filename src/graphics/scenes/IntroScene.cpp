@@ -5,7 +5,7 @@
 
 void IntroScene::onEnter()
 {
-    background = TextureManager::getInstance().getOrLoadTexture("intro", "assets/images/intro_bg.png");
+    background = TextureManager::getInstance().getOrLoadTexture("intro", "assets/images/background/intro_bg.png");
     AudioManager::getInstance().playIntroMusic();
 }
 
