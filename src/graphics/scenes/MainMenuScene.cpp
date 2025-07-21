@@ -65,7 +65,7 @@ void MainMenuScene::startGame()
 
 void MainMenuScene::loadGame()
 {
-    SceneManager::getInstance().goTo("SaveSelectScene");
+    SceneManager::getInstance().goTo("LoadGamesScene");
 }
 
 void MainMenuScene::exitGame()
