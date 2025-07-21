@@ -83,8 +83,8 @@ void UIInputBox::update()
 
 void UIInputBox::render()
 {
-    DrawRectangleRounded(bounds, 2.0f, 20, boxColor);
-    DrawRectangleRoundedLinesEx(bounds, 2.0f, 20, 2.0f, cadreColor);
+    DrawRectangleRounded(bounds, 0.2f, 20, boxColor);
+    DrawRectangleRoundedLinesEx(bounds, 0.2f, 20, 2.0f, cadreColor);
 
     std::string displayText = text;
     if (isFocused && showCursor && text.length() < (size_t)maxLength)
