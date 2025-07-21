@@ -26,18 +26,21 @@ void IntroScene::update(float deleteTime)
     }
     if (timer >= 7.0f)
     {
-        SceneManager::getInstance().goTo("MainMenu"); // change the scene and go to the next one
+        SceneManager::getInstance().goTo("MainMenuScene"); // change the scene and go to the next one
     }
 }
 
 void IntroScene::render()
 {
     ClearBackground(BLACK);
-    DrawTexture(background, 0, 0, WHITE);
+
+    float scaleX = 1600.0f / background.width;
+
+    DrawTextureEx(background, {0, 0}, 0.0f, scaleX, WHITE);
     float barWidth = 400;
     float barHeight = 20;
-    float barX = GetScreenWidth() / 2 - barWidth / 2 - 80;
-    float barY = GetScreenHeight() - 130;
+    float barX = GetScreenWidth() / 2 - barWidth / 2 - 50;
+    float barY = GetScreenHeight() - 100;
     Color horrorRed = {170, 20, 20, 255};
     DrawRectangle(barX, barY, barWidth, barHeight, DARKGRAY);
     DrawRectangle(barX, barY, barWidth * progress, barHeight, horrorRed);
