@@ -37,8 +37,8 @@ private:
 public:
     static SaveManager& getInstance();
 
-    void saveGameToSlot(int, Game&); // ذخیره کامل بازی با شماره اسلات
-    void loadGameFromSlot(int, Game&); // بارگذاری بازی با شماره اسلاتی که کاربر وارد کرده و میخواد بازی رو ادامه بده
+    void saveGameToSlot(); // ذخیره کامل بازی با شماره اسلات
+    void loadGameFromSlot(int); // بارگذاری بازی با شماره اسلاتی که کاربر وارد کرده و میخواد بازی رو ادامه بده
 
     void saveHeroesToFile(const std::string&, const std::vector<Hero*>& ); // ذخیره کردن قهرمان فعال بازی
     std::vector<Hero*> loadHeroesFromFile(const std::string&); // خواندن اطلاعات قهرمان و ساختن آن بر اساس اطاعات قبلی برای ادامه بازی
