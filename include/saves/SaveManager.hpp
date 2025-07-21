@@ -28,7 +28,14 @@ class SaveManager
 
 private:
 
+    SaveManager() = default;
+
+    SaveManager(const SaveManager&) = delete;
+    SaveManager& operator=(const SaveManager&) = delete;
+
+
 public:
+    static SaveManager& getInstance();
 
     void saveGameToSlot(int, Game&); // ذخیره کامل بازی با شماره اسلات
     void loadGameFromSlot(int, Game&); // بارگذاری بازی با شماره اسلاتی که کاربر وارد کرده و میخواد بازی رو ادامه بده
