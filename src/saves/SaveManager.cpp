@@ -12,47 +12,48 @@ SaveManager& SaveManager::getInstance() {
     return instance;
 }
 
-void SaveManager::saveGameToSlot(int slotNumber, Game& game)
+void SaveManager::saveGameToSlot()
 {
+    int slotNumber = Game::getInstance().findNextFreeSlot();
     if (slotNumber < 1)
         throw GameException("slotNumber can not be less than 1!\n");
 
     std::string filename = "save" + std::to_string(slotNumber) + ".txt";
-    saveHeroesToFile(filename, game.getHeroes());
+    saveHeroesToFile(filename, Game::getInstance().getHeroes());
 
-    saveCurrentHeroStateToFile(filename, game.getCurrentHeroIndex(), game.getHeroes()[game.getCurrentHeroIndex()]->getActionsLeft());
+    saveCurrentHeroStateToFile(filename, Game::getInstance().getCurrentHeroIndex(), Game::getInstance().getHeroes()[Game::getInstance().getCurrentHeroIndex()]->getActionsLeft());
 
-    saveMonstersToFile(filename, game.getMonsters());
+    saveMonstersToFile(filename, Game::getInstance().getMonsters());
 
-    saveVillagersToFile(filename, game.getVillagers());
+    saveVillagersToFile(filename, Game::getInstance().getVillagers());
 
     auto items = Map::get_instanse()->getAllItems();
     saveItemsToFile(filename, items);
 
-    saveMonsterCardsToFile(filename, game.getMonsterDeck());
+    saveMonsterCardsToFile(filename, Game::getInstance().getMonsterDeck());
 
     saveItemManagerStateToFile(filename);
 
-    saveTerrorLevel(filename, game.getTerrorLevel());
+    saveTerrorLevel(filename, Game::getInstance().getTerrorLevel());
 
-    saveFrenzy(filename, game.getFrenzy()->get_name());
+    saveFrenzy(filename, Game::getInstance().getFrenzy()->get_name());
 
-    savePerkDeckToFile(filename, game.getPerkDeck());
+    savePerkDeckToFile(filename, Game::getInstance().getPerkDeck());
 
     writeSaveTimestamp(filename);
 
-    game.setSlot(slotNumber);
-    game.setCurrentSaveSlot(slotNumber);
+    Game::getInstance().setSlot(slotNumber);
+    Game::getInstance().setCurrentSaveSlot(slotNumber);
 
 
 }
 
-void SaveManager::loadGameFromSlot(int slotNumber, Game& game)
+void SaveManager::loadGameFromSlot(int slotNumber)
 {
     if (slotNumber < 1)
        throw GameException("slotNumber can not be less than 1!\n");
     
-    game.reset();
+    Game::getInstance().reset();
 
     std::string filename = "save" + std::to_string(slotNumber) + ".txt";
 
@@ -61,18 +62,18 @@ void SaveManager::loadGameFromSlot(int slotNumber, Game& game)
         throw std::runtime_error("No file has been saved for this slot!\n");
 
    std::vector<Hero*> heroes = loadHeroesFromFile(filename);
-    game.setHeroes(heroes); // قهرمان رو در گیم ست می کنیم
+    Game::getInstance().setHeroes(heroes); // قهرمان رو در گیم ست می کنیم
 
     auto [currentIndex, actionsLeft] = loadCurrentHeroStateFromFile(filename);
-    game.setCurrentHeroIndex(currentIndex);
-    game.getHeroes()[game.getCurrentHeroIndex()]->setActionsLeft(actionsLeft);
+    Game::getInstance().setCurrentHeroIndex(currentIndex);
+    Game::getInstance().getHeroes()[Game::getInstance().getCurrentHeroIndex()]->setActionsLeft(actionsLeft);
 
 
     std::vector<Monster*> monsters = loadMonstersFromFile(filename);
-    game.setMonsters(monsters);
+    Game::getInstance().setMonsters(monsters);
 
     std::vector<Villager*> villagers = loadVillagersFromFile(filename);
-    game.setVillagers(villagers);
+    Game::getInstance().setVillagers(villagers);
 
     std::vector<Item*> items = loadItemsFromFile(filename);
 
@@ -83,23 +84,23 @@ void SaveManager::loadGameFromSlot(int slotNumber, Game& game)
             item->get_location()->addItem(item);
     }
     std::vector<MonsterCard> cards = loadMonsterCardsFromFile(filename);
-    game.setMonsterDeck(cards);
+    Game::getInstance().setMonsterDeck(cards);
    
     loadItemManagerStateFromFile(filename);
 
     int terror = loadTerrorLevel(filename);
-    game.setTerrorLevel(terror);
+    Game::getInstance().setTerrorLevel(terror);
 
     Monster* frenzy = loadFrenzy(filename, monsters);
-    game.setFrenzyMonster(frenzy);
+    Game::getInstance().setFrenzyMonster(frenzy);
 
     std::vector<PerkCard> deck = loadPerkDeckFromFile(filename);
-    game.setPerkDeck(deck);
+    Game::getInstance().setPerkDeck(deck);
 
-    game.setLoadedFromFile(true);
+    Game::getInstance().setLoadedFromFile(true);
 
-    game.setSlot(slotNumber);                   
-    game.setCurrentSaveSlot(slotNumber);
+    Game::getInstance().setSlot(slotNumber);                   
+    Game::getInstance().setCurrentSaveSlot(slotNumber);
 
 }
 
