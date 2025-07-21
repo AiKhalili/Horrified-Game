@@ -4,13 +4,12 @@
 using namespace std;
 
 UILabel::UILabel(Vector2 pos, const string &txt, int sz,
-                 float dur, Color fontClr, Color bgClr, Color cadreClr) : position(pos),
-                                                                          text(txt),
-                                                                          fontSize(sz),
-                                                                          fontColor(fontClr),
-                                                                          backgroundColor(bgClr),
-                                                                          cadreColor(cadreClr),
-                                                                          duration(dur) {}
+                 float dur, Color fontClr, Color cadreClr) : position(pos),
+                                                             text(txt),
+                                                             fontSize(sz),
+                                                             fontColor(fontClr),
+                                                             cadreColor(cadreClr),
+                                                             duration(dur) {}
 
 void UILabel::setFont(Font f)
 {
@@ -55,8 +54,8 @@ void UILabel::render()
 
     if (drawBackground)
     {
-        DrawRectangleRounded({position.x, position.y, bgWidth, bgHeight}, 2.0f, 20, backgroundColor);
-        DrawRectangleRoundedLinesEx({position.x, position.y, bgWidth, bgHeight}, 2.0f, 20, 2.0f, cadreColor);
+        DrawRectangleRounded({position.x, position.y, bgWidth, bgHeight}, 0.2f, 20, backgroundColor);
+        DrawRectangleRoundedLinesEx({position.x, position.y, bgWidth, bgHeight}, 0.2f, 20, 2.0f, cadreColor);
     }
 
     Vector2 drawPos;
