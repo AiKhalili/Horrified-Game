@@ -348,15 +348,15 @@ void Game::startLoop()
 
 void Game::startNewGame()
 {
-    setup(); // فقط برای بازی جدید اجرا بشه
+    setup();                              // آماده‌سازی اولیه
     startLoop();
-    setLoadedFromFile(false);
-
 }
 
-void Game::startLoadedGame()
+void Game::startLoadedGame(int slot)
 {
-    startLoop(); // بدون setup
+    SaveManager::getInstance().loadGameFromSlot(slot, *this);      // فایل اسلات رو می‌خونه و مقداردهی می‌کنه
+
+    startLoop();
 }
 
 void Game::setup()
@@ -1008,11 +1008,10 @@ void Game::heroPhase(Hero *hero)
             }
             else if (Choice == "Q")
             {
-                SaveManager saveManager;
                 cout << "Quitting and Saving this game...\n";
 
                 int currentSlot = getCurrentSaveSlot();  // ← اسلاتی که قبلاً بازی از آن لود شده
-                saveManager.saveGameToSlot(currentSlot, *this); // ← در همان فایل ذخیره می‌کنیم
+                SaveManager::getInstance().saveGameToSlot(currentSlot, *this); // ← در همان فایل ذخیره می‌کنیم
 
                 exit(0);
                 }
@@ -2312,63 +2311,14 @@ vector<Hero *> Game::getAllHeroes() const
     return heroes;
 }
 
-void Game::loadOrStartFromSave()
+void Game::prepareForSaving()
 {
-    int maxSlot = findNextFreeSlot() - 1;
-    bool hasSavedGame = (maxSlot >= 1);
+    if (getCurrentSaveSlot() != 0)
+        return; // اگه قبلاً اسلات اختصاص داده شده، دیگه کاری نکن
 
-    cout << "\nDo you want to:\n";
-    cout << "1. Start New Game\n";
-    if (hasSavedGame)
-        cout << "2. Continue Saved Game\n";
-
-    cout << "Select option (1";
-    if (hasSavedGame) cout << " or 2";
-    cout << "): ";
-
-    string firstChoice;
-    getline(cin, firstChoice);
-
-    if (firstChoice == "1")
-    {
-        reset();
-        int newSlot = findNextFreeSlot();
-        setSlot(newSlot);
-        setCurrentSaveSlot(newSlot);
-    }
-    else if (firstChoice == "2" && hasSavedGame)
-    {
-        reset();
-        int slot;
-        while (true)
-        {
-            cout << "Enter save slot number (1 to " << maxSlot << "): ";
-            cin >> slot;
-            if (slot >= 1 && slot <= maxSlot)
-            {
-                cin.ignore();
-                break;
-            }
-            cout << "Invalid slot number!\n";
-        }
-
-        try
-        {
-            SaveManager s;
-            s.loadGameFromSlot(slot, *this);
-            setCurrentSaveSlot(slot);
-            firstHeroPhaseAfterLoad = true;
-            startLoadedGame();
-        }
-        catch (const exception &e)
-        {
-            cout << "Failed to load game: " << e.what() << "\n";
-            loadOrStartFromSave(); // دوباره سعی کن
-        }
-    }
-    else
-    {
-        cout << "Invalid input. Try again.\n";
-        loadOrStartFromSave();
-    }
+    int newSlot = findNextFreeSlot();
+    setSlot(newSlot);
+    setCurrentSaveSlot(newSlot);
+    setLoadedFromFile(false); // چون بازی جدید بوده، لود نشده
 }
+
