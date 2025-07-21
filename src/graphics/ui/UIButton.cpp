@@ -48,11 +48,11 @@ void UIButton::render()
 {
     Color currentColor = isHovered ? hoverColor : bgColor;
 
-    DrawRectangleRec(bounds, currentColor); // رسم مستطیل پس زمینه
+    DrawRectangleRounded(bounds, 0.2f, 20, currentColor); // رسم مستطیل پس زمینه
 
     if (isFocused)
     { // کشیدن کادر رنگی دور مستطیل
-        DrawRectangleLinesEx(bounds, 3, cadreColor);
+        DrawRectangleRoundedLinesEx(bounds, 0.2f, 20, 2.0f, cadreColor);
     }
 
     Vector2 textSize; // اندازی گیری سایز متن برای اینکه دقیقا وسط کادر باشه
