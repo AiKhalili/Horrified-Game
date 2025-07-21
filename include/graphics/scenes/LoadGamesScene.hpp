@@ -10,7 +10,6 @@ class LoadGamesScene : public Scene
 private:
     Texture2D background;
     Font normalFont;
-    Font spooky;
     UIManager ui;
 
     void createButtons();
