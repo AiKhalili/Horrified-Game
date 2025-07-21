@@ -11,7 +11,7 @@ private:
     Vector2 position; // موقیت متن
     std::string text; // خود متنی که قراره نمایش داده بشه
     int fontSize;     // اندازه فونت
-    Color color;      // رنگ متن
+    Color fontColor;  // رنگ متن
     Color backgroundColor;
     Color cadreColor;
     Font font;                  // فونت متن
@@ -22,8 +22,8 @@ private:
     float padding;      // فاصله بین متن و کادر
 
 public:
-    UILabel(Vector2 pos, const std::string &text, int fontSize = 20,
-            Color color = BLACK, Color cadreColor = RED, float duration = 0.0f);
+    UILabel(Vector2 pos, const std::string &text, int fontSize = 20, float duration = 0.0f,
+            Color fontcolor = BLACK, Color bgColor = DARKGRAY, Color cadreColor = RED);
     void render() override;
     void update() override;
     void setFont(Font);
