@@ -23,7 +23,7 @@ private:
 
 public:
     UILabel(Vector2 pos, const std::string &text, int fontSize = 20, float duration = 0.0f,
-            Color fontcolor = BLACK, Color bgColor = DARKGRAY, Color cadreColor = RED);
+            Color fontcolor = BLACK, Color cadreColor = RED);
     void render() override;
     void update() override;
     void setFont(Font);
