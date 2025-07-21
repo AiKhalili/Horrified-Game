@@ -7,6 +7,11 @@
 #include <iostream>
 #include <core/Map.hpp>
 
+SaveManager& SaveManager::getInstance() {
+    static SaveManager instance;
+    return instance;
+}
+
 void SaveManager::saveGameToSlot(int slotNumber, Game& game)
 {
     if (slotNumber < 1)
@@ -531,3 +536,4 @@ std::vector<std::pair<int, std::string>> SaveManager::getAllSaveSlotsWithTimesta
 
     return result;
 }
+
