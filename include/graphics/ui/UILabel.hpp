@@ -13,6 +13,7 @@ private:
     int fontSize;     // اندازه فونت
     Color color;      // رنگ متن
     Color backgroundColor;
+    Color cadreColor;
     Font font;                  // فونت متن
     bool useCustomFont = false; // آیا از فونت سفارشی استفاده بشه یا نه؟
     bool drawBackground = false;
@@ -22,7 +23,7 @@ private:
 
 public:
     UILabel(Vector2 pos, const std::string &text, int fontSize = 20,
-            Color color = BLACK, float duration = 0.0f);
+            Color color = BLACK, Color cadreColor = RED, float duration = 0.0f);
     void render() override;
     void update() override;
     void setFont(Font);
