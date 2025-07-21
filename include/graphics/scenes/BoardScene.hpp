@@ -7,20 +7,44 @@
 #include <vector>
 #include <string>
 
-struct LocarionMarker
-{
-    Vector2 posision;
-    float radius;
-    std::string locatonName;
-};
-
 class BoardScene : public Scene
 {
 private:
+    struct LocationMarker
+    {
+        Vector2 posision;
+        float radius;
+        std::string locatonName;
+    };
+
     Texture2D background;
-    UIManager ui;
+    Texture2D skullIcon;
+    Texture2D chestIcon;
+    Texture2D cardIcon;
+
+    Vector2 heroImangePos;
+    Vector2 chestImagePos;
+    Vector2 cardImagePos;
+
     Font normalFont;
-    std::vector<LocarionMarker> locations;
+
+    UIManager ui;
+    std::vector<LocationMarker> locations;
+    std::string hoveredLocation;
+
+    void handleClickOnLocation();
+    void checkLocationHover();
+    void DrawTerrorLevel();
+    void drawHeroInfo();
+    void drawOptions();
+    void drawHeroPositionMarker();
+
+    void handleSelectAction();
+    void handleSaveAndExit();
+    void handleGoToMainMenu();
+    void handleExitGame();
+
+    void makeButton(const std::string &text, int row, int col, std::function<void()> onClick);
 
 public:
     void onEnter() override;
