@@ -23,19 +23,49 @@ void UILabel::update()
     }
 }
 
+void UILabel::enableBackground(Color bgColor, float pad)
+{
+    drawBackground = true;
+    backgroundColor = bgColor;
+    padding = pad;
+}
+
 void UILabel::render()
 {
     if (duration > 0.0f && timer >= duration)
     {
         return;
     }
+
+    Vector2 textSize;
     if (useCustomFont)
     {
-        DrawTextEx(font, text.c_str(), position, (float)fontSize, 2, color);
+        textSize = MeasureTextEx(font, text.c_str(), (float)fontSize, 2);
     }
     else
     {
-        DrawText(text.c_str(), position.x, position.y, fontSize, color);
+        textSize = {(float)MeasureText(text.c_str(), fontSize), (float)fontSize};
+    }
+
+    float bgWidth = textSize.x + 2 * padding;
+    float bgHeight = textSize.y + 2 * padding;
+
+    if (drawBackground)
+    {
+        DrawRectangle(position.x, position.y, bgWidth, bgHeight, backgroundColor);
+    }
+
+    Vector2 drawPos;
+    drawPos.x = position.x + (bgWidth - textSize.x) / 2.0f;
+    drawPos.y = position.y + (bgHeight - textSize.y) / 2.0f;
+
+    if (useCustomFont)
+    {
+        DrawTextEx(font, text.c_str(), drawPos, (float)fontSize, 2, color);
+    }
+    else
+    {
+        DrawText(text.c_str(), drawPos.x, drawPos.y, fontSize, color);
     }
 }
 
