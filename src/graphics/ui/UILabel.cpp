@@ -3,12 +3,14 @@
 
 using namespace std;
 
-UILabel::UILabel(Vector2 pos, const string &txt, int sz, Color clr, Color cadreClr, float dur) : position(pos),
-                                                                                                 text(txt),
-                                                                                                 fontSize(sz),
-                                                                                                 color(clr),
-                                                                                                 cadreColor(cadreClr),
-                                                                                                 duration(dur) {}
+UILabel::UILabel(Vector2 pos, const string &txt, int sz,
+                 float dur, Color fontClr, Color bgClr, Color cadreClr) : position(pos),
+                                                                          text(txt),
+                                                                          fontSize(sz),
+                                                                          fontColor(fontClr),
+                                                                          backgroundColor(bgClr),
+                                                                          cadreColor(cadreClr),
+                                                                          duration(dur) {}
 
 void UILabel::setFont(Font f)
 {
@@ -63,11 +65,11 @@ void UILabel::render()
 
     if (useCustomFont)
     {
-        DrawTextEx(font, text.c_str(), drawPos, (float)fontSize, 2, color);
+        DrawTextEx(font, text.c_str(), drawPos, (float)fontSize, 2, fontColor);
     }
     else
     {
-        DrawText(text.c_str(), drawPos.x, drawPos.y, fontSize, color);
+        DrawText(text.c_str(), drawPos.x, drawPos.y, fontSize, fontColor);
     }
 }
 
