@@ -7,10 +7,12 @@
 #include "graphics/ui/UIInputBox.hpp"
 #include "graphics/ui/UIButton.hpp"
 #include "graphics/scenes/SceneManager.hpp"
+#include "graphics/scenes/MainMenuScene.hpp"
 #include "raylib.h"
 #include <string>
 #include <vector>
 #include <memory>
+#include "core/Game.hpp"
 
 class PlayerInfoScene : public Scene
 {
@@ -24,8 +26,7 @@ public:
     void render() override;
 
     void resetInputsForNextPlayer();
-    void showErrorMessage(const std::string &msg);
-    void updateBackButtonVisibility();
+    void showErrorMessage(const std::string &);
 
 private:
     UIManager uiManager;
