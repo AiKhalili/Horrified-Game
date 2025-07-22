@@ -66,3 +66,13 @@ void SceneManager::render()
         currentScene->render();
     }
 }
+
+void SceneManager::requestExit()
+{
+    exitRequest = true;
+}
+
+bool SceneManager::isExitRequested() const
+{
+    return exitRequest;
+}
