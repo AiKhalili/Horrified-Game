@@ -1,4 +1,10 @@
 #include "graphics/scenes/SceneManager.hpp"
+#include "graphics/scenes/SceneManager.hpp"
+#include "graphics/scenes/IntroScene.hpp"
+#include "graphics/scenes/MainMenuScene.hpp"
+#include "graphics/scenes/LoadGamesScene.hpp"
+#include "graphics/scenes/BoardScene.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
 #include <iostream>
 
 SceneManager &SceneManager::getInstance()
@@ -14,6 +20,14 @@ void SceneManager::registerScene(const std::string &name, std::unique_ptr<Scene>
     { // set the first registered scene as the active one(only if no scene is active yet)
         currentScene = scenes[name].get();
     }
+}
+
+void SceneManager::registerAllScenes()
+{
+    registerScene(SceneKeys::INTRO_SCENE, std::make_unique<IntroScene>());
+    registerScene(SceneKeys::MAIN_MENU_SCENE, std::make_unique<MainMenuScene>());
+    registerScene(SceneKeys::LOAD_GAMES_SCENE, std::make_unique<LoadGamesScene>());
+    registerScene(SceneKeys::BOARD_SCENE, std::make_unique<BoardScene>());
 }
 
 void SceneManager::goTo(const std::string &name)
