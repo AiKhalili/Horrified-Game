@@ -13,6 +13,8 @@ public:
     void registerScene(const std::string &name, std::unique_ptr<Scene> scene); // register the scene with a unique name
     void goTo(const std::string &name);                                        // change the scene
     void registerAllScenes();
+    void requestExit();
+    void isExitRequested() const;
 
     // call in *main*
     void update(float deleteTime);
@@ -24,6 +26,7 @@ private:
     SceneManager &operator=(const SceneManager &) = delete;
     std::unordered_map<std::string, std::unique_ptr<Scene>> scenes; // all of the scenes
     Scene *currentScene = nullptr;                                  // the current scene
+    bool exitRequest = false;
 };
 
 #endif
