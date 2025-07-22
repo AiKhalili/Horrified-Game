@@ -14,7 +14,7 @@ public:
     void goTo(const std::string &name);                                        // change the scene
     void registerAllScenes();
     void requestExit();
-    void isExitRequested() const;
+    bool isExitRequested() const;
 
     // call in *main*
     void update(float deleteTime);
