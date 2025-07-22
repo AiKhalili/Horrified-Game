@@ -12,6 +12,7 @@ public:
     static SceneManager &getInstance();
     void registerScene(const std::string &name, std::unique_ptr<Scene> scene); // register the scene with a unique name
     void goTo(const std::string &name);                                        // change the scene
+    void registerAllScenes();
 
     // call in *main*
     void update(float deleteTime);
