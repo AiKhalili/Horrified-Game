@@ -9,34 +9,50 @@
 #include <memory>
 #include <vector>
 
+class Game;
+constexpr int HERO_COUNT = 4;
+
 class HeroSelectionScene : public Scene
 {
 public:
     HeroSelectionScene();
-    ~HeroSelectionScene() override;
+    ~HeroSelectionScene();
 
+    void onEnter() override;
+    void onExit() override;
     void update(float deltaTime) override;
     void render() override;
 
 private:
-    UIManager uiManager;
+    enum class SelectionPhase {
+        Player1_Select,
+        Player1_Submit,
+        Player2_Select,
+        Player2_Submit,
+        Done
+    };
+
+    SelectionPhase phase;
 
     Texture2D background;
     Font font;
 
-    static constexpr int HERO_COUNT = 4;
-    Texture2D heroTextures[HERO_COUNT];
-    std::vector<std::unique_ptr<UIButton>> heroButtons;
-
-    std::unique_ptr<UILabel> titleLabel;
-
     Rectangle heroButtonRects[HERO_COUNT];
+    Texture2D heroTextures[HERO_COUNT];
 
-    int currentPlayer = 1;
-    int playerSelections[2] = { -1, -1 };
+    int currentPlayer;
+    std::string currentMessage;
 
-    void onHeroSelected(int heroIndex);
+    int playerSelections[2] = {-1, -1};
+
     bool isButtonEnabled(int heroIndex) const;
+    void onHeroSelected(int heroIndex);
+    std::string heroNameFromIndex(int index) const;
+
+    std::unique_ptr<UIButton> continueButton;
+    std::unique_ptr<UIButton> backButton;
+
+    float submitTimer = 0.0f;
 };
 
 #endif
