@@ -1,4 +1,5 @@
 #include "graphics/scenes/PlayerInfoScene.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
 #include <iostream>
 
 PlayerInfoScene::PlayerInfoScene()
@@ -15,19 +16,21 @@ PlayerInfoScene::PlayerInfoScene()
     timeInput = timeInputUPtr.get();
     timeInput->setFont(font);
 
-    auto nameLabelUPtr = std::make_unique<UILabel>(Vector2{1000, 300}, "Enter your Name:", 30, WHITE);
+    auto nameLabelUPtr = std::make_unique<UILabel>(Vector2{1000, 300}, "Enter your Name:", 30, 0.0f, WHITE);
     nameLabelUPtr->setFont(font);
-    auto timeLabelUPtr = std::make_unique<UILabel>(Vector2{910, 500}, "Enter the last time you ate garlic:", 30, WHITE);
+
+    auto timeLabelUPtr = std::make_unique<UILabel>(Vector2{910, 500}, "Enter the last time you ate garlic:", 30, 0.0f, WHITE);
     timeLabelUPtr->setFont(font);
 
-    auto continueButtonUPtr = std::make_unique<UIButton>(Rectangle{1050, 700, 100, 50}, "Submit", 30, WHITE, GRAY, DARKGRAY, WHITE);
+    auto continueButtonUPtr = std::make_unique<UIButton>(Rectangle{1030, 700, 150, 50}, "SUBMIT", 30, WHITE, DARKGRAY, GRAY, WHITE);
     continueButton = continueButtonUPtr.get();
-
-    auto backButtonUPtr = std::make_unique<UIButton>(Rectangle{40, 800, 80, 50}, "Back", 30, BLACK, LIGHTGRAY);
-    backButton = backButtonUPtr.get();
-
     continueButton->setFont(font);
+    continueButton->setFocus(true);
+
+    auto backButtonUPtr = std::make_unique<UIButton>(Rectangle{40, 800, 200, 50}, "Main Menu", 30, WHITE, DARKGRAY, GRAY, WHITE);
+    backButton = backButtonUPtr.get();
     backButton->setFont(font);
+    backButton->setFocus(true);
 
     uiManager.add(std::move(nameInputUPtr));
     uiManager.add(std::move(timeInputUPtr));
@@ -36,50 +39,42 @@ PlayerInfoScene::PlayerInfoScene()
     uiManager.add(std::move(continueButtonUPtr));
     uiManager.add(std::move(backButtonUPtr));
 
-    updateBackButtonVisibility();
-
+    // دکمه SUBMIT
     continueButton->setOnClick([this]() {
         std::string name = nameInput->getText();
         std::string time = timeInput->getText();
 
-        if (name.empty() || time.empty())
-        {
-            showErrorMessage("Pleas enter all seaction!");
+        if (name.empty() || time.empty()) {
+           showErrorMessage("Please enter both name and time!");
             return;
         }
 
-        playerNames.push_back(name);
-        playerTimes.push_back(time);
+        try {
+           Game::getInstance().setPlayersTimes(currentPlayer, name, time);
+        } catch (const std::invalid_argument &ex) {
+           showErrorMessage(ex.what());
+            return;
+        }
 
-        if (currentPlayer == 1)
-        {
+        if (currentPlayer == 1) {
             currentPlayer = 2;
             resetInputsForNextPlayer();
-            updateBackButtonVisibility();
-        }
-        else
-        {
-            SceneManager::getInstance().goTo("NextScene");
+        } else {
+            SceneManager::getInstance().goTo(SceneKeys::HERO_SELECTION_SCENE);
         }
     });
 
+    // دکمه بازگشت به منوی اصلی
     backButton->setOnClick([this]() {
-        if (currentPlayer == 2)
-        {
-            if (!playerNames.empty()) playerNames.pop_back();
-            if (!playerTimes.empty()) playerTimes.pop_back();
-            currentPlayer = 1;
-            resetInputsForNextPlayer();
-            updateBackButtonVisibility();
-        }
+        currentPlayer = 1;
+        resetInputsForNextPlayer();
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE);
     });
 }
-
 
 PlayerInfoScene::~PlayerInfoScene()
 {
     UnloadTexture(backgroundTexture);
-    UnloadFont(font);
     UnloadFont(font);
 }
 
@@ -97,24 +92,10 @@ void PlayerInfoScene::resetInputsForNextPlayer()
     }
 }
 
-void PlayerInfoScene::showErrorMessage(const std::string &msg)
-{
-    errorMessage = msg;
-    errorDisplayTime = 3.0f;
-}
-
-void PlayerInfoScene::updateBackButtonVisibility()
-{
-    if (currentPlayer == 2)
-        backButton->setVisible(true);
-    else
-        backButton->setVisible(false);
-}
-
 void PlayerInfoScene::onEnter()
 {
     resetInputsForNextPlayer();
-    updateBackButtonVisibility();
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 }
 
 void PlayerInfoScene::onExit()
@@ -127,11 +108,24 @@ void PlayerInfoScene::update(float deltaTime)
 
     if (IsKeyPressed(KEY_ENTER))
     {
-        continueButton->click();
-    }
-    if (IsKeyPressed(KEY_BACKSPACE))
-    {
-        SceneManager::getInstance().goTo("MainMenu");
+        std::string name = nameInput->getText();
+        std::string time = timeInput->getText();
+
+        if (name.empty() || time.empty()) return;
+
+        try {
+           Game::getInstance().setPlayersTimes(currentPlayer, name, time);
+        } catch (const std::invalid_argument &ex) {
+            showErrorMessage(ex.what());
+            return;
+        }
+
+        if (currentPlayer == 1) {
+            currentPlayer = 2;
+            resetInputsForNextPlayer();
+        } else {
+            SceneManager::getInstance().goTo(SceneKeys::HERO_SELECTION_SCENE);
+        }
     }
 
     if (errorDisplayTime > 0.0f)
@@ -148,9 +142,9 @@ void PlayerInfoScene::render()
 {
     DrawTexturePro(
         backgroundTexture,
-        Rectangle{ 0, 0, (float)backgroundTexture.width, (float)backgroundTexture.height },
-        Rectangle{ 0, 0, 1600, 900 },
-        Vector2{ 0, 0 },
+        Rectangle{0, 0, (float)backgroundTexture.width, (float)backgroundTexture.height},
+        Rectangle{0, 0, 1600, 900},
+        Vector2{0, 0},
         0.0f,
         WHITE
     );
@@ -159,16 +153,12 @@ void PlayerInfoScene::render()
 
     if (!errorMessage.empty())
     {
-        if (errorDisplayTime > 0.0f)
-    {
-        DrawTextEx(
-            font, 
-            errorMessage.c_str(), 
-            {600, 40},
-            40,
-            2,                                 // فاصله بین حروف
-            RED 
-        );
+        DrawTextEx(font, errorMessage.c_str(), {600, 40}, 40, 2, RED);
     }
-    }
+}
+
+void PlayerInfoScene::showErrorMessage(const std::string &msg)
+{
+    errorMessage = msg;
+    errorDisplayTime = 3.0f;
 }
