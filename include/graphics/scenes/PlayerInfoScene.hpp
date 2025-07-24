@@ -3,48 +3,47 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
-#include "graphics/ui/UILabel.hpp"
-#include "graphics/ui/UIInputBox.hpp"
 #include "graphics/ui/UIButton.hpp"
-#include "graphics/scenes/SceneManager.hpp"
-#include "graphics/scenes/MainMenuScene.hpp"
+#include "graphics/ui/UIInputBox.hpp"
 #include "raylib.h"
 #include <string>
 #include <vector>
-#include <memory>
-#include "core/Game.hpp"
 
 class PlayerInfoScene : public Scene
 {
 public:
-    PlayerInfoScene();
-    ~PlayerInfoScene();
-
     void onEnter() override;
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
 
     void resetInputsForNextPlayer();
-    void showErrorMessage(const std::string &);
+    void showErrorMessage(const std::string &msg);
 
 private:
     UIManager uiManager;
     Texture2D backgroundTexture;
     Font font;
+    bool fontLoaded = false;
 
-    UIButton* continueButton = nullptr;
-    UIButton* backButton = nullptr;
+    UIButton *continueButton = nullptr;
+    UIButton *backButton = nullptr;
+    UIButton *focusedButton = nullptr;
 
-    UIInputBox* nameInput = nullptr;
-    UIInputBox* timeInput = nullptr;
+    UIInputBox *nameInput = nullptr;
+    UIInputBox *timeInput = nullptr;
 
-    int currentPlayer;
-    std::vector<std::string> playerNames;
-    std::vector<std::string> playerTimes;
+    UILabel* playerLabel = nullptr;
 
+    int currentPlayer = 1;
     std::string errorMessage;
     float errorDisplayTime = 0.0f;
+
+    void createButtons();
+    void createInputBoxes();
+    void createLabels();
+
+    void debugCheckUIElements();
 };
 
 #endif
