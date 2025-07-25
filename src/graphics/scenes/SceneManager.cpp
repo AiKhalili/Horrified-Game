@@ -5,6 +5,8 @@
 #include "graphics/scenes/LoadGamesScene.hpp"
 #include "graphics/scenes/BoardScene.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/scenes/HeroSelectionScene.hpp"
+#include "graphics/scenes/PlayerInfoScene.hpp"
 #include <iostream>
 
 SceneManager &SceneManager::getInstance()
@@ -28,6 +30,9 @@ void SceneManager::registerAllScenes()
     registerScene(SceneKeys::MAIN_MENU_SCENE, std::make_unique<MainMenuScene>());
     registerScene(SceneKeys::LOAD_GAMES_SCENE, std::make_unique<LoadGamesScene>());
     registerScene(SceneKeys::BOARD_SCENE, std::make_unique<BoardScene>());
+    registerScene(SceneKeys::PLAYER_INFO_SCENE, std::make_unique<PlayerInfoScene>());
+    registerScene(SceneKeys::HERO_SELECTION_SCENE, std::make_unique<HeroSelectionScene>());
+    // registerScene(SceneKeys::GAME_WON_SCENE)
 }
 
 void SceneManager::goTo(const std::string &name)
