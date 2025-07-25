@@ -3,34 +3,25 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
-#include "graphics/ui/UIButton.hpp"
-#include "graphics/ui/UILabel.hpp"
 #include "raylib.h"
-#include <memory>
-#include <vector>
 
 class Game;
 constexpr int HERO_COUNT = 4;
 
 class HeroSelectionScene : public Scene
 {
-public:
-    HeroSelectionScene();
-    ~HeroSelectionScene();
-
-    void onEnter() override;
-    void onExit() override;
-    void update(float deltaTime) override;
-    void render() override;
 
 private:
-    enum class SelectionPhase {
+    enum class SelectionPhase
+    {
         Player1_Select,
         Player1_Submit,
         Player2_Select,
         Player2_Submit,
         Done
     };
+
+    UIManager uiManager;
 
     SelectionPhase phase;
 
@@ -53,6 +44,18 @@ private:
     std::unique_ptr<UIButton> backButton;
 
     float submitTimer = 0.0f;
+
+    void LoadeHeroTextures();
+    void creatButton();
+
+    void whoStart();
+
+public:
+    void onEnter() override;
+    void onExit() override;
+    void update(float deltaTime) override;
+    void render() override;
+    
 };
 
 #endif
