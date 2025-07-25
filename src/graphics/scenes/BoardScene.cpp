@@ -14,7 +14,7 @@ void BoardScene::onEnter()
     skullIcon = TextureManager::getInstance().getOrLoadTexture("skull", "assets/images/icon/skull.jpeg");
     chestIcon = TextureManager::getInstance().getOrLoadTexture("chest", "assets/images/icon/chest.png");
     cardIcon = TextureManager::getInstance().getOrLoadTexture("cardIcon", "assets/images/icon/perkCard.jpg");
-    cardIcon = TextureManager::getInstance().getOrLoadTexture("greenFlag", "assets/images/icon/greenFlag.png");
+    greenFlagIcon = TextureManager::getInstance().getOrLoadTexture("greenFlag", "assets/images/icon/greenFlag.png");
 
     normalFont = LoadFont("assets/fonts/simple.ttf");
 
@@ -24,25 +24,25 @@ void BoardScene::onEnter()
     makeButton("Exit Game", 1, 1, std::bind(&BoardScene::handleExitGame, this));
 
     locations = {
-        {{124, 450}, 85, "Cave"},
-        {{388, 421}, 110, "Camp"},
-        {{678, 365}, 110, "Precinct"},
-        {{960, 310}, 115, "Inn"},
-        {{1295, 355}, 100, "Barn"},
-        {{1574, 351}, 100, "Dungeon"},
-        {{1430, 645}, 120, "Tower"},
-        {{1086, 681}, 115, "Theatre"},
-        {{1535, 947}, 110, "Docks"},
-        {{476, 943}, 115, "Mansion"},
-        {{174, 1060}, 100, "Abbey"},
-        {{120, 1367}, 105, "Crypt"},
-        {{380, 1337}, 120, "Museum"},
-        {{648, 1613}, 100, "Hospital"},
-        {{772, 1393}, 115, "Church"},
-        {{1022, 1585}, 120, "Graveyard"},
-        {{1385, 1595}, 100, "Institute"},
-        {{1180, 1327}, 130, "Laboratory"},
-        {{942, 1137}, 105, "Shop"}};
+        {{62, 225}, 40, "Cave"},
+        {{195, 210}, 55, "Camp"},
+        {{340, 180}, 60, "Precinct"},
+        {{480, 153}, 55, "Inn"},
+        {{645, 175}, 55, "Barn"},
+        {{788, 182}, 50, "Dungeon"},
+        {{716, 328}, 55, "Tower"},
+        {{545, 340}, 60, "Theatre"},
+        {{768, 474}, 57, "Docks"},
+        {{240, 465}, 60, "Mansion"},
+        {{87, 530}, 55, "Abbey"},
+        {{62, 682}, 50, "Crypt"},
+        {{190, 667}, 60, "Museum"},
+        {{324, 808}, 47, "Hospital"},
+        {{387, 698}, 60, "Church"},
+        {{508, 795}, 60, "Graveyard"},
+        {{690, 790}, 60, "Institute"},
+        {{590, 666}, 60, "Laboratory"},
+        {{473, 563}, 54, "Shop"}};
 }
 
 void BoardScene::makeButton(const std::string &text, int row, int col, std::function<void()> onClick)
@@ -237,30 +237,40 @@ void BoardScene::handleGameStateTransition()
     }
 }
 
-void BoardScene::render()
+void BoardScene::drawGlow()
 {
-    BeginDrawing();
-    ClearBackground(BLACK);
-
-    DrawTexture(background, 0, 0, WHITE);
-
     if (!hoveredLocation.empty())
     {
         for (const auto &loc : locations)
         {
             if (loc.locatonName == hoveredLocation)
             {
-                for (int i = 0; i < 3; i++)
+                Color neonGreen = {57, 255, 20, 255};
+                for (int i = 0; i < 20; i++)
                 {
-                    float radius = loc.radius + i * 5;
-                    int alpha = 100 - i * 30;
-                    Color neonGreen = {57, 255, 20, (unsigned char)alpha};
-                    DrawCircleLines(loc.posision.x, loc.posision.y, radius, neonGreen);
+                    float radius = loc.radius + i;
+                    float alpha = 1.0f - (float)i / 20;
+                    Color ringColor = Color{neonGreen.r, neonGreen.g, neonGreen.b, (unsigned char)(alpha * 255)};
+                    DrawCircleLinesV(loc.posision, radius, ringColor);
                 }
                 break;
             }
         }
     }
+}
+
+void BoardScene::render()
+{
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    float scale = 0.5f;
+    Vector2 position = {
+        (1600 - background.width * scale) / 2.0f,
+        (900 - background.height * scale) / 2.0f};
+
+    DrawTextureEx(background, position, 0.0f, scale, WHITE);
+    drawGlow();
 
     drawHeroPositionMarker();
     DrawTerrorLevel();
