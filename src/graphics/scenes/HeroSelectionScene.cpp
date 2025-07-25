@@ -1,13 +1,22 @@
 #include "graphics/scenes/HeroSelectionScene.hpp"
 #include "graphics/scenes/SceneManager.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/ui/UIButton.hpp"
+#include "graphics/ui/UILabel.hpp"
+#include "graphics/TextureManager.hpp"
+#include "audio/AudioManager.hpp"
+#include <memory>
+#include <vector>
 #include <iostream>
 #include "core/Game.hpp"
 
-HeroSelectionScene::HeroSelectionScene()
+void HeroSelectionScene::onEnter()
 {
-    background = LoadTexture("assets/images/backhero.png");
+    background = TextureManager::getInstance().getOrLoadTexture("HeroSelection", "assets/images/background/hero_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
+
+    playerSelections[0] = -1;
+    playerSelections[1] = -1;
 
     float size = 350.f;
     float spacing = 370.f;
@@ -18,92 +27,27 @@ HeroSelectionScene::HeroSelectionScene()
     for (int i = 0; i < HERO_COUNT; ++i)
         heroButtonRects[i] = {startX + i * spacing, y, size, size};
 
-    heroTextures[0] = LoadTexture("assets/images/Heros/Archaeologist.png");
-    heroTextures[1] = LoadTexture("assets/images/Heros/Courier.png");
-    heroTextures[2] = LoadTexture("assets/images/Heros/Mayor.png");
-    heroTextures[3] = LoadTexture("assets/images/Heros/Scientist.png");
+    LoadeHeroTextures();
+    creatButton();
+    whoStart();
 
-    continueButton = std::make_unique<UIButton>(Rectangle{725, 700, 150, 50}, "SUBMIT", 30, WHITE, DARKGRAY, GRAY, WHITE);
-    continueButton->setFont(font);
-    continueButton->setFocus(true);
-    continueButton->setOnClick([this]()
-                               {
-    if (phase == SelectionPhase::Player1_Submit)
-    {
-        phase = SelectionPhase::Player2_Select;
-        currentPlayer = (currentPlayer == 1 ? 2 : 1);
-        Game& game = Game::getInstance();
-        currentMessage = (currentPlayer == 1 ? game.getName1() : game.getName2()) + ", choose your hero";
-    }
-    else if (phase == SelectionPhase::Player2_Submit)
-    {
-        Game &game = Game::getInstance();
-        try
-        {
-            game.assignHeroes(
-                game.getName1(),
-                heroNameFromIndex(playerSelections[0]),
-                heroNameFromIndex(playerSelections[1])
-            );
-        }
-        catch (const GameException &ex)
-        {
-            std::cerr << "Error assigning heroes: " << ex.what() << std::endl;
-            return;
-        }
-
-        currentMessage = "Both players have selected their heroes.";
-        phase = SelectionPhase::Done;
-
-        // مقداردهی تایمر برای نمایش پیام قبل از تغییر صحنه
-        submitTimer = 2.0f;  // 2 ثانیه پیام نمایش داده شود
-    } });
-
-    backButton = std::make_unique<UIButton>(Rectangle{40, 800, 200, 50}, "Main Menu", 30, WHITE, DARKGRAY, GRAY, WHITE);
-    backButton->setFont(font);
-    backButton->setFocus(true);
-    backButton->setOnClick([this]()
-                           { SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
-}
-
-HeroSelectionScene::~HeroSelectionScene()
-{
-    UnloadTexture(background);
-    UnloadFont(font);
-    for (int i = 0; i < HERO_COUNT; i++)
-        UnloadTexture(heroTextures[i]);
-}
-
-void HeroSelectionScene::onEnter()
-{
-    Game &game = Game::getInstance();
-    playerSelections[0] = -1;
-    playerSelections[1] = -1;
-
-    if (game.getTime1() <= game.getTime2())
-    {
-        currentPlayer = 1;
-        phase = SelectionPhase::Player1_Select;
-        currentMessage = game.getName1() + ", choose your hero";
-    }
-    else
-    {
-        currentPlayer = 2;
-        phase = SelectionPhase::Player1_Select;
-        currentMessage = game.getName2() + ", choose your hero";
-    }
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 }
 
 void HeroSelectionScene::onExit()
 {
-    // در صورت نیاز پاک‌سازی خاص انجام بده
+    UnloadFont(font);
+    uiManager.clear();
 }
 
 void HeroSelectionScene::update(float deltaTime)
 {
+    AudioManager::getInstance().update();
+    uiManager.update();
+
     Vector2 mousePos = GetMousePosition();
 
-    if (phase != SelectionPhase::Done) // فقط وقتی هنوز انتخاب کامل نشده است
+    if (phase == SelectionPhase::Player1_Select || phase == SelectionPhase::Player2_Select)
     {
         if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
         {
@@ -117,30 +61,106 @@ void HeroSelectionScene::update(float deltaTime)
             }
         }
 
-        if (continueButton)
-            continueButton->update();
-        if (backButton)
-            backButton->update();
-    }
-    else
-    {
-        // وقتی phase == Done است، تایمر رو کاهش بده
-        if (submitTimer > 0.0f)
+        if (IsKeyPressed(KEY_RIGHT))
         {
-            submitTimer -= deltaTime;
-            if (submitTimer <= 0.0f)
+            int &currentSelection = playerSelections[currentPlayer - 1];
+            do
             {
-                // وقتی تایمر تمام شد برو به صفحه بورد گیم
-                SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); // نام صحنه بوردگیم رو جایگزین کن
-            }
+                currentSelection = (currentSelection + 1) % HERO_COUNT;
+            } while (!isButtonEnabled(currentSelection));
+            onHeroSelected(currentSelection);
+        }
+        else if (IsKeyPressed(KEY_LEFT))
+        {
+            int &currentSelection = playerSelections[currentPlayer - 1];
+            do
+            {
+                currentSelection = (currentSelection - 1 + HERO_COUNT) % HERO_COUNT;
+            } while (!isButtonEnabled(currentSelection));
+            onHeroSelected(currentSelection);
         }
     }
 }
 
+void HeroSelectionScene::creatButton()
+{
+    continueButton = std::make_unique<UIButton>(
+        Rectangle{725, 700, 150, 50}, "SUBMIT", 30, WHITE, DARKGRAY, GRAY, WHITE);
+    continueButton->setFont(font);
+    continueButton->setFocus(true);
+    continueButton->setOnClick([this]()
+    {
+        AudioManager::getInstance().playSoundEffect("click");
+
+        if (playerSelections[currentPlayer - 1] == -1)
+        {
+            currentMessage = "Please select a hero before submitting!";
+            return;
+        }
+
+        Game &game = Game::getInstance();
+
+        if (playerSelections[0] == -1 || playerSelections[1] == -1)
+        {
+            if (playerSelections[0] == -1)
+            {
+                currentPlayer = 1;
+                phase = SelectionPhase::Player1_Select;
+                currentMessage = game.getName1() + ", choose your hero";
+                return;
+            }
+            else if (playerSelections[1] == -1)
+            {
+                currentPlayer = 2;
+                phase = SelectionPhase::Player2_Select;
+                currentMessage = game.getName2() + ", choose your hero";
+                return;
+            }
+        }
+
+        try
+        {
+            game.reset();
+            game.assignHeroes(
+                game.getName1(),
+                heroNameFromIndex(playerSelections[0]),
+                heroNameFromIndex(playerSelections[1]));
+
+            game.setupHeroes();
+            game.setStartingPlater((game.getTime1() <= game.getTime2())
+                ? game.getName1()
+                : game.getName2());
+
+            game.startNewGame();
+        }
+        catch (const GameException &ex)
+        {
+            std::cerr << "Error assigning heroes: " << ex.what() << std::endl;
+            return;
+        }
+
+        currentMessage = "Both players have selected their heroes.";
+        phase = SelectionPhase::Done;
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
+    });
+
+    backButton = std::make_unique<UIButton>(
+        Rectangle{40, 800, 200, 50}, "Main Menu", 30, WHITE, DARKGRAY, GRAY, WHITE);
+    backButton->setFont(font);
+    backButton->setOnClick([this]()
+    {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE);
+    });
+
+    uiManager.add(std::move(continueButton));
+    uiManager.add(std::move(backButton));
+}
+
+
 void HeroSelectionScene::render()
 {
     BeginDrawing();
-    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
     ClearBackground(BLACK);
 
     DrawTexturePro(background,
@@ -150,79 +170,50 @@ void HeroSelectionScene::render()
 
     Vector2 mousePos = GetMousePosition();
 
-    // اگر هر دو انتخاب شدند (phase == Done) تصاویر رو نمایش نده
-    if (phase != SelectionPhase::Done)
+    for (int i = 0; i < HERO_COUNT; ++i)
     {
-        for (int i = 0; i < HERO_COUNT; ++i)
-        {
-            // پنهان کردن قهرمان انتخاب شده نفر اول در کل مراحل انتخاب و تأیید نفر دوم
-            if ((phase == SelectionPhase::Player2_Select || phase == SelectionPhase::Player2_Submit) && playerSelections[0] != -1 && i == playerSelections[0])
-                continue;
+        int otherIndex = (currentPlayer == 1) ? playerSelections[1] : playerSelections[0];
+        if (otherIndex != -1 && i == otherIndex)
+            continue;
 
-            Rectangle sourceRec = {0, 0, (float)heroTextures[i].width, (float)heroTextures[i].height};
-            Rectangle destRect = heroButtonRects[i];
-            Vector2 origin = {0, 0};
+        Rectangle sourceRec = {0, 0, (float)heroTextures[i].width, (float)heroTextures[i].height};
+        Rectangle destRect = heroButtonRects[i];
+        Vector2 origin = {0, 0};
 
-            DrawTexturePro(heroTextures[i], sourceRec, destRect, origin, 0.0f, WHITE);
+        DrawTexturePro(heroTextures[i], sourceRec, destRect, origin, 0.0f, WHITE);
 
-            // رسم کادر سفید دور قهرمان انتخاب شده ولی هنوز submit نشده
-            // یعنی اگر phase تو حالت انتخاب/submit مربوط به بازیکن فعلی هست و این قهرمان انتخاب شده
-            bool isSelectedButNotSubmitted = false;
+        bool isSelected = (playerSelections[0] == i && currentPlayer == 1) ||
+                          (playerSelections[1] == i && currentPlayer == 2);
 
-            if (phase == SelectionPhase::Player1_Submit && playerSelections[0] == i)
-                isSelectedButNotSubmitted = true;
-            else if (phase == SelectionPhase::Player2_Submit && playerSelections[1] == i)
-                isSelectedButNotSubmitted = true;
-
-            if (isSelectedButNotSubmitted)
-            {
-                DrawRectangleLinesEx(destRect, 5, WHITE);
-            }
-            else if (CheckCollisionPointRec(mousePos, destRect))
-            {
-                // وقتی موس روشه کادر نازک رسم کن
-                DrawRectangleLinesEx(destRect, 3, WHITE);
-            }
-        }
+        if (isSelected)
+            DrawRectangleLinesEx(destRect, 5, WHITE);
+        else if (CheckCollisionPointRec(mousePos, destRect) && isButtonEnabled(i))
+            DrawRectangleLinesEx(destRect, 3, WHITE);
     }
 
-    UILabel label({(1600.0f / 2) - 250, 50}, currentMessage, 50, 0.0f, WHITE);
-    label.setFont(font);
-    label.render();
+    Vector2 textSize = MeasureTextEx(font, currentMessage.c_str(), 50, 0);
+    float textX = (1600.0f - textSize.x) / 2.0f;
+    DrawTextEx(font, currentMessage.c_str(), {textX, 50}, 50, 0, WHITE);
 
-    if (continueButton)
-        continueButton->render();
-    if (backButton)
-        backButton->render();
-
+    uiManager.render();
     EndDrawing();
 }
+
 
 bool HeroSelectionScene::isButtonEnabled(int heroIndex) const
 {
     if (phase != SelectionPhase::Player1_Select && phase != SelectionPhase::Player2_Select)
         return false;
-
     if (currentPlayer == 2 && heroIndex == playerSelections[0])
         return false;
-
     return true;
 }
 
 void HeroSelectionScene::onHeroSelected(int heroIndex)
 {
     playerSelections[currentPlayer - 1] = heroIndex;
-
-    if (phase == SelectionPhase::Player1_Select)
-    {
-        phase = SelectionPhase::Player1_Submit;
-        currentMessage = "Click SUBMIT to continue to next player";
-    }
-    else if (phase == SelectionPhase::Player2_Select)
-    {
-        phase = SelectionPhase::Player2_Submit;
-        currentMessage = "Click SUBMIT to start the game";
-    }
+    std::cout << "[DEBUG] Player " << currentPlayer << " selected hero index " << heroIndex << "\n";
+    currentMessage = "Click SUBMIT when ready!";
 }
 
 std::string HeroSelectionScene::heroNameFromIndex(int index) const
@@ -239,5 +230,37 @@ std::string HeroSelectionScene::heroNameFromIndex(int index) const
         return "Scientist";
     default:
         return "";
+    }
+}
+
+void HeroSelectionScene::LoadeHeroTextures()
+{
+    heroTextures[0] = TextureManager::getInstance().getOrLoadTexture("Archaeologist", "assets/images/heroes/Archaeologist.png");
+    heroTextures[1] = TextureManager::getInstance().getOrLoadTexture("Courier", "assets/images/heroes/Courier.png");
+    heroTextures[2] = TextureManager::getInstance().getOrLoadTexture("Mayor", "assets/images/heroes/Mayor.png");
+    heroTextures[3] = TextureManager::getInstance().getOrLoadTexture("Scientist", "assets/images/heroes/Scientist.png");
+
+    for (int i = 0; i < HERO_COUNT; ++i)
+        std::cout << "[DEBUG] Hero " << i << " tex size: "
+                  << heroTextures[i].width << "x" << heroTextures[i].height << "\n";
+}
+
+void HeroSelectionScene::whoStart()
+{
+    Game &game = Game::getInstance();
+    playerSelections[0] = -1;
+    playerSelections[1] = -1;
+
+    if (game.getTime1() <= game.getTime2())
+    {
+        currentPlayer = 1;
+        phase = SelectionPhase::Player1_Select;
+        currentMessage = game.getName1() + ", choose your hero";
+    }
+    else
+    {
+        currentPlayer = 2;
+        phase = SelectionPhase::Player2_Select;
+        currentMessage = game.getName2() + ", choose your hero";
     }
 }
