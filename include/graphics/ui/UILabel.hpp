@@ -26,9 +26,11 @@ public:
             Color fontcolor = BLACK, Color cadreColor = RED);
     void render() override;
     void update() override;
-    void setFont(Font);
-    bool isExoired() const;
+    void setFont(const Font &);
     void enableBackground(Color bgColor, float pad = 10.0f);
+    void setText(const std::string &newText);
+    void resetTimer();
+    std::string getText() { return text; }
 };
 
 #endif
