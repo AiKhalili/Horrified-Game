@@ -5,6 +5,7 @@
 #include "graphics/ui/UIManager.hpp"
 #include "graphics/ui/UIButton.hpp"
 #include "graphics/ui/UIInputBox.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "raylib.h"
 #include <string>
 #include <vector>
@@ -30,14 +31,14 @@ private:
     UIButton *backButton = nullptr;
     UIButton *focusedButton = nullptr;
 
+    UILabel* errorLabel = nullptr;
+
     UIInputBox *nameInput = nullptr;
     UIInputBox *timeInput = nullptr;
 
     UILabel* playerLabel = nullptr;
 
     int currentPlayer = 1;
-    std::string errorMessage;
-    float errorDisplayTime = 0.0f;
 
     void createButtons();
     void createInputBoxes();
