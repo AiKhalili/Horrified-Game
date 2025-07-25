@@ -5,6 +5,7 @@
 #include "core/Game.hpp"
 #include "saves/SaveManager.hpp"
 #include "graphics/ui/UILabel.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
 
 void LoadGamesScene::onEnter()
 {
@@ -91,8 +92,8 @@ void LoadGamesScene::createButtons()
             button->setOnClick([slotNumber]()
                                {
             AudioManager::getInstance().playSoundEffect("click");
-            SaveManager::getInstance().loadGameFromSlot(slotNumber, Game::getInstance());
-            SceneManager::getInstance().goTo("BoardScene"); });
+            Game::getInstance().startLoadedGame(slotNumber);
+            SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
 
             ui.add(std::move(button));
         }
@@ -104,7 +105,7 @@ void LoadGamesScene::createButtons()
     backBtn->setOnClick([]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo("MainMenuScene"); });
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     ui.add(std::move(backBtn));
 }
