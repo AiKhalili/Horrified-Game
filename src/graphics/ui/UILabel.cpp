@@ -9,12 +9,26 @@ UILabel::UILabel(Vector2 pos, const string &txt, int sz,
                                                              fontSize(sz),
                                                              fontColor(fontClr),
                                                              cadreColor(cadreClr),
-                                                             duration(dur) {}
+                                                             duration(dur),
+                                                             timer(0.0f)
+{
+}
 
-void UILabel::setFont(Font f)
+void UILabel::setFont(const Font &f)
 {
     font = f;
     useCustomFont = true;
+}
+
+void UILabel::setText(const std::string &newText)
+{
+    text = newText;
+    timer = 0.0f;
+}
+
+void UILabel::resetTimer()
+{
+    timer = 0.0f;
 }
 
 void UILabel::update()
@@ -34,6 +48,7 @@ void UILabel::enableBackground(Color bgColor, float pad)
 
 void UILabel::render()
 {
+
     if (duration > 0.0f && timer >= duration)
     {
         return;
@@ -70,9 +85,4 @@ void UILabel::render()
     {
         DrawText(text.c_str(), drawPos.x, drawPos.y, fontSize, fontColor);
     }
-}
-
-bool UILabel::isExoired() const
-{
-    return (duration > 0.0f && timer >= duration);
 }
