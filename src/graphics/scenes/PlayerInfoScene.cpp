@@ -9,10 +9,11 @@
 
 void PlayerInfoScene::onEnter()
 {
-    std::cout << "[DEBUG] PlayerInfoScene::onEnter()" << std::endl;
+    backgroundTexture = TextureManager::getInstance().getOrLoadTexture("PlayerInfo", "assets/images/background/player_info.png");
 
-    if (font.texture.id == 0)
-        std::cout << "[DEBUG] Font texture is invalid!" << std::endl;
+    font = LoadFontEx("assets/fonts/simple.ttf", 30, 0, 0);
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+    fontLoaded = true;
 
     currentPlayer = 1;
     uiManager.clear();
@@ -22,17 +23,9 @@ void PlayerInfoScene::onEnter()
     timeInput = nullptr;
     playerLabel = nullptr;
 
-    backgroundTexture = TextureManager::getInstance().getOrLoadTexture("PlayerInfo", "assets/images/background/player_info.png");
-
-    font = LoadFont("assets/fonts/simple.ttf");
-    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
-
     createButtons();
     createInputBoxes();
-    createLabels(); // شامل playerLabel
-
-    errorMessage.clear();
-    errorDisplayTime = 0.0f;
+    createLabels();
 
     resetInputsForNextPlayer();
     debugCheckUIElements();
@@ -40,13 +33,15 @@ void PlayerInfoScene::onEnter()
 
 void PlayerInfoScene::onExit()
 {
-    std::cout << "[DEBUG] PlayerInfoScene::onExit()" << std::endl;
-    resetInputsForNextPlayer();
+
     continueButton = nullptr;
     backButton = nullptr;
     nameInput = nullptr;
     timeInput = nullptr;
     playerLabel = nullptr;
+
+    UnloadFont(font);
+    fontLoaded = false;
     uiManager.clear();
 }
 
@@ -54,33 +49,11 @@ void PlayerInfoScene::update(float deltaTime)
 {
     AudioManager::getInstance().update();
     uiManager.update();
-
-    if (IsKeyPressed(KEY_ENTER))
-    {
-        // اگر فوکوس روی هر دکمه است، فقط کلیک همان دکمه را اجرا کن
-        if (backButton && backButton->isFocus())
-        {
-            backButton->click();
-            return;
-        }
-        if (continueButton && continueButton->isFocus())
-        {
-            continueButton->click();
-            return;
-        }
-    }
-
-    // مدیریت پیام خطا
-    if (errorDisplayTime > 0.0f)
-    {
-        errorDisplayTime -= deltaTime;
-        if (errorDisplayTime <= 0.0f)
-            errorMessage.clear();
-    }
 }
 
 void PlayerInfoScene::render()
 {
+    ClearBackground(BLACK);
     DrawTexturePro(backgroundTexture,
                    Rectangle{0, 0, (float)backgroundTexture.width, (float)backgroundTexture.height},
                    Rectangle{0, 0, 1600, 900},
@@ -89,14 +62,10 @@ void PlayerInfoScene::render()
                    WHITE);
 
     uiManager.render();
-
-    if (!errorMessage.empty())
-        DrawTextEx(font, errorMessage.c_str(), {600, 40}, 40, 2, RED);
 }
 
 void PlayerInfoScene::resetInputsForNextPlayer()
 {
-    std::cout << "[DEBUG] resetInputsForNextPlayer()" << std::endl;
     if (nameInput)
         nameInput->setText("");
     if (timeInput)
@@ -105,9 +74,8 @@ void PlayerInfoScene::resetInputsForNextPlayer()
 
 void PlayerInfoScene::showErrorMessage(const std::string &msg)
 {
-    std::cout << "[DEBUG] Error: " << msg << std::endl;
-    errorMessage = msg;
-    errorDisplayTime = 3.0f;
+    std::cout << "[DEBUG] showErrorMg" << msg << '\n';
+    errorLabel->setText(msg);
 }
 
 void PlayerInfoScene::createButtons()
@@ -137,11 +105,10 @@ void PlayerInfoScene::createButtons()
     std::string name = nameInput->getText();
     std::string time = timeInput->getText();
 
-    // اگر در حال تغییر بازیکن هستیم (فریم اول) ارور نده
     if (name.empty() || time.empty())
     {
-        if (currentPlayer == 2)   // وقتی می‌خواهد بازیکن دوم را بگیرد
-            return;               // ارور نده، فقط بگذار کاربر وارد کند
+        if (currentPlayer == 2) 
+            return;
         showErrorMessage("Please enter both name and time!");
         return;
     }
@@ -189,7 +156,7 @@ void PlayerInfoScene::createInputBoxes()
 void PlayerInfoScene::createLabels()
 {
     auto playerLabelUPtr = std::make_unique<UILabel>(
-        Vector2{650, 40}, "Player 1 entering info", 40, 0.0f, WHITE);
+        Vector2{600, 40}, "Player 1 entering info", 60, 0.0f, WHITE);
     playerLabelUPtr->setFont(font);
     playerLabel = playerLabelUPtr.get();
     uiManager.add(std::move(playerLabelUPtr));
@@ -207,6 +174,12 @@ void PlayerInfoScene::createLabels()
 
     uiManager.add(std::move(nameLabelUPtr));
     uiManager.add(std::move(timeLabelUPtr));
+
+    auto errorLabelUPtr = std::make_unique<UILabel>(
+        Vector2{450, 700}, "", 40, 3.0f, RED);
+    errorLabelUPtr->setFont(font);
+    errorLabel = errorLabelUPtr.get();
+    uiManager.add(std::move(errorLabelUPtr));
 }
 
 void PlayerInfoScene::debugCheckUIElements()
@@ -217,4 +190,5 @@ void PlayerInfoScene::debugCheckUIElements()
     std::cout << "[DEBUG] nameInput: " << (nameInput ? "OK" : "NULL") << std::endl;
     std::cout << "[DEBUG] timeInput: " << (timeInput ? "OK" : "NULL") << std::endl;
     std::cout << "[DEBUG] playerLabel: " << (playerLabel ? "OK" : "NULL") << std::endl;
+    std::cout << "[DEBUG] errorLabel: " << (errorLabel ? "OK" : "NULL") << std::endl;
 }
