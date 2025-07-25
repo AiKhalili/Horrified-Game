@@ -21,10 +21,7 @@ private:
     Texture2D skullIcon;
     Texture2D chestIcon;
     Texture2D cardIcon;
-
-    Vector2 heroImangePos;
-    Vector2 chestImagePos;
-    Vector2 cardImagePos;
+    Texture2D greenFlagIcon;
 
     Font normalFont;
 
@@ -33,16 +30,18 @@ private:
     std::string hoveredLocation;
 
     void handleClickOnLocation();
+    void handleHeroInfoClick();
     void checkLocationHover();
     void DrawTerrorLevel();
     void drawHeroInfo();
-    void drawOptions();
     void drawHeroPositionMarker();
+    void drawGlow();
 
     void handleSelectAction();
     void handleSaveAndExit();
     void handleGoToMainMenu();
     void handleExitGame();
+    void handleGameStateTransition();
 
     void makeButton(const std::string &text, int row, int col, std::function<void()> onClick);
 
