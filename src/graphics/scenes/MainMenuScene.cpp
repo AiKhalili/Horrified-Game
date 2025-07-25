@@ -2,6 +2,8 @@
 #include "graphics/scenes/SceneManager.hpp"
 #include "audio/AudioManager.hpp"
 #include "graphics/TextureManager.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
+#include "core/Game.hpp"
 
 void MainMenuScene::onEnter()
 {
@@ -60,15 +62,15 @@ void MainMenuScene::render()
 
 void MainMenuScene::startGame()
 {
-    SceneManager::getInstance().goTo("BoardScene");
+    SceneManager::getInstance().goTo(SceneKeys::PLAYER_INFO_SCENE);
 }
 
 void MainMenuScene::loadGame()
 {
-    SceneManager::getInstance().goTo("LoadGamesScene");
+    SceneManager::getInstance().goTo(SceneKeys::LOAD_GAMES_SCENE);
 }
 
 void MainMenuScene::exitGame()
 {
-    CloseWindow();
+    SceneManager::getInstance().requestExit();
 }
