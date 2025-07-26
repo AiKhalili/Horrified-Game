@@ -12,11 +12,11 @@ private:
     UIManager ui;
     Texture2D background;
     Font font;
-    void craeteLabels();
+    void createLabels();
     void createButtons();
 
 public:
- void onEnter() override;
+    void onEnter() override;
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
