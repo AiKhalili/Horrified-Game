@@ -45,39 +45,21 @@ void HeroSelectionScene::update(float deltaTime)
     AudioManager::getInstance().update();
     uiManager.update();
 
-    Vector2 mousePos = GetMousePosition();
-
-    if (phase == SelectionPhase::Player1_Select || phase == SelectionPhase::Player2_Select)
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
-        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
-        {
-            for (int i = 0; i < HERO_COUNT; ++i)
-            {
-                if (CheckCollisionPointRec(mousePos, heroButtonRects[i]) && isButtonEnabled(i))
-                {
-                    onHeroSelected(i);
-                    break;
-                }
-            }
-        }
+        Vector2 mousePos = GetMousePosition();
 
-        if (IsKeyPressed(KEY_RIGHT))
+        for (int i = 0; i < HERO_COUNT; ++i)
         {
-            int &currentSelection = playerSelections[currentPlayer - 1];
-            do
+            int otherIndex = (currentPlayer == 1) ? playerSelections[1] : playerSelections[0];
+            if (otherIndex != -1 && i == otherIndex)
+                continue;
+
+            if (CheckCollisionPointRec(mousePos, heroButtonRects[i]) && isButtonEnabled(i))
             {
-                currentSelection = (currentSelection + 1) % HERO_COUNT;
-            } while (!isButtonEnabled(currentSelection));
-            onHeroSelected(currentSelection);
-        }
-        else if (IsKeyPressed(KEY_LEFT))
-        {
-            int &currentSelection = playerSelections[currentPlayer - 1];
-            do
-            {
-                currentSelection = (currentSelection - 1 + HERO_COUNT) % HERO_COUNT;
-            } while (!isButtonEnabled(currentSelection));
-            onHeroSelected(currentSelection);
+                onHeroSelected(i);
+                break;
+            }
         }
     }
 }
@@ -198,7 +180,6 @@ void HeroSelectionScene::render()
     uiManager.render();
     EndDrawing();
 }
-
 
 bool HeroSelectionScene::isButtonEnabled(int heroIndex) const
 {
