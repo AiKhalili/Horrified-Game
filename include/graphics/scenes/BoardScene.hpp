@@ -43,6 +43,7 @@ private:
     void handleSaveAndExit();
     void handleGoToMainMenu();
     void handleExitGame();
+    void handleEndHeroPhase();
     void handleGameStateTransition();
 
     void makeButton(const std::string &text, int row, int col, std::function<void()> onClick, bool center = false);
