@@ -14,6 +14,10 @@ void ShowActionsScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture("ShowActions", "assets/images/background/show_actions.png");
     font = LoadFont("assets/fonts/simple.ttf");
+
+    createLabels();
+    createButtons();
+
     SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 }
 
@@ -41,27 +45,39 @@ void ShowActionsScene::render()
     ui.render();
 }
 
-void ShowActionsScene::craeteLabels()
+void ShowActionsScene::createLabels()
 {
+    const char *text = "Please Select Action";
+    int fontSize = 70;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
     auto selectText = std::make_unique<UILabel>(
-        Vector2{800, 40}, "PLEASE SELECT ACTION", 35, 0.0f, WHITE);
+        Vector2{(1600 - textSize.x) / 2.0f, 50}, text, fontSize, 0.0f, WHITE);
     selectText->setFont(font);
     ui.add(std::move(selectText));
 }
 
 void ShowActionsScene::createButtons()
 {
-    float leftX = 100;
-    float rightX = 600;
-    float startY = 150;
-    float gap = 80;
-    float width = 200;
-    float height = 60;
+    float width = 300;
+    float height = 90;
+    float gap = 40;
+    float columnGap = 120;
+
+    float totalWidth = 2 * width + columnGap;
+    float startXLeft = (1600 - totalWidth) / 2.0f;
+    float startXRight = startXLeft + width + columnGap;
+
+    float blockHeight = (4 * height) + (3 * gap);
+    float startY = (900 - blockHeight) / 2.0f;
+
+    Color darkGreenGray = {25, 70, 70, 255}; 
+    Color mediumGreenGray = {40, 100, 100, 255};
 
     auto makeButton = [&](const std::string &text, float x, int index, std::function<void()> action)
     {
-        Rectangle bounds = {x, startY + gap * index, width, height};
-        auto btn = std::make_unique<UIButton>(bounds, text, 32, WHITE, DARKGREEN, GREEN);
+        Rectangle bounds = {x, startY + (height + gap) * index, width, height};
+        auto btn = std::make_unique<UIButton>(bounds, text, 50, WHITE, darkGreenGray, mediumGreenGray, WHITE);
         btn->setFont(font);
         btn->setOnClick([action]()
                         {
@@ -70,18 +86,19 @@ void ShowActionsScene::createButtons()
         ui.add(std::move(btn));
     };
 
-    // ۴ دکمه سمت چپ
-     makeButton("Move", leftX, 0, std::bind(&ShowActionsScene::openMoveAction, this));
-     makeButton("Pick Up", leftX, 1, std::bind(&ShowActionsScene::openPickUpAction, this));
-     makeButton("Defeat", leftX, 2, std::bind(&ShowActionsScene::openDefeatAction, this));
-     makeButton("Help", leftX, 3, std::bind(&ShowActionsScene::openHelpAction, this));
+    // ستون چپ
+    makeButton("Move", startXLeft, 0, std::bind(&ShowActionsScene::openMoveAction, this));
+    makeButton("Pick Up", startXLeft, 1, std::bind(&ShowActionsScene::openPickUpAction, this));
+    makeButton("Defeat", startXLeft, 2, std::bind(&ShowActionsScene::openDefeatAction, this));
+    makeButton("Help", startXLeft, 3, std::bind(&ShowActionsScene::openHelpAction, this));
 
-    // ۴ دکمه سمت راست
-    makeButton("Guide", rightX, 0, std::bind(&ShowActionsScene::openGuideAction, this));
-    makeButton("Advance", rightX, 1, std::bind(&ShowActionsScene::openAdvanceAction, this));
-    makeButton("Use Perk", rightX, 2, std::bind(&ShowActionsScene::openUsePerkAction, this));
-    makeButton("Special", leftX, 3, std::bind(&ShowActionsScene::openSpecialAction, this));
-    // makeButton("Quit", rightX, 3, std::bind(&ShowActionsScene::openAction9, this));
+    // ستون راست
+    makeButton("Guide", startXRight, 0, std::bind(&ShowActionsScene::openGuideAction, this));
+    makeButton("Advance", startXRight, 1, std::bind(&ShowActionsScene::openAdvanceAction, this));
+    makeButton("Use Perk", startXRight, 2, std::bind(&ShowActionsScene::openUsePerkAction, this));
+
+    //if (Game::getInstance().shouldShowSpecialAcion() == true)
+        makeButton("Special", startXRight, 3, std::bind(&ShowActionsScene::openSpecialAction, this));
 }
 
 void ShowActionsScene::openMoveAction()
