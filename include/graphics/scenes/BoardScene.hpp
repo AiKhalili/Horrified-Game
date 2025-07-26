@@ -24,6 +24,7 @@ private:
     Texture2D greenFlagIcon;
 
     Font normalFont;
+    Font locationFont;
 
     UIManager ui;
     std::vector<LocationMarker> locations;
@@ -36,6 +37,7 @@ private:
     void drawHeroInfo();
     void drawHeroPositionMarker();
     void drawGlow();
+    void drawHeroActions();
 
     void handleSelectAction();
     void handleSaveAndExit();
@@ -43,7 +45,7 @@ private:
     void handleExitGame();
     void handleGameStateTransition();
 
-    void makeButton(const std::string &text, int row, int col, std::function<void()> onClick);
+    void makeButton(const std::string &text, int row, int col, std::function<void()> onClick, bool center = false);
 
 public:
     void onEnter() override;
