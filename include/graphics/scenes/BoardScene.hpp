@@ -37,6 +37,7 @@ private:
     void drawHeroInfo();
     void drawHeroPositionMarker();
     void drawGlow();
+    void drawMonsterGlow();
     void drawHeroActions();
 
     void handleSelectAction();
