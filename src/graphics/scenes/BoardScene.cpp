@@ -21,7 +21,7 @@ void BoardScene::onEnter()
     locationFont = LoadFont("assets/fonts/arial.ttf");
 
     makeButton("Action Select", 0, 0, std::bind(&BoardScene::handleSelectAction, this));
-    makeButton("End Phase", 0, 1, std::bind(&BoardScene::handleExitGame, this));
+    makeButton("End Phase", 0, 1, std::bind(&BoardScene::handleEndHeroPhase, this));
     makeButton("Save & Exit", 1, 0, std::bind(&BoardScene::handleSaveAndExit, this));
     makeButton("Main Menu", 1, 1, std::bind(&BoardScene::handleGoToMainMenu, this));
     makeButton("Exit Game", 2, 0, std::bind(&BoardScene::handleExitGame, this), true);
@@ -88,23 +88,28 @@ void BoardScene::makeButton(const std::string &text, int row, int col, std::func
 
 void BoardScene::handleSelectAction()
 {
-    SceneManager::getInstance().goTo("SelectActionScene");
+    SceneManager::getInstance().goTo(SceneKeys::SHOW_ACTIONS_SCENE);
 }
 
 void BoardScene::handleSaveAndExit()
 {
     SaveManager::getInstance().saveGameToSlot();
-    CloseWindow();
+    SceneManager::getInstance().requestExit();
 }
 
 void BoardScene::handleGoToMainMenu()
 {
-    SceneManager::getInstance().goTo("MainMenuScene");
+    SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE);
 }
 
 void BoardScene::handleExitGame()
 {
-    CloseWindow();
+    SceneManager::getInstance().requestExit();
+}
+
+void BoardScene::handleEndHeroPhase()
+{
+    Game::getInstance().setGameState(GameState::EndHeroPhase);
 }
 
 void BoardScene::onExit()
@@ -352,13 +357,13 @@ void BoardScene::handleHeroInfoClick()
     if (CheckCollisionPointRec(mousePos, destChest) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo("ChestInfoScene");
+        SceneManager::getInstance().goTo(SceneKeys::CHEST_INFO_SCENE);
     }
 
     if (CheckCollisionPointRec(mousePos, destCard) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
         AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo("PerkCardScene");
+        SceneManager::getInstance().goTo(SceneKeys::PERK_CARD_SCENE);
     }
 }
 
