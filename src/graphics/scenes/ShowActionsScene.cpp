@@ -5,6 +5,7 @@
 #include "graphics/ui/UILabel.hpp"
 #include "graphics/TextureManager.hpp"
 #include "audio/AudioManager.hpp"
+#include "saves/SaveManager.hpp"
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -99,6 +100,34 @@ void ShowActionsScene::createButtons()
 
     //if (Game::getInstance().shouldShowSpecialAcion() == true)
         makeButton("Special", startXRight, 3, std::bind(&ShowActionsScene::openSpecialAction, this));
+
+    auto menuBtn = std::make_unique<UIButton>(Rectangle{1400, 820, 160, 50}, "Main Menu", 26, WHITE, DARKGRAY, GRAY, WHITE);
+    menuBtn->setFont(font);
+    menuBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
+
+    ui.add(std::move(menuBtn));
+
+    auto backBtn = std::make_unique<UIButton>(Rectangle{1400, 745, 160, 50}, "Back", 26, WHITE, DARKGRAY, GRAY, WHITE);
+    backBtn->setFont(font);
+    backBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
+
+    ui.add(std::move(backBtn));
+
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1400, 670, 160, 50}, "Save", 26, WHITE, DARKGRAY, GRAY, WHITE);
+    saveBtn->setFont(font);
+    saveBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SaveManager::getInstance().saveGameToSlot();
+    });
+
+    ui.add(std::move(saveBtn));
 }
 
 void ShowActionsScene::openMoveAction()
