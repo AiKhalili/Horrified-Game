@@ -292,6 +292,38 @@ void BoardScene::drawGlow()
     }
 }
 
+void BoardScene::drawMonsterGlow()
+{
+    auto monsters = Game::getInstance().getMonsters();
+
+    for (auto *monster : monsters)
+    {
+        std::string monsterLocation = monster->get_location()->get_name();
+
+        for (const auto &loc : locations)
+        {
+            if (loc.locatonName == monsterLocation)
+            {
+                Color glowColor = {255, 50, 50, 20};
+
+                for (int i = 0; i < 15; i++)
+                {
+                    float radius = loc.radius + i * 2;
+                    float alpha = 1.0f - (float)i / 15;
+                    Color ringColor = {
+                        glowColor.r,
+                        glowColor.g,
+                        glowColor.b,
+                        (unsigned char)(glowColor.a * alpha)};
+
+                    DrawCircleV(loc.posision, radius, ringColor);
+                }
+                break;
+            }
+        }
+    }
+}
+
 void BoardScene::render()
 {
     BeginDrawing();
@@ -309,6 +341,7 @@ void BoardScene::render()
     DrawTerrorLevel();
     drawHeroInfo();
     drawHeroActions();
+    drawMonsterGlow();
 
     ui.render();
 
