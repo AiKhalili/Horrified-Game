@@ -610,7 +610,14 @@ Hero* Hero::deserialize(const string& line) {
         hero = new Mayor(name, Map::get_instanse());
     } else if (className == "Archaeologist") {
         hero = new Archaeologist(name, Map::get_instanse());
-    } else {
+    } 
+    else if(className == "Courier"){
+        hero = new Courier(name,Map::get_instanse());
+    }
+    else if(className == "Scientist"){
+        hero = new Scientist(name, Map::get_instanse());
+    }
+    else {
         throw GameException("Unknown hero class: " + className);
     }
 
@@ -660,10 +667,10 @@ Hero* Hero::deserialize(const string& line) {
         string perkName;
         while (getline(perkStream, perkName, ',')) {
             PerkType type;
-            if (perkName == "Visit from the detective") type = PerkType::VISIT_FROM_THE_DETECTIVE;
-            else if (perkName == "Break of dawn")       type = PerkType::BREAK_OF_DAWN;
+            if (perkName == "VisitFromTheDetective") type = PerkType::VISIT_FROM_THE_DETECTIVE;
+            else if (perkName == "BreakOfDawn")       type = PerkType::BREAK_OF_DAWN;
             else if (perkName == "Overstock")           type = PerkType::OVERSTOCK;
-            else if (perkName == "Late into the night") type = PerkType::LATE_INTO_THE_NIGHT;
+            else if (perkName == "LateIntoTheNight") type = PerkType::LATE_INTO_THE_NIGHT;
             else if (perkName == "Repel")               type = PerkType::REPEL;
             else if (perkName == "Hurry")               type = PerkType::HURRY;
             else throw GameException("Unknown perk: " + perkName);
