@@ -14,13 +14,19 @@
 class ChestInfoScene : public Scene
 {
 private:
+    struct HeroItemTex
+    {
+        Texture2D tex;
+        COlOR color;
+    };
+
     Hero *currentHero;
     Texture2D background;
     Font font;
     UIManager uiManager;
-    std::unique_ptr<UIButton> uiButton;
-    std::vector<Texture2D> itemTextures;
+    std::vector<HeroItemTex> itemTextures;
     void loadHeroItems();
+    void createUI();
 
 public:
     void update(float deleteTime) override;
