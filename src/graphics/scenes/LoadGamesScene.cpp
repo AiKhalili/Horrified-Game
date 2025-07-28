@@ -51,14 +51,18 @@ void LoadGamesScene::createButtons()
 {
     auto slots = SaveManager::getInstance().getAllSaveSlotsWithTimestamps();
 
-    float btnWidth = 280;
+    float btnWidth = 300;
     float btnHeight = 80;
-    float startX = 80;
-    float startY = 150;
-    float gapX = 300;
-    float gapY = 130;
+    float gapX = 100;
+    float gapY = 50;
 
-    int maxPerRow = 5;
+    float totalWidth = btnWidth * 2 + gapX;
+    float startX = (1600 - totalWidth) / 2;
+
+    float totalHeight = btnHeight * 5 + gapY * 4;
+    float startY = (900 - totalHeight) / 2;
+
+    int maxPerRow = 2;
 
     Color buttonColor = {255, 230, 180, 255};
 
@@ -73,18 +77,19 @@ void LoadGamesScene::createButtons()
     }
     else
     {
-        for (size_t i = 0; i < slots.size(); ++i)
+        size_t maxSlots = std::min(slots.size(),(size_t)10);
+        for (size_t i = 0; i < maxSlots; ++i)
         {
             int row = i / maxPerRow;
             int col = i % maxPerRow;
 
-            float x = startX + col * gapX;
-            float y = startY + row * gapY;
+            float x = startX + col * (gapX + btnWidth);
+            float y = startY + row * (gapY + btnHeight);
 
             Rectangle bounds = {x, y, btnWidth, btnHeight};
             std::string label = "Slot " + std::to_string(slots[i].first) + "\n" + slots[i].second;
 
-            auto button = std::make_unique<UIButton>(bounds, label, 22, buttonColor, BLACK, DARKGRAY, buttonColor);
+            auto button = std::make_unique<UIButton>(bounds, label, 28, buttonColor, BLACK, DARKGRAY, buttonColor);
             button->setFont(normalFont);
 
             int slotNumber = slots[i].first;
