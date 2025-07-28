@@ -16,6 +16,8 @@ namespace SceneKeys
     inline const std::string OUT_OF_TIME_SCENE = "OutOfTimeScene";
     inline const std::string PERK_CARD_SCENE = "PerkCardScene";
     inline const std::string MONSTER_PHASE_SCENE = "MonsterPhaseScene";
+    inline const std::string SHOW_ACTIONS_SCENE = "ShowActionsScene";
+    inline const std::string CHEST_INFO_SCENE = "ChestInfoScene";
 }
 
 #endif
