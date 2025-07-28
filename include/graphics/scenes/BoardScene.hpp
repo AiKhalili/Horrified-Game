@@ -21,6 +21,7 @@ private:
     Texture2D skullIcon;
     Texture2D chestIcon;
     Texture2D cardIcon;
+    Texture2D potionIcon;
     Texture2D greenFlagIcon;
 
     Font normalFont;
