@@ -184,7 +184,7 @@ void BoardScene::drawHeroInfo()
 
     Texture2D heroTexture = TextureManager::getInstance().getOrLoadTexture(heroName, heroPath);
 
-    Rectangle destHero = {1200, 80, 380, 500};
+    Rectangle destHero = {1200, 95, 380, 500};
 
     DrawTexturePro(heroTexture,
                    {0, 0, (float)heroTexture.width, (float)heroTexture.height},
