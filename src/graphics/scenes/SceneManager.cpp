@@ -7,6 +7,9 @@
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/scenes/HeroSelectionScene.hpp"
 #include "graphics/scenes/PlayerInfoScene.hpp"
+#include "graphics/scenes/ShowActionsScene.hpp"
+#include "graphics/scenes/ChestInfoScene.hpp"
+#include "graphics/scenes/PerkCardScene.hpp"
 #include <iostream>
 
 SceneManager &SceneManager::getInstance()
@@ -32,6 +35,9 @@ void SceneManager::registerAllScenes()
     registerScene(SceneKeys::BOARD_SCENE, std::make_unique<BoardScene>());
     registerScene(SceneKeys::PLAYER_INFO_SCENE, std::make_unique<PlayerInfoScene>());
     registerScene(SceneKeys::HERO_SELECTION_SCENE, std::make_unique<HeroSelectionScene>());
+    registerScene(SceneKeys::SHOW_ACTIONS_SCENE, std::make_unique<ShowActionsScene>());
+    registerScene(SceneKeys::CHEST_INFO_SCENE, std::make_unique<ChestInfoScene>());
+    registerScene(SceneKeys::PERK_CARD_SCENE, std::make_unique<PerkCardScene>());
     // registerScene(SceneKeys::GAME_WON_SCENE)
 }
 
