@@ -15,6 +15,7 @@ void BoardScene::onEnter()
     chestIcon = TextureManager::getInstance().getOrLoadTexture("chest", "assets/images/icon/chest.png");
     cardIcon = TextureManager::getInstance().getOrLoadTexture("cardIcon", "assets/images/icon/perkCard.png");
     greenFlagIcon = TextureManager::getInstance().getOrLoadTexture("greenFlag", "assets/images/icon/greenFlag.png");
+    potionIcon = TextureManager::getInstance().getOrLoadTexture("potion", "assets/images/icon/potion.png");
 
     normalFont = LoadFontEx("assets/fonts/simple.ttf", 100, 0, 0);
     SetTextureFilter(normalFont.texture, TEXTURE_FILTER_BILINEAR);
@@ -183,7 +184,7 @@ void BoardScene::drawHeroInfo()
 
     Texture2D heroTexture = TextureManager::getInstance().getOrLoadTexture(heroName, heroPath);
 
-    Rectangle destHero = {1200, 70, 400, 500};
+    Rectangle destHero = {1200, 80, 380, 500};
 
     DrawTexturePro(heroTexture,
                    {0, 0, (float)heroTexture.width, (float)heroTexture.height},
@@ -215,7 +216,7 @@ void BoardScene::drawHeroInfo()
     Vector2 chestTextPos = {
         destChest.x + destChest.width / 2 - chestSize.x / 2,
         destChest.y + destChest.height};
-    DrawTextEx(normalFont, chestLabel, chestTextPos, 28, 1, {0, 0, 100, 255});
+    DrawTextEx(normalFont, chestLabel, chestTextPos, 28, 1, WHITE);
 
     DrawTexturePro(cardIcon,
                    {0, 0, (float)cardIcon.width, (float)cardIcon.height},
@@ -226,7 +227,7 @@ void BoardScene::drawHeroInfo()
     Vector2 cardTextPos = {
         destCard.x + destCard.width / 2 - cardSize.x / 2,
         destCard.y + destCard.height + 8};
-    DrawTextEx(normalFont, cardLabel, cardTextPos, 28, 1, {0, 0, 100, 255});
+    DrawTextEx(normalFont, cardLabel, cardTextPos, 28, 1, WHITE);
 }
 
 void BoardScene::update(float)
@@ -409,19 +410,25 @@ void BoardScene::drawHeroActions()
         return;
     }
 
-    int maxAction = hero->getMaxActions();
     int remaining = hero->getActionsLeft();
 
-    float startX = 950;
-    float startY = 150;
-    float radius = 18.0f;
-    float gap = 12.0f;
+    float startX = 880;
+    float startY = 130;
+    float gap = 0.0f;
+    float size = 65.0f;
 
-    for (int i = 0; i < maxAction; i++)
+    for (int i = 0; i < remaining; i++)
     {
-        Color color = (i < remaining) ? Color{255, 250, 100, 255} : DARKGRAY;
-        Vector2 pos = {startX + i * (radius * 2 + gap), startY};
-        DrawCircleV(pos, radius, color);
-        DrawCircleLinesV(pos, radius, BLACK);
+        Rectangle src = {
+            0, 0,
+            (float)potionIcon.width,
+            (float)potionIcon.height};
+
+        Rectangle dest = {
+            startX + i * (size + gap),
+            startY,
+            size, size};
+
+        DrawTexturePro(potionIcon, src, dest, {0, 0}, 0.0f, WHITE);
     }
 }
