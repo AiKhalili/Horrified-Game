@@ -53,8 +53,8 @@ void LoadGamesScene::createButtons()
 
     float btnWidth = 280;
     float btnHeight = 80;
-    float startX = 150;
-    float startY = 120;
+    float startX = 80;
+    float startY = 150;
     float gapX = 300;
     float gapY = 130;
 
