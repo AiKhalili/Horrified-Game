@@ -177,15 +177,25 @@ void ItemSelectionScene::createLabels()
 
     ui.add(std::move(boardBtn));
 
-    auto nonBtn = std::make_unique<UIButton>(Rectangle{730, 790, 150, 75}, "Non", 60, textcolor, labelcolor, clickcolor, textcolor);
+    Color midCreamBrown ={140, 110, 70, 255};
+
+    auto nonBtn = std::make_unique<UIButton>(Rectangle{570, 790, 130, 60}, "Non", 45, labelcolor, textcolor, clickcolor, midCreamBrown);
     nonBtn->setFont(font);
     nonBtn->setOnClick([]()
-                        {
-        AudioManager::getInstance().playSoundEffect("click");
-    // یادم باشه این جا باید بزنم
-     });
+                       {
+                           AudioManager::getInstance().playSoundEffect("click");
+                       });
 
     ui.add(std::move(nonBtn));
+
+    auto submtBtn = std::make_unique<UIButton>(Rectangle{900, 790, 130, 60}, "Submit", 45,
+                                               labelcolor, textcolor, clickcolor, midCreamBrown);
+    submtBtn->setFont(font);
+    submtBtn->setOnClick([]()
+                         { 
+                             AudioManager::getInstance().playSoundEffect("click");
+                         });
+    ui.add(std::move(submtBtn));
 }
 
 void ItemSelectionScene::loadItemTextures()
@@ -224,7 +234,7 @@ void ItemSelectionScene::toggleSelection(Item *item)
         selected.erase(it);
 }
 
-std::vector<Item*>& ItemSelectionScene::getSelectedItems()
+std::vector<Item *> &ItemSelectionScene::getSelectedItems()
 {
     return selected;
 }
