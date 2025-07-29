@@ -10,6 +10,7 @@
 #include "graphics/scenes/ShowActionsScene.hpp"
 #include "graphics/scenes/ChestInfoScene.hpp"
 #include "graphics/scenes/PerkCardScene.hpp"
+#include "graphics/scenes/LocationInfoScene.hpp"
 #include <iostream>
 
 SceneManager &SceneManager::getInstance()
@@ -38,6 +39,7 @@ void SceneManager::registerAllScenes()
     registerScene(SceneKeys::SHOW_ACTIONS_SCENE, std::make_unique<ShowActionsScene>());
     registerScene(SceneKeys::CHEST_INFO_SCENE, std::make_unique<ChestInfoScene>());
     registerScene(SceneKeys::PERK_CARD_SCENE, std::make_unique<PerkCardScene>());
+    registerScene(SceneKeys::LOCATION_INFO_SCENE, std::make_unique<LocationInfoScene>());
     // registerScene(SceneKeys::GAME_WON_SCENE)
 }
 
