@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include "graphics/scenes/Scene.hpp"
+#include <stdexcept>
 
 class SceneManager
 {
@@ -19,6 +20,22 @@ public:
     // call in *main*
     void update(float deleteTime);
     void render();
+
+    template <typename T>
+    T &getScene(const std::string &name)
+    {
+        auto it = scenes.find(name);
+        if (it == scenes.end())
+        {
+            throw std::runtime_error("Scene <" + name + "> not found!");
+        }
+        T *scene = dynamic_cast<T *>(it->second.get());
+        if (!scene)
+        {
+            throw std::runtime_error("Scene <" + name + "> is not of requested type!");
+        }
+        return *scene;
+    }
 
 private:
     SceneManager() = default;
