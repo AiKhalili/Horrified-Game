@@ -12,15 +12,27 @@
 class LocationInfoScene : public Scene
 {
 private:
-    Location *currentLocation;
+    struct ItemTex
+    {
+        Texture2D tex;
+        COlOR color;
+    };
+
+    Texture2D background;
+    Location *currentLocation = nullptr;
     Font font;
     UIManager ui;
-    std::unordered_map<std::string, Texture2D *> textures;
+
+    std::vector<ItemTex> itemTextures;
+    std::vector<Texture2D> heroTextures;
+    std::vector<Texture2D> monsterTextures;
+    std::vector<Texture2D> villagerTextures;
 
     void loadTextures();
     void createUI();
     void drawCoffin();
-    void drawCharacters();
+    void drawHeroAndMonster();
+    void drawVillagers();
     void drawItems();
 
 public:
@@ -28,6 +40,8 @@ public:
     void onExit() override;
     void update(float deleteTime) override;
     void render() override;
+
+    void setLocation(Location *loc);
 };
 
 #endif
