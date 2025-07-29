@@ -18,6 +18,7 @@ namespace SceneKeys
     inline const std::string MONSTER_PHASE_SCENE = "MonsterPhaseScene";
     inline const std::string SHOW_ACTIONS_SCENE = "ShowActionsScene";
     inline const std::string CHEST_INFO_SCENE = "ChestInfoScene";
+    inline const std::string LOCATION_INFO_SCENE = "LocationInfoScene";
 }
 
 #endif
