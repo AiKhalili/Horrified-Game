@@ -19,7 +19,7 @@ public:
 
     void setMonsterPhaseLog(const std::vector<std::string> &log);
 
-    std::vector<std::string> getMonsterPhaseLog();
+    std::vector<std::string> getMonsterPhaseLog() const;
 };
 
 #endif
