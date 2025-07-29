@@ -3,9 +3,11 @@
 #include "graphics/scenes/SceneManager.hpp"
 #include "graphics/TextureManager.hpp"
 #include "core/Game.hpp"
+#include "core/Map.hpp"
 #include "raymath.h"
 #include "saves/SaveManager.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/scenes/LocationInfoScene.hpp"
 #include <iostream>
 
 void BoardScene::onEnter()
@@ -125,7 +127,14 @@ void BoardScene::handleClickOnLocation()
     {
         AudioManager::getInstance().playSoundEffect("click");
         std::cout << "Clicked on : " << hoveredLocation << '\n'; // just for debug
-        SceneManager::getInstance().goTo("LocationInfoScene");
+
+        Location *selectedLoc = Map::get_instanse()->getLocation(hoveredLocation);
+        if (selectedLoc)
+        {
+            auto &scene = SceneManager::getInstance().getScene<LocationInfoScene>(SceneKeys::LOCATION_INFO_SCENE);
+            scene.setLocation(selectedLoc);
+            SceneManager::getInstance().goTo(SceneKeys::LOCATION_INFO_SCENE);
+        }
     }
 }
 
