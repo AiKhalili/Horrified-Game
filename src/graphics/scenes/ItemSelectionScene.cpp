@@ -22,7 +22,7 @@ void ItemSelectionScene::setData(const std::vector<Item *> &Items)
 void ItemSelectionScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture(
-        "ShowActions", "assets/images/background/item_selection.png");
+        "ItemSelection", "assets/images/background/item_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
 
     createLabels();
