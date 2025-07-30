@@ -6,6 +6,7 @@
 #include "graphics/TextureManager.hpp"
 #include "audio/AudioManager.hpp"
 #include "saves/SaveManager.hpp"
+#include "core/SceneDataHub.hpp"
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -176,11 +177,13 @@ void MonsterSelectionScene::createButtons()
     confirmedMonster = clickedMonster;
 
     if (confirmedMonster == 0)
-        selectedMonsterName = "Dracula";
+        selectedMonster = new Dracula();
     else if (confirmedMonster == 1)
-        selectedMonsterName = "InvisibleMan";
+        selectedMonster = new Invisible_Man();
     else
-        selectedMonsterName = ""; });
+        selectedMonster = nullptr; 
+    SceneDataHub::getInstance().setSelectedMonster(this->getSelectedMonster());
+    });
 
     ui.add(std::move(submtBtn));
 
@@ -205,4 +208,7 @@ void MonsterSelectionScene::createButtons()
     ui.add(std::move(wealth1Btn));
 }
 
-std::string MonsterSelectionScene::getSelectedMonsterName() { return selectedMonsterName; }
+Monster* MonsterSelectionScene::getSelectedMonster()
+{
+    return selectedMonster;
+}
