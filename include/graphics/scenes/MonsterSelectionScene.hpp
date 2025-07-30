@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "core/Monster.hpp"
 #include "raylib.h"
 
 class Game;
@@ -21,7 +22,7 @@ private:
     int hoverMonster = -1;
     int clickedMonster = -1; 
     int confirmedMonster = -1;
-    std::string selectedMonsterName;
+    Monster* selectedMonster = nullptr;
 
 public:
     void onEnter() override;
@@ -29,7 +30,7 @@ public:
     void update(float deltaTime) override;
     void render() override;
 
-    std::string getSelectedMonsterName();
+    Monster* getSelectedMonster();
 };
 
 #endif
