@@ -6,6 +6,7 @@
 #include "graphics/TextureManager.hpp"
 #include "audio/AudioManager.hpp"
 #include "saves/SaveManager.hpp"
+#include "core/SceneDataHub.hpp"
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -15,7 +16,7 @@
 void ItemSelectionScene::setData(const std::vector<Item *> &Items)
 {
     items = Items;
-    // hero = Game::getInstance().getCurrentHero();
+    hero = Game::getInstance().getCurrentHero();
     location = Items[0]->get_location();
 }
 
@@ -177,24 +178,28 @@ void ItemSelectionScene::createLabels()
 
     ui.add(std::move(boardBtn));
 
-    Color midCreamBrown ={140, 110, 70, 255};
+    Color midCreamBrown = {140, 110, 70, 255};
 
-    auto nonBtn = std::make_unique<UIButton>(Rectangle{570, 790, 130, 60}, "Non", 45, labelcolor, textcolor, clickcolor, midCreamBrown);
+    auto nonBtn = std::make_unique<UIButton>(
+        Rectangle{570, 790, 130, 60}, "Non", 45,
+        labelcolor, textcolor, clickcolor, midCreamBrown);
     nonBtn->setFont(font);
-    nonBtn->setOnClick([]()
+    nonBtn->setOnClick([this]()
                        {
-                           AudioManager::getInstance().playSoundEffect("click");
-                       });
+    AudioManager::getInstance().playSoundEffect("click");
 
+    this->selected.clear();
+
+    SceneDataHub::getInstance().setSelectedItems({}); });
     ui.add(std::move(nonBtn));
 
     auto submtBtn = std::make_unique<UIButton>(Rectangle{900, 790, 130, 60}, "Submit", 45,
                                                labelcolor, textcolor, clickcolor, midCreamBrown);
     submtBtn->setFont(font);
-    submtBtn->setOnClick([]()
+    submtBtn->setOnClick([this]()
                          { 
                              AudioManager::getInstance().playSoundEffect("click");
-                         });
+                             SceneDataHub::getInstance().setSelectedItems(this->getSelectedItems()); });
     ui.add(std::move(submtBtn));
 }
 
