@@ -10,21 +10,32 @@
 enum class MonsterPhaseStep
 {
     CheckMonsterPhasePerk,
-    DrawMonsterCard
+    DrawMonsterCard,
+    PlaceItems
 };
 
 class MonsterPhaseScene : public Scene
 {
 private:
     Texture2D background;
+    Texture2D cardTexture;
     Font font;
     UIManager ui;
     Game &game = Game::getInstance();
     MonsterPhaseStep currentStep = MonsterPhaseStep::CheckMonsterPhasePerk;
+
     float stepTimer = 0.0f;
+    float cardScale = 0.0f;
+
+    bool cardDrawn = false;
     bool skipPhase = false;
+    MonsterCard card;
+
+    std::vector<Item*> items;
+    std::vector<Texture2D> itemTex;
 
     void step_CheckMonsterPhasePerk(float deleteTime);
+    void step_DrawMonsterCard(float deleteTime);
 
 public:
     void onEnter() override;
