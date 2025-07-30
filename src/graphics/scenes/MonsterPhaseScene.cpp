@@ -27,7 +27,35 @@ void MonsterPhaseScene::render()
     float scaleX = 1600.0f / background.width;
     DrawTextureEx(background, {0.0}, 0.0f, scaleX, WHITE);
 
+    if (cardDrawn)
+    {
+        float cardW = 300.0f * cardScale;
+        float cardH = 400.0f * cardScale;
+        Vector2 pos = {1600 - cardW - 50, 50}; // گوشه راست بالا
+
+        Rectangle src = {0, 0, (float)cardTexture.width, (float)cardTexture.height};
+        Rectangle dst = {pos.x, pos.y, cardW, cardH};
+        Vector2 origin = {0, 0};
+
+        DrawTexturePro(cardTexture, src, dst, origin, 0.0f, WHITE);
+    }
+
     ui.render();
+}
+
+void MonsterPhaseScene::update(float deleteTime)
+{
+    switch (currentStep)
+    {
+    case MonsterPhaseStep::CheckMonsterPhasePerk:
+        step_CheckMonsterPhasePerk(deleteTime);
+        break;
+    case MonsterPhaseStep::DrawMonsterCard:
+        step_DrawMonsterCard(deleteTime);
+        break;
+    }
+
+    ui.update();
 }
 
 void MonsterPhaseScene::step_CheckMonsterPhasePerk(float deltaTime)
@@ -65,5 +93,33 @@ void MonsterPhaseScene::step_CheckMonsterPhasePerk(float deltaTime)
     {
         currentStep = MonsterPhaseStep::DrawMonsterCard;
         stepTimer = 0.0f;
+    }
+}
+
+void MonsterPhaseScene::step_DrawMonsterCard(float deltaTime)
+{
+    if (!cardDrawn)
+    {
+        game.drawMonsterCard();
+        card = game.currentMosnterCard;
+
+        std::string name = card.get_name();
+        std::string path = "assets/images/Monster_Cards/" + name + ".png";
+
+        cardTexture = TextureManager::getInstance().getOrLoadTexture(name, path);
+
+        cardScale = 0.0f;
+        cardDrawn = true;
+    }
+
+    if (cardScale < 1.0f)
+    {
+        cardScale += deltaTime * 1.0f;
+        if (cardScale >= 1.0f)
+        {
+            cardScale = 1.0f;
+            // AudioManager::getInstance().playSFX("card_hit"); // صدای کوبیدن کارت
+            currentStep = MonsterPhaseStep::PlaceItems;
+        }
     }
 }
