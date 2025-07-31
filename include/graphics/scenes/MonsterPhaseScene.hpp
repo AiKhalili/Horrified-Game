@@ -5,6 +5,7 @@
 #include "graphics/ui/UIManager.hpp"
 #include "graphics/ui/UILabel.hpp"
 #include "raylib.h"
+#include <memory>
 #include "core/Game.hpp"
 
 enum class MonsterPhaseStep
@@ -12,7 +13,8 @@ enum class MonsterPhaseStep
     CheckMonsterPhasePerk,
     DrawMonsterCard,
     PlaceItems,
-    RunEvent
+    RunEvent,
+    Move
 };
 
 class MonsterPhaseScene : public Scene
@@ -21,6 +23,8 @@ private:
     Texture2D background;
     Texture2D cardTexture;
     Texture2D bats;
+    Texture2D villagerTex;
+    
     Font normalFont;
     Font spookyFont;
 
@@ -43,7 +47,10 @@ private:
     float itemsAlpha = 0.0f;
     bool showItemIcons = false;
 
-    void showMessage(const std::string& text,Vector2 pos,int fontSize,float time);
+    bool titelAdded = false;
+    bool messageShown = false;
+
+    void showMessage(const std::string &text, Vector2 pos, int fontSize, float time);
 
     void step_CheckMonsterPhasePerk(float deleteTime);
     void step_DrawMonsterCard(float deleteTime);
@@ -53,8 +60,12 @@ private:
     void renderBackGround();
     void renderMonsterCard();
     void renderItems();
+    void renderEvents();
 
     void render_FormOfTheBat(float deleteTime);
+    void render_Thief(float deleteTime);
+    void render_Sunrise(float deleteTime);
+    void render_villagerCard(float deleteTime);
 
 public:
     void onEnter() override;
