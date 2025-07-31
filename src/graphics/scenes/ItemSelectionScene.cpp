@@ -16,8 +16,11 @@
 void ItemSelectionScene::setData(const std::vector<Item *> &Items)
 {
     items = Items;
-    hero = Game::getInstance().getCurrentHero();
-    location = Items[0]->get_location();
+    if (!items.empty())
+    {
+        hero = Game::getInstance().getCurrentHero();
+        location = Items[0]->get_location();
+    }
 }
 
 void ItemSelectionScene::onEnter()
@@ -27,6 +30,15 @@ void ItemSelectionScene::onEnter()
     font = LoadFont("assets/fonts/simple.ttf");
 
     createLabels();
+
+    if (!items.empty())
+    {
+        createActionButtons();
+    }
+    else
+    {
+        creatErroreLabels();
+    }
 
     std::sort(items.begin(), items.end(), [](Item *a, Item *b)
               {
@@ -180,27 +192,6 @@ void ItemSelectionScene::createLabels()
 
     Color midCreamBrown = {140, 110, 70, 255};
 
-    auto nonBtn = std::make_unique<UIButton>(
-        Rectangle{570, 790, 130, 60}, "Non", 45,
-        labelcolor, textcolor, clickcolor, midCreamBrown);
-    nonBtn->setFont(font);
-    nonBtn->setOnClick([this]()
-                       {
-    AudioManager::getInstance().playSoundEffect("click");
-
-    this->selected.clear();
-
-    SceneDataHub::getInstance().setSelectedItems({}); });
-    ui.add(std::move(nonBtn));
-
-    auto submtBtn = std::make_unique<UIButton>(Rectangle{900, 790, 130, 60}, "Submit", 45,
-                                               labelcolor, textcolor, clickcolor, midCreamBrown);
-    submtBtn->setFont(font);
-    submtBtn->setOnClick([this]()
-                         { 
-                             AudioManager::getInstance().playSoundEffect("click");
-                             SceneDataHub::getInstance().setSelectedItems(this->getSelectedItems()); });
-    ui.add(std::move(submtBtn));
 }
 
 void ItemSelectionScene::loadItemTextures()
@@ -242,4 +233,49 @@ void ItemSelectionScene::toggleSelection(Item *item)
 std::vector<Item *> &ItemSelectionScene::getSelectedItems()
 {
     return selected;
+}
+
+void ItemSelectionScene::creatErroreLabels()
+{
+    const char *text = "There are no items to display";
+    int fontSize = 40;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+
+    auto errorText = std::make_unique<UILabel>(
+        Vector2{(1600 - textSize.x) / 2.0f, 250}, text, fontSize, 0.0f, textcolor, textcolor);
+    errorText->setFont(font);
+    errorText->enableBackground(labelcolor, 10.0f);
+    ui.add(std::move(errorText));
+}
+
+void ItemSelectionScene::createActionButtons()
+{
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+    Color clickcolor = {85, 65, 45, 255};
+    Color midCreamBrown = {140, 110, 70, 255};
+
+    auto nonBtn = std::make_unique<UIButton>(
+        Rectangle{570, 790, 130, 60}, "Non", 45,
+        labelcolor, textcolor, clickcolor, midCreamBrown);
+    nonBtn->setFont(font);
+    nonBtn->setOnClick([this]()
+                       {
+        AudioManager::getInstance().playSoundEffect("click");
+        this->selected.clear();
+        SceneDataHub::getInstance().setSelectedItems({}); });
+    ui.add(std::move(nonBtn));
+
+    auto submitBtn = std::make_unique<UIButton>(
+        Rectangle{900, 790, 130, 60}, "Submit", 45,
+        labelcolor, textcolor, clickcolor, midCreamBrown);
+    submitBtn->setFont(font);
+    submitBtn->setOnClick([this]()
+                          {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneDataHub::getInstance().setSelectedItems(this->getSelectedItems()); });
+    ui.add(std::move(submitBtn));
 }
