@@ -30,6 +30,8 @@ private:
     void loadItemTextures();
     void toggleSelection(Item *item);
     void createLabels();
+    void creatErroreLabels();
+    void createActionButtons();
 
 public:
     void onEnter() override;
