@@ -18,6 +18,7 @@ private:
     Texture2D monsterTextures[2];
     void LoadeMonsterTextures();
     void createButtons();
+    void createLabels();
 
     int hoverMonster = -1;
     int clickedMonster = -1; 
