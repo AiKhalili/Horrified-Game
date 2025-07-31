@@ -20,6 +20,7 @@ void MonsterSelectionScene::onEnter()
     LoadeMonsterTextures();
 
     createButtons();
+    createLabels();
 
     SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
     AudioManager::getInstance().stopMusic();
@@ -130,18 +131,9 @@ void MonsterSelectionScene::LoadeMonsterTextures()
 
 void MonsterSelectionScene::createButtons()
 {
-    const char *text = "Please Select Monster";
-    int fontSize = 45;
-    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
-
     Color textcolor = {255, 255, 255, 150};
     Color labelcolor = {138, 3, 3, 180};
     Color clickcolor = {170, 30, 30, 150};
-
-    auto selectText = std::make_unique<UILabel>(
-        Vector2{(1600 - textSize.x) / 2.0f, 15}, text, fontSize, 0.0f, textcolor);
-    selectText->setFont(font);
-    ui.add(std::move(selectText));
 
     auto menuBtn = std::make_unique<UIButton>(Rectangle{1450, 840, 120, 40}, "Main Menu", 20, textcolor, labelcolor, clickcolor, textcolor);
     menuBtn->setFont(font);
@@ -182,33 +174,52 @@ void MonsterSelectionScene::createButtons()
         selectedMonster = new Invisible_Man();
     else
         selectedMonster = nullptr; 
-    SceneDataHub::getInstance().setSelectedMonster(this->getSelectedMonster());
-    });
+    SceneDataHub::getInstance().setSelectedMonster(this->getSelectedMonster()); });
 
     ui.add(std::move(submtBtn));
-
-    auto nameBtn = std::make_unique<UIButton>(Rectangle{390, 700, 300, 45}, "Monster Name:  Dracula", 30,
-                                              labelcolor, textcolor, clickcolor, labelcolor);
-    nameBtn->setFont(font);
-    ui.add(std::move(nameBtn));
-
-    auto wealthBtn = std::make_unique<UIButton>(Rectangle{440, 750, 200, 45}, "Wealth: Coffins", 30,
-                                                labelcolor, textcolor, clickcolor, labelcolor);
-    wealthBtn->setFont(font);
-    ui.add(std::move(wealthBtn));
-
-    auto name1Btn = std::make_unique<UIButton>(Rectangle{890, 700, 350, 45}, "Monster Name:  InvisibleMan", 30,
-                                               labelcolor, textcolor, clickcolor, labelcolor);
-    name1Btn->setFont(font);
-    ui.add(std::move(name1Btn));
-
-    auto wealth1Btn = std::make_unique<UIButton>(Rectangle{960, 750, 220, 45}, "Wealth: Evidences", 30,
-                                                 labelcolor, textcolor, clickcolor, labelcolor);
-    wealth1Btn->setFont(font);
-    ui.add(std::move(wealth1Btn));
 }
 
-Monster* MonsterSelectionScene::getSelectedMonster()
+Monster *MonsterSelectionScene::getSelectedMonster()
 {
     return selectedMonster;
+}
+
+void MonsterSelectionScene::createLabels()
+{
+     const char *text = "Please Select Monster";
+    int fontSize = 45;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
+    Color textcolor = {255, 255, 255, 150};
+    Color labelcolor = {138, 3, 3, 180};
+    Color clickcolor = {170, 30, 30, 150};
+
+    auto selectText = std::make_unique<UILabel>(
+        Vector2{(1600 - textSize.x) / 2.0f, 15}, text, fontSize, 0.0f, textcolor);
+    selectText->setFont(font);
+    ui.add(std::move(selectText));
+
+    auto nameBtn = std::make_unique<UILabel>(Vector2{390, 700}, "Monster Name:  Dracula", 30, 0.0f,
+                                              labelcolor, labelcolor);
+    nameBtn->setFont(font);
+    nameBtn->enableBackground(textcolor, 10.0f);
+    ui.add(std::move(nameBtn));
+
+    auto wealthBtn = std::make_unique<UILabel>(Vector2{440, 765}, "Wealth: Coffins", 30,0.0f,
+                                                labelcolor, labelcolor);
+    wealthBtn->setFont(font);
+    wealthBtn->enableBackground(textcolor, 10.0f);
+    ui.add(std::move(wealthBtn));
+
+    auto name1Btn = std::make_unique<UILabel>(Vector2{890, 700}, "Monster Name:  InvisibleMan", 30,0.0f,
+                                               labelcolor, labelcolor);
+    name1Btn->setFont(font);
+    name1Btn->enableBackground(textcolor, 10.0f);
+    ui.add(std::move(name1Btn));
+
+    auto wealth1Btn = std::make_unique<UILabel>(Vector2{960, 765}, "Wealth: Evidences", 30,0.0f,
+                                                 labelcolor, labelcolor);
+    wealth1Btn->setFont(font);
+    wealth1Btn->enableBackground(textcolor, 10.0f);
+    ui.add(std::move(wealth1Btn));
 }
