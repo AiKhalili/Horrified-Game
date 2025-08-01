@@ -165,3 +165,48 @@ void Invisible_Man::setEvidence(const std::map<std::string, bool>& newEvidence) 
     evidence = newEvidence;
 }
 
+Location* Invisible_Man::moveTowardTarget(vector<Hero *> heroes, vector<Villager *> villagers, int maxSteps)
+{
+    Location *currentLocation = this->get_location();
+
+    // اگه روستایی روی لوکیشن هست، حرکت نکن
+    for (Villager *v : villagers)
+    {
+        if (v->getCurrentLocation() == currentLocation)
+            return currentLocation;
+    }
+
+    // پیدا کردن نزدیک‌ترین روستایی
+    Location *target = nullptr;
+    vector<Location *> path;
+    size_t minDistance = INT_MAX;
+
+    for (Villager *v : villagers)
+    {
+        vector<Location *> p = findShortestPath(currentLocation, v->getCurrentLocation());
+        if (!p.empty() && p.size() < minDistance)
+        {
+            minDistance = p.size();
+            path = p;
+            target = v->getCurrentLocation();
+        }
+    }
+
+    if (!target) return nullptr;
+
+    if ((int)path.size() <= maxSteps + 1)
+    {
+        this->get_location()->removeMonster(this);
+        this->set_location(target);
+        target->addMonster(this);
+        return target;
+    }
+    else
+    {
+        Location *intermediate = path[maxSteps];
+        this->get_location()->removeMonster(this);
+        this->set_location(intermediate);
+        intermediate->addMonster(this);
+        return nullptr;
+    }
+}
