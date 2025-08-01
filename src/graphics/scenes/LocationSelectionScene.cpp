@@ -1,0 +1,299 @@
+#include "graphics/scenes/LocationSelectionScene.hpp"
+#include "saves/SaveManager.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/scenes/SceneManager.hpp"
+#include "graphics/ui/UIButton.hpp"
+#include "graphics/ui/UILabel.hpp"
+#include "graphics/TextureManager.hpp"
+#include "audio/AudioManager.hpp"
+#include "saves/SaveManager.hpp"
+#include "core/SceneDataHub.hpp"
+#include <memory>
+#include <vector>
+#include <iostream>
+#include <cmath>
+#include "core/Game.hpp"
+#include "raymath.h"
+
+void LocationSelectionScene::setData(const std::vector<Location *> &Locations)
+{
+    Sentlocations = Locations;
+}
+
+void LocationSelectionScene::onEnter()
+{
+    background = TextureManager::getInstance().getOrLoadTexture("board", "assets/images/background/location_selection.jpg");
+
+    normalFont = LoadFontEx("assets/fonts/simple.ttf",  30, 0, 0);
+    SetTextureFilter(normalFont.texture, TEXTURE_FILTER_BILINEAR);
+
+    locationFont = LoadFontEx("assets/fonts/arial.ttf", 30, 0, 0);
+    SetTextureFilter(locationFont.texture, TEXTURE_FILTER_BILINEAR);
+
+    locations = {
+        {{62, 225}, 40, "Cave"},
+        {{195, 210}, 55, "Camp"},
+        {{340, 180}, 60, "Precinct"},
+        {{480, 153}, 55, "Inn"},
+        {{645, 175}, 55, "Barn"},
+        {{788, 182}, 50, "Dungeon"},
+        {{716, 328}, 55, "Tower"},
+        {{545, 340}, 60, "Theatre"},
+        {{768, 474}, 57, "Docks"},
+        {{240, 465}, 60, "Mansion"},
+        {{87, 530}, 55, "Abbey"},
+        {{62, 682}, 50, "Crypt"},
+        {{190, 667}, 60, "Museum"},
+        {{324, 808}, 47, "Hospital"},
+        {{387, 698}, 60, "Church"},
+        {{508, 795}, 60, "Graveyard"},
+        {{690, 790}, 60, "Institute"},
+        {{590, 666}, 60, "Laboratory"},
+        {{473, 563}, 54, "Shop"}};
+
+    createLabels();
+    createButtons();
+}
+
+void LocationSelectionScene::onExit()
+{
+    UnloadFont(normalFont);
+    locationSelect = nullptr;
+    Sentlocations.clear();
+    ui.clear();
+}
+
+void LocationSelectionScene::handleClickOnLocation()
+{
+    if (!hoveredLocation.empty() && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        for (auto loc : Sentlocations)
+        {
+            if (loc->get_name() == hoveredLocation)
+            {
+                locationSelect = loc;
+                AudioManager::getInstance().playSoundEffect("click");
+                break;
+            }
+        }
+    }
+}
+
+void LocationSelectionScene::checkLocationHover()
+{
+    hoveredLocation.clear();
+    Vector2 mousePos = GetMousePosition();
+
+    for (const auto &loc : locations)
+    {
+        if (!isLocationActive(loc.locatonName))
+            continue;
+
+        float dist = Vector2Distance(mousePos, loc.posision);
+        if (dist < loc.radius)
+        {
+            hoveredLocation = loc.locatonName;
+            break;
+        }
+    }
+}
+
+void LocationSelectionScene::update(float)
+{
+    checkLocationHover();
+    handleClickOnLocation();
+
+    AudioManager::getInstance().update();
+    ui.update();
+}
+
+void LocationSelectionScene::drawGlow()
+{
+    if (!hoveredLocation.empty())
+    {
+        for (const auto &loc : locations)
+        {
+            if (loc.locatonName == hoveredLocation)
+            {
+                Color neonGreen = {57, 255, 20, 255};
+                for (int i = 0; i < 20; i++)
+                {
+                    float radius = loc.radius + i;
+                    float alpha = 1.0f - (float)i / 20;
+                    Color ringColor = {neonGreen.r, neonGreen.g, neonGreen.b, (unsigned char)(alpha * 255)};
+                    DrawCircleLinesV(loc.posision, radius, ringColor);
+                }
+                break;
+            }
+        }
+    }
+
+    if (locationSelect)
+    {
+        for (const auto &loc : locations)
+        {
+            if (loc.locatonName == locationSelect->get_name())
+            {
+                Color neonGreen = {57, 255, 20, 255};
+                for (int i = 0; i < 20; i++)
+                {
+                    float radius = loc.radius + i;
+                    float alpha = 1.0f - (float)i / 20;
+                    Color ringColor = {neonGreen.r, neonGreen.g, neonGreen.b, (unsigned char)(alpha * 255)};
+                    DrawCircleLinesV(loc.posision, radius, ringColor);
+                }
+                break;
+            }
+        }
+    }
+}
+
+void LocationSelectionScene::render()
+{
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    float screenWidth = GetScreenWidth();
+    float screenHeight = GetScreenHeight();
+
+    float scale = 0.5f;
+    Vector2 position = {
+        (screenWidth - background.width * scale) / 2.0f,
+        (screenHeight - background.height * scale) / 2.0f};
+
+    DrawTextureEx(background, position, 0.0f, scale, WHITE);
+
+    drawInactiveLocations();
+    drawGlow();
+    ui.render();
+
+    if (!hoveredLocation.empty())
+    {
+        Vector2 pos = {(float)GetMouseX() + 15, (float)GetMouseY() - 20};
+        DrawTextEx(locationFont, hoveredLocation.c_str(), pos, 28, 1, {0, 0, 0, 255});
+    }
+
+    EndDrawing();
+}
+
+Location *LocationSelectionScene::getSelectedLocation()
+{
+    return locationSelect;
+}
+
+bool LocationSelectionScene::isLocationActive(const std::string &name)
+{
+    for (auto *loc : Sentlocations)
+    {
+        if (loc->get_name() == name)
+            return true;
+    }
+    return false;
+}
+
+void LocationSelectionScene::drawInactiveLocations()
+{
+    for (const auto &loc : locations)
+    {
+        if (!isLocationActive(loc.locatonName))
+        {
+            Color overlay = {120, 120, 120, 150};
+            DrawCircleV(loc.posision, loc.radius, overlay);
+        }
+    }
+}
+
+void LocationSelectionScene::createLabels()
+{
+    const char *text = "Please Select Location";
+    int fontSize = 50;
+    Vector2 textSize = MeasureTextEx(normalFont, text, fontSize, 1);
+
+    float screenWidth = GetScreenWidth();
+    float screenHeight = GetScreenHeight();
+
+    auto selectText = std::make_unique<UILabel>(
+        Vector2{screenWidth * 0.65f, screenHeight * 0.05f}, text, fontSize, 0.0f, WHITE);
+    selectText->setFont(normalFont);
+    ui.add(std::move(selectText));
+
+    const std::vector<std::string> lines = {
+        "Locations that you are not allowed to go to are inactive",
+        "and have a gray halo, and you cannot select them to move to.",
+        "However, permitted locations are colored",
+        "and active, and you can select the location",
+        "you want to move to and then click the Submit button."
+    };
+
+    int font1Size = 30;
+    float startY = screenHeight * 0.28f;
+    float offset = screenHeight * 0.06f;
+
+    auto addLabel = [this, font1Size](Vector2 pos, const std::string &text) {
+        auto label = std::make_unique<UILabel>(pos, text.c_str(), font1Size, 0.0f, WHITE);
+        label->setFont(normalFont);
+        ui.add(std::move(label));
+    };
+
+    for (int i = 0; i < (int)lines.size(); i++) {
+        addLabel({screenWidth * 0.56f, startY + i * offset}, lines[i]);
+    }
+}
+
+
+void LocationSelectionScene::createButtons()
+{
+    Color labelcolor = {0, 51, 102, 255};
+    Color textcolor = WHITE;
+    Color clickcolor =  {192, 192, 192, 255};
+
+    auto menuBtn = std::make_unique<UIButton>(Rectangle{1000, 600, 200, 60}, "Main Menu", 40, textcolor, labelcolor, clickcolor, textcolor);
+    menuBtn->setFont(normalFont);
+    menuBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
+
+    ui.add(std::move(menuBtn));
+
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1000, 680, 200, 60}, "Save", 40, textcolor, labelcolor, clickcolor, textcolor);
+    saveBtn->setFont(normalFont);
+    saveBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SaveManager::getInstance().saveGameToSlot(); });
+
+    ui.add(std::move(saveBtn));
+
+    auto boardBtn = std::make_unique<UIButton>(Rectangle{1250, 600, 200, 60}, "Board Scene", 40, textcolor, labelcolor, clickcolor, textcolor);
+    boardBtn->setFont(normalFont);
+    boardBtn->setOnClick([]()
+                         {
+        AudioManager::getInstance().playSoundEffect("click");
+        SaveManager::getInstance().saveGameToSlot(); });
+
+    ui.add(std::move(boardBtn));
+
+    auto nonBtn = std::make_unique<UIButton>(
+        Rectangle{1250, 680, 200, 60}, "Non", 40,
+        textcolor, labelcolor, clickcolor, textcolor);
+    nonBtn->setFont(normalFont);
+    nonBtn->setOnClick([this]()
+                       {
+        AudioManager::getInstance().playSoundEffect("click");
+        locationSelect = nullptr;
+        //SceneDataHub::getInstance().setSelectedLocation({}); 
+        });
+    ui.add(std::move(nonBtn));
+
+    auto submitBtn = std::make_unique<UIButton>(
+        Rectangle{1125, 760, 200, 60}, "Submit", 40,
+        textcolor, labelcolor, clickcolor, textcolor);
+    submitBtn->setFont(normalFont);
+    submitBtn->setOnClick([this]()
+                          {
+        AudioManager::getInstance().playSoundEffect("click");
+        //SceneDataHub::getInstance().setSelectedItems(this->getSelectedLocation());
+         });
+    ui.add(std::move(submitBtn));
+}
