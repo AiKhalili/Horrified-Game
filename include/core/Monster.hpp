@@ -44,7 +44,7 @@ public:
     void setFrenzyOrder(int);
 
     std::vector<Location *> findShortestPath(Location *, Location *);
-    Location *moveTowardTarget(std::vector<Hero *>, std::vector<Villager *>, int);
+    virtual Location *moveTowardTarget(std::vector<Hero *>, std::vector<Villager *>, int);
     virtual ~Monster() = default;
     
     virtual std::vector<Location *> getAdvanceLocation() = 0;
