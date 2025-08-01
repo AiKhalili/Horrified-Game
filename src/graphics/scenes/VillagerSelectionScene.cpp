@@ -189,7 +189,7 @@ void VillagerSelectionScene::createLabels()
     boardBtn->setOnClick([]()
                          {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
 
     ui.add(std::move(boardBtn));
 
