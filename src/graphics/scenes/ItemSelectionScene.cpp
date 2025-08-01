@@ -186,12 +186,11 @@ void ItemSelectionScene::createLabels()
     boardBtn->setOnClick([]()
                          {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
 
     ui.add(std::move(boardBtn));
 
     Color midCreamBrown = {140, 110, 70, 255};
-
 }
 
 void ItemSelectionScene::loadItemTextures()
