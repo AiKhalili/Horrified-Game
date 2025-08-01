@@ -6,7 +6,7 @@
 #include <iostream>
 using namespace std;
 
-Invisible_Man::Invisible_Man() : Monster("Invisible Man")
+Invisible_Man::Invisible_Man() : Monster("InvisibleMan")
 {
     setFrenzyOrder(6);
     evidence = {{"Inn", false}, {"Barn", false}, {"Laboratory", false}, {"Institute", false}, {"Mansion", false}};
@@ -150,7 +150,7 @@ int Invisible_Man::getCounter() const
 }
 
 string Invisible_Man::serialize() const {
-    string data = "Invisible_Man|";
+    string data = "InvisibleMan|";
     data += (get_location() ? get_location()->get_name() : "null") + "|";
     data += is_defeated() ? "1|" : "0|";
 
