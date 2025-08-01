@@ -28,6 +28,7 @@ public:
     virtual bool isAdvanceLocation(const std::string &) const override;
     virtual std::string serialize() const override;
     void setEvidence(const std::map<std::string, bool>& newEvidence);
+    virtual Location *moveTowardTarget(std::vector<Hero *> heroes, std::vector<Villager *> villagers, int maxSteps) override;
 
 };
 
