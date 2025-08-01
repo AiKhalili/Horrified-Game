@@ -43,8 +43,6 @@ private:
     void createButtons();
     void createInputBoxes();
     void createLabels();
-
-    void debugCheckUIElements();
 };
 
 #endif
