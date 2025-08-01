@@ -50,7 +50,7 @@ void Dracula::specialPower(Hero *hero)
     if (this->get_location() != hero->getLocation()) // اگر قبلا در یک مکان نبودند
     {
         hero->getLocation()->removeHero(hero);
-        hero->setLocation(this->get_location()); // دراکولا قهرمان به سمت خودش می کشه 
+        hero->setLocation(this->get_location()); // دراکولا قهرمان به سمت خودش می کشه
         hero->getLocation()->addHero(hero);
     }
 }
@@ -83,19 +83,33 @@ int Dracula::getCounter() const
     return count; // تعداد تابوت های نابود شده
 }
 
-string Dracula::serialize() const {
+string Dracula::serialize() const
+{
     string data = "Dracula|";
     data += (get_location() ? get_location()->get_name() : "null") + "|";
     data += is_defeated() ? "1|" : "0|";
 
-    for (const auto& pair : coffins) {
+    for (const auto &pair : coffins)
+    {
         data += pair.first + ":" + (pair.second ? "1" : "0") + ",";
     }
 
     return data;
 }
 
-void Dracula::setCoffins(const std::map<std::string, bool>& newCoffins) {
+void Dracula::setCoffins(const std::map<std::string, bool> &newCoffins)
+{
     coffins = newCoffins;
 }
 
+bool Dracula::isCoffinLocation(const std::string &locName) const
+{
+    auto it = coffins.find(locName);
+    return it != coffins.end();
+}
+
+bool Dracula::isCoffinDestroyed(const std::string &locName) const
+{
+    auto it = coffins.find(locName);
+    return it != coffins.end() && it->second == true;
+}
