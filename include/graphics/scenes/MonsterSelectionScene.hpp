@@ -24,13 +24,16 @@ private:
     int clickedMonster = -1; 
     int confirmedMonster = -1;
     Monster* selectedMonster = nullptr;
-
+    std::vector<Monster *> monsters;
+    std::vector<std::string> monsterNames;
+    std::string clickedMonsterName = "";
+    
 public:
     void onEnter() override;
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
-
+    void setDate(std::vector<Monster *> &Monsters);
     Monster* getSelectedMonster();
 };
 
