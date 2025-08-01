@@ -5,6 +5,7 @@
 #include "graphics/ui/UILabel.hpp"
 #include "graphics/TextureManager.hpp"
 #include "audio/AudioManager.hpp"
+#include "graphics/scenes/PlayerSummaryScene.hpp"
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -71,74 +72,83 @@ void HeroSelectionScene::creatButton()
     continueButton->setFont(font);
     continueButton->setFocus(true);
     continueButton->setOnClick([this]()
-    {
-        AudioManager::getInstance().playSoundEffect("click");
+                               {
+                                   AudioManager::getInstance().playSoundEffect("click");
 
-        if (playerSelections[currentPlayer - 1] == -1)
-        {
-            currentMessage = "Please select a hero before submitting!";
-            return;
-        }
+                                   if (playerSelections[currentPlayer - 1] == -1)
+                                   {
+                                       currentMessage = "Please select a hero before submitting!";
+                                       return;
+                                   }
 
-        Game &game = Game::getInstance();
+                                   Game &game = Game::getInstance();
 
-        if (playerSelections[0] == -1 || playerSelections[1] == -1)
-        {
-            if (playerSelections[0] == -1)
-            {
-                currentPlayer = 1;
-                phase = SelectionPhase::Player1_Select;
-                currentMessage = game.getName1() + ", choose your hero";
-                return;
-            }
-            else if (playerSelections[1] == -1)
-            {
-                currentPlayer = 2;
-                phase = SelectionPhase::Player2_Select;
-                currentMessage = game.getName2() + ", choose your hero";
-                return;
-            }
-        }
+                                   if (playerSelections[0] == -1 || playerSelections[1] == -1)
+                                   {
+                                       if (playerSelections[0] == -1)
+                                       {
+                                           currentPlayer = 1;
+                                           phase = SelectionPhase::Player1_Select;
+                                           currentMessage = game.getName1() + ", choose your hero";
+                                           return;
+                                       }
+                                       else if (playerSelections[1] == -1)
+                                       {
+                                           currentPlayer = 2;
+                                           phase = SelectionPhase::Player2_Select;
+                                           currentMessage = game.getName2() + ", choose your hero";
+                                           return;
+                                       }
+                                   }
 
-        try
-        {
-            game.reset();
-            game.assignHeroes(
-                game.getName1(),
-                heroNameFromIndex(playerSelections[0]),
-                heroNameFromIndex(playerSelections[1]));
+                                   try
+                                   {
+                                       game.reset();
+                                       game.assignHeroes(
+                                           game.getName1(),
+                                           heroNameFromIndex(playerSelections[0]),
+                                           heroNameFromIndex(playerSelections[1]));
 
-            game.setupHeroes();
-            game.setStartingPlater((game.getTime1() <= game.getTime2())
-                ? game.getName1()
-                : game.getName2());
+                                       game.setupHeroes();
+                                       game.setStartingPlater((game.getTime1() <= game.getTime2())
+                                                                  ? game.getName1()
+                                                                  : game.getName2());
 
-            game.startNewGame();
-        }
-        catch (const GameException &ex)
-        {
-            std::cerr << "Error assigning heroes: " << ex.what() << std::endl;
-            return;
-        }
+                                       game.startNewGame();
+                                   }
+                                   catch (const GameException &ex)
+                                   {
+                                       std::cerr << "Error assigning heroes: " << ex.what() << std::endl;
+                                       return;
+                                   }
 
-        currentMessage = "Both players have selected their heroes.";
-        phase = SelectionPhase::Done;
-        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
-    });
+                                   currentMessage = "Both players have selected their heroes.";
+                                   phase = SelectionPhase::Done;
+                                   try {
+    auto& summaryScene = SceneManager::getInstance().getScene<PlayerSummaryScene>(SceneKeys::PLAYER_SUMMARY_SCENE);
+    summaryScene.setData(
+        game.getName1(),
+        heroNameFromIndex(playerSelections[0]),
+        game.getName2(),
+        heroNameFromIndex(playerSelections[1]));
+} catch (const std::exception& e) {
+    std::cerr << "Error getting summary scene: " << e.what() << std::endl;
+}
+
+
+                                   SceneManager::getInstance().goTo(SceneKeys::PLAYER_SUMMARY_SCENE); });
 
     backButton = std::make_unique<UIButton>(
         Rectangle{40, 800, 200, 50}, "Main Menu", 30, WHITE, DARKGRAY, GRAY, WHITE);
     backButton->setFont(font);
     backButton->setOnClick([this]()
-    {
+                           {
         AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE);
-    });
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     uiManager.add(std::move(continueButton));
     uiManager.add(std::move(backButton));
 }
-
 
 void HeroSelectionScene::render()
 {
