@@ -216,7 +216,7 @@ Monster* Monster::deserialize(const std::string& line) {
         d->setCoffins(customCoffins);
         monster = d;
     }
-    else if (type == "Invisible_Man") {
+    else if (type == "InvisibleMan") {
         Invisible_Man* im = new Invisible_Man();
         Map::get_instanse()->removeMonsterFrom(im->get_location()->get_name(), im);
         Map::get_instanse()->addMonsterTo(location->get_name(), im);
