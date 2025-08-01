@@ -13,6 +13,16 @@
 #include <cmath>
 #include "core/Game.hpp"
 
+void MonsterSelectionScene::setDate(std::vector<Monster *> &Monsters)
+{
+    monsters = Monsters;
+    monsterNames.clear();
+    for (auto m : monsters)
+    {
+        monsterNames.push_back(m->get_name());
+    }
+}
+
 void MonsterSelectionScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture("MonsterSelection", "assets/images/background/monster_selection.png");
@@ -43,28 +53,51 @@ void MonsterSelectionScene::update(float deltaTime)
     Vector2 mousePos = GetMousePosition();
     float scale = 0.5f;
 
+    int draculaIndex = -1;
+    int otherMonsterIndex = -1;
+    for (int i = 0; i < monsters.size(); i++)
+    {
+        if (monsters[i]->get_name() == "Dracula")
+        {
+            draculaIndex = i;
+            break;
+        }
+    }
+    for (int i = 0; i < monsters.size(); i++)
+    {
+        if (i != draculaIndex)
+        {
+            otherMonsterIndex = i;
+            break;
+        }
+    }
+
     Rectangle leftRect = {200, (GetScreenHeight() / 2.0f) - (monsterTextures[0].height * scale / 2),
                           monsterTextures[0].width * scale, monsterTextures[0].height * scale};
     Rectangle rightRect = {GetScreenWidth() - 200 - monsterTextures[1].width * scale,
                            (GetScreenHeight() / 2.0f) - (monsterTextures[1].height * scale / 2),
                            monsterTextures[1].width * scale, monsterTextures[1].height * scale};
 
-    if (CheckCollisionPointRec(mousePos, leftRect))
-        hoverMonster = 0;
-    else if (CheckCollisionPointRec(mousePos, rightRect))
-        hoverMonster = 1;
-    else
-        hoverMonster = -1;
+    hoverMonster = -1;
+    if (draculaIndex != -1 && !monsters[draculaIndex]->is_defeated() && CheckCollisionPointRec(mousePos, leftRect))
+        hoverMonster = draculaIndex;
+    else if (otherMonsterIndex != -1 && !monsters[otherMonsterIndex]->is_defeated() && CheckCollisionPointRec(mousePos, rightRect))
+        hoverMonster = otherMonsterIndex;
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hoverMonster != -1)
     {
         if (clickedMonster == hoverMonster)
         {
             clickedMonster = -1;
+            clickedMonsterName = "";
         }
         else
         {
             clickedMonster = hoverMonster;
+            if (clickedMonster >= 0 && clickedMonster < monsterNames.size())
+                clickedMonsterName = monsterNames[clickedMonster];
+            else
+                clickedMonsterName = "";
         }
     }
 }
@@ -87,36 +120,52 @@ void MonsterSelectionScene::render()
 
     Color haloColor = ColorAlpha(WHITE, 0.3f);
 
+    int draculaIndex = -1;
+    int invisibleIndex = -1;
+
+    for (int i = 0; i < monsters.size(); i++)
+    {
+        if (monsters[i]->get_name() == "Dracula" && !monsters[i]->is_defeated())
+            draculaIndex = i;
+        else if (monsters[i]->get_name() == "InvisibleMan" && !monsters[i]->is_defeated())
+            invisibleIndex = i;
+    }
+
     float leftScale = baseScale;
+    if (hoverMonster == draculaIndex && clickedMonster != draculaIndex)
+        leftScale = hoverScale;
+    if (clickedMonster == draculaIndex)
+        leftScale = hoverScale;
+
     float rightScale = baseScale;
-
-    if (hoverMonster == 0 && clickedMonster != 0)
-        leftScale = hoverScale;
-    if (hoverMonster == 1 && clickedMonster != 1)
+    if (hoverMonster == invisibleIndex && clickedMonster != invisibleIndex)
+        rightScale = hoverScale;
+    if (clickedMonster == invisibleIndex)
         rightScale = hoverScale;
 
-    if (clickedMonster == 0)
-        leftScale = hoverScale;
-    if (clickedMonster == 1)
-        rightScale = hoverScale;
+    if (draculaIndex != -1)
+    {
+        Vector2 leftPos = {
+            centerX - gap - monsterTextures[0].width * leftScale,
+            (GetScreenHeight() / 2.0f) - (monsterTextures[0].height * leftScale / 2)};
+        DrawCircle(leftPos.x + (monsterTextures[0].width * leftScale / 2),
+                   leftPos.y + (monsterTextures[0].height * leftScale / 2),
+                   (monsterTextures[0].width * leftScale / 2) + 20,
+                   haloColor);
+        DrawTextureEx(monsterTextures[0], leftPos, 0.0f, leftScale, WHITE);
+    }
 
-    Vector2 leftPos = {
-        centerX - gap - monsterTextures[0].width * leftScale,
-        (GetScreenHeight() / 2.0f) - (monsterTextures[0].height * leftScale / 2)};
-    DrawCircle(leftPos.x + (monsterTextures[0].width * leftScale / 2),
-               leftPos.y + (monsterTextures[0].height * leftScale / 2),
-               (monsterTextures[0].width * leftScale / 2) + 20,
-               haloColor);
-    DrawTextureEx(monsterTextures[0], leftPos, 0.0f, leftScale, WHITE);
-
-    Vector2 rightPos = {
-        centerX + gap,
-        (GetScreenHeight() / 2.0f) - (monsterTextures[1].height * rightScale / 2)};
-    DrawCircle(rightPos.x + (monsterTextures[1].width * rightScale / 2),
-               rightPos.y + (monsterTextures[1].height * rightScale / 2),
-               (monsterTextures[1].width * rightScale / 2) + 20,
-               haloColor);
-    DrawTextureEx(monsterTextures[1], rightPos, 0.0f, rightScale, WHITE);
+    if (invisibleIndex != -1)
+    {
+        Vector2 rightPos = {
+            centerX + gap,
+            (GetScreenHeight() / 2.0f) - (monsterTextures[1].height * rightScale / 2)};
+        DrawCircle(rightPos.x + (monsterTextures[1].width * rightScale / 2),
+                   rightPos.y + (monsterTextures[1].height * rightScale / 2),
+                   (monsterTextures[1].width * rightScale / 2) + 20,
+                   haloColor);
+        DrawTextureEx(monsterTextures[1], rightPos, 0.0f, rightScale, WHITE);
+    }
 
     ui.render();
 
@@ -166,16 +215,18 @@ void MonsterSelectionScene::createButtons()
                          {
     AudioManager::getInstance().playSoundEffect("click");
 
-    confirmedMonster = clickedMonster;
+    selectedMonster = nullptr;
 
-    if (confirmedMonster == 0)
-        selectedMonster = new Dracula();
-    else if (confirmedMonster == 1)
-        selectedMonster = new Invisible_Man();
-    else
-        selectedMonster = nullptr; 
-    SceneDataHub::getInstance().setSelectedMonster(this->getSelectedMonster()); });
+    for (auto m : monsters)
+    {
+        if (m->get_name() == clickedMonsterName)
+        {
+            selectedMonster = m;
+            break;
+        }
+    }
 
+    SceneDataHub::getInstance().setSelectedMonster(selectedMonster); });
     ui.add(std::move(submtBtn));
 }
 
@@ -186,40 +237,48 @@ Monster *MonsterSelectionScene::getSelectedMonster()
 
 void MonsterSelectionScene::createLabels()
 {
-     const char *text = "Please Select Monster";
+    const char *text = "Please Select Monster";
     int fontSize = 45;
     Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
 
     Color textcolor = {255, 255, 255, 150};
     Color labelcolor = {138, 3, 3, 180};
-    Color clickcolor = {170, 30, 30, 150};
 
     auto selectText = std::make_unique<UILabel>(
         Vector2{(1600 - textSize.x) / 2.0f, 15}, text, fontSize, 0.0f, textcolor);
     selectText->setFont(font);
     ui.add(std::move(selectText));
 
-    auto nameBtn = std::make_unique<UILabel>(Vector2{390, 700}, "Monster Name:  Dracula", 30, 0.0f,
-                                              labelcolor, labelcolor);
-    nameBtn->setFont(font);
-    nameBtn->enableBackground(textcolor, 10.0f);
-    ui.add(std::move(nameBtn));
+    for (int i = 0; i < monsters.size(); i++) {
+        if (monsters[i]->is_defeated())
+            continue;
 
-    auto wealthBtn = std::make_unique<UILabel>(Vector2{440, 765}, "Wealth: Coffins", 30,0.0f,
-                                                labelcolor, labelcolor);
-    wealthBtn->setFont(font);
-    wealthBtn->enableBackground(textcolor, 10.0f);
-    ui.add(std::move(wealthBtn));
+        const std::string &name = monsters[i]->get_name();
+        if (name == "Dracula") {
+            auto nameBtn = std::make_unique<UILabel>(Vector2{390, 700}, "Monster Name:  Dracula", 30, 0.0f,
+                                                     labelcolor, labelcolor);
+            nameBtn->setFont(font);
+            nameBtn->enableBackground(textcolor, 10.0f);
+            ui.add(std::move(nameBtn));
 
-    auto name1Btn = std::make_unique<UILabel>(Vector2{890, 700}, "Monster Name:  InvisibleMan", 30,0.0f,
-                                               labelcolor, labelcolor);
-    name1Btn->setFont(font);
-    name1Btn->enableBackground(textcolor, 10.0f);
-    ui.add(std::move(name1Btn));
+            auto wealthBtn = std::make_unique<UILabel>(Vector2{440, 765}, "Wealth: Coffins", 30, 0.0f,
+                                                       labelcolor, labelcolor);
+            wealthBtn->setFont(font);
+            wealthBtn->enableBackground(textcolor, 10.0f);
+            ui.add(std::move(wealthBtn));
+        } 
+        else if (name == "InvisibleMan") {
+            auto name1Btn = std::make_unique<UILabel>(Vector2{890, 700}, "Monster Name:  InvisibleMan", 30, 0.0f,
+                                                      labelcolor, labelcolor);
+            name1Btn->setFont(font);
+            name1Btn->enableBackground(textcolor, 10.0f);
+            ui.add(std::move(name1Btn));
 
-    auto wealth1Btn = std::make_unique<UILabel>(Vector2{960, 765}, "Wealth: Evidences", 30,0.0f,
-                                                 labelcolor, labelcolor);
-    wealth1Btn->setFont(font);
-    wealth1Btn->enableBackground(textcolor, 10.0f);
-    ui.add(std::move(wealth1Btn));
+            auto wealth1Btn = std::make_unique<UILabel>(Vector2{960, 765}, "Wealth: Evidences", 30, 0.0f,
+                                                        labelcolor, labelcolor);
+            wealth1Btn->setFont(font);
+            wealth1Btn->enableBackground(textcolor, 10.0f);
+            ui.add(std::move(wealth1Btn));
+        }
+    }
 }
