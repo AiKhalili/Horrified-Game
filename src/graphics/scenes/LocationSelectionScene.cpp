@@ -270,7 +270,7 @@ void LocationSelectionScene::createButtons()
     boardBtn->setOnClick([]()
                          {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
 
     ui.add(std::move(boardBtn));
 
@@ -282,7 +282,7 @@ void LocationSelectionScene::createButtons()
                        {
         AudioManager::getInstance().playSoundEffect("click");
         locationSelect = nullptr;
-        //SceneDataHub::getInstance().setSelectedLocation({}); 
+        SceneDataHub::getInstance().setSelectedLocation({}); 
         });
     ui.add(std::move(nonBtn));
 
@@ -293,7 +293,7 @@ void LocationSelectionScene::createButtons()
     submitBtn->setOnClick([this]()
                           {
         AudioManager::getInstance().playSoundEffect("click");
-        //SceneDataHub::getInstance().setSelectedItems(this->getSelectedLocation());
+        SceneDataHub::getInstance().setSelectedLocation(this->getSelectedLocation());
          });
     ui.add(std::move(submitBtn));
 }
