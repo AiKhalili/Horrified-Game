@@ -42,22 +42,22 @@ string Item::get_color_to_string() const
 {
     if (color == COlOR::red)
     {
-        return "red";
+        return "Red";
     }
     else if (color == COlOR::blue)
     {
-        return "blue";
+        return "Blue";
     }
     else
     {
-        return "yellow";
+        return "Yellow";
     }
 }
 
 COlOR Item::stringToColor(const std::string& s) {
-    if (s == "red") return COlOR::red;
-    if (s == "blue") return COlOR::blue;
-    if (s == "yellow") return COlOR::yellow;
+    if (s == "Red") return COlOR::red;
+    if (s == "Blue") return COlOR::blue;
+    if (s == "Yellow") return COlOR::yellow;
     throw GameException("Invalid color string: " + s);
 }
 
@@ -86,9 +86,9 @@ Item* Item::deserialize(const std::string& line)
 
     getline(ss, part, '|');
     COlOR color;
-    if (part == "red") color = COlOR::red;
-    else if (part == "blue") color = COlOR::blue;
-    else if (part == "yellow") color = COlOR::yellow;
+    if (part == "Red") color = COlOR::red;
+    else if (part == "Blue") color = COlOR::blue;
+    else if (part == "Yellow") color = COlOR::yellow;
     else throw GameException("Invalid item color: " + part);
 
     getline(ss, part, '|');
