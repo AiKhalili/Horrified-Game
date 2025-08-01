@@ -28,7 +28,6 @@ void PlayerInfoScene::onEnter()
     createLabels();
 
     resetInputsForNextPlayer();
-    debugCheckUIElements();
 }
 
 void PlayerInfoScene::onExit()
@@ -49,6 +48,10 @@ void PlayerInfoScene::update(float deltaTime)
 {
     AudioManager::getInstance().update();
     uiManager.update();
+    if (errorLabel && !errorLabel->getText().empty())
+    {
+        errorLabel->update();
+    }
 }
 
 void PlayerInfoScene::render()
@@ -62,6 +65,11 @@ void PlayerInfoScene::render()
                    WHITE);
 
     uiManager.render();
+
+    if (errorLabel && !errorLabel->getText().empty())
+    {
+        errorLabel->render();
+    }
 }
 
 void PlayerInfoScene::resetInputsForNextPlayer()
@@ -74,7 +82,6 @@ void PlayerInfoScene::resetInputsForNextPlayer()
 
 void PlayerInfoScene::showErrorMessage(const std::string &msg)
 {
-    std::cout << "[DEBUG] showErrorMg" << msg << '\n';
     errorLabel->setText(msg);
 }
 
@@ -105,14 +112,12 @@ void PlayerInfoScene::createButtons()
     std::string name = nameInput->getText();
     std::string time = timeInput->getText();
 
-    if (name.empty() || time.empty())
+   if (name.empty() || time.empty())
     {
-        if (currentPlayer == 2) 
-            return;
-        showErrorMessage("Please enter both name and time!");
+        std::string msg = (currentPlayer == 1) ? "Please enter both name and time!" : "Second player's info is required!";
+        showErrorMessage(msg);
         return;
     }
-
     try {
         Game::getInstance().setPlayersTimes(currentPlayer, name, time);
     } catch (const std::invalid_argument &ex) {
@@ -175,20 +180,11 @@ void PlayerInfoScene::createLabels()
     uiManager.add(std::move(nameLabelUPtr));
     uiManager.add(std::move(timeLabelUPtr));
 
+    Color errorText = {255, 85, 85, 255};
+
     auto errorLabelUPtr = std::make_unique<UILabel>(
-        Vector2{450, 700}, "", 40, 3.0f, RED);
+        Vector2{925, 800}, "", 35, 3.0f, errorText);
     errorLabelUPtr->setFont(font);
     errorLabel = errorLabelUPtr.get();
-    uiManager.add(std::move(errorLabelUPtr));
-}
-
-void PlayerInfoScene::debugCheckUIElements()
-{
-    std::cout << "[DEBUG] Checking UI elements..." << std::endl;
-    std::cout << "[DEBUG] continueButton: " << (continueButton ? "OK" : "NULL") << std::endl;
-    std::cout << "[DEBUG] backButton: " << (backButton ? "OK" : "NULL") << std::endl;
-    std::cout << "[DEBUG] nameInput: " << (nameInput ? "OK" : "NULL") << std::endl;
-    std::cout << "[DEBUG] timeInput: " << (timeInput ? "OK" : "NULL") << std::endl;
-    std::cout << "[DEBUG] playerLabel: " << (playerLabel ? "OK" : "NULL") << std::endl;
-    std::cout << "[DEBUG] errorLabel: " << (errorLabel ? "OK" : "NULL") << std::endl;
+    static std::unique_ptr<UILabel> staticErrorLabel = std::move(errorLabelUPtr);
 }
