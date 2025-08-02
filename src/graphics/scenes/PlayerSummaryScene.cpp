@@ -25,7 +25,7 @@ void PlayerSummaryScene::setData(const std::string &player1Name, const std::stri
 void PlayerSummaryScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture(
-        "ItemSelection", "assets/images/background/player_summary.png");
+        "PlayerSummary", "assets/images/background/player_summary.png");
 
     Titlefont = LoadFont("assets/fonts/spooky.otf");
     SetTextureFilter(Titlefont.texture, TEXTURE_FILTER_BILINEAR);
