@@ -13,9 +13,10 @@
 #include <cmath>
 #include "core/Game.hpp"
 
-void VillagerSelectionScene::setData(const std::vector<Villager *> &Villagers)
+void VillagerSelectionScene::setData(const std::vector<Villager *> &Villagers, const std::string &newkey)
 {
     villagers = Villagers;
+    scenekey = newkey;
 }
 
 void VillagerSelectionScene::onEnter()
@@ -23,8 +24,16 @@ void VillagerSelectionScene::onEnter()
     background = TextureManager::getInstance().getOrLoadTexture(
         "VillagerSelection", "assets/images/background/villager_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
+    errorFont = LoadFont("assets/fonts/arial.ttf");
+
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(errorFont.texture, TEXTURE_FILTER_BILINEAR);
 
     createLabels();
+
+    if(villagers.empty()){
+        creatErroreLabels();
+    }
 
     selected.clear();
     villagerRects.clear();
@@ -60,7 +69,6 @@ void VillagerSelectionScene::onEnter()
         villagerRects.push_back({x, y, itemSize, itemSize});
     }
 
-    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 }
 
 void VillagerSelectionScene::onExit()
@@ -193,26 +201,39 @@ void VillagerSelectionScene::createLabels()
 
     ui.add(std::move(boardBtn));
 
-    auto nonBtn = std::make_unique<UIButton>(Rectangle{40, 790, 120, 45}, "Non", 35, textcolor, text1color, clickcolor, midCreamBrown);
-    nonBtn->setFont(font);
-    nonBtn->setOnClick([this]()
-                       {
+    auto backBtn = std::make_unique<UIButton>(Rectangle{1450, 690, 120, 40}, "Back", 20, textcolor, labelcolor, clickcolor, textcolor);
+    backBtn->setFont(font);
+    backBtn->setOnClick([]()
+                         {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::MOVE_SCENE); });
+
+    ui.add(std::move(backBtn));
+
+    if (!villagers.empty())
+    {
+
+        auto nonBtn = std::make_unique<UIButton>(Rectangle{40, 790, 120, 45}, "Non", 35, textcolor, text1color, clickcolor, midCreamBrown);
+        nonBtn->setFont(font);
+        nonBtn->setOnClick([this]()
+                           {
                            AudioManager::getInstance().playSoundEffect("click");
                            this->selected.clear();
                            SceneDataHub::getInstance().setSelectedVillagers({});
-                       });
+                           SceneManager::getInstance().goTo(scenekey); });
 
-    ui.add(std::move(nonBtn));
+        ui.add(std::move(nonBtn));
 
-    auto submtBtn = std::make_unique<UIButton>(Rectangle{40, 840, 120, 45}, "Submit", 35,
-                                               textcolor, text1color, clickcolor, midCreamBrown);
-    submtBtn->setFont(font);
-    submtBtn->setOnClick([this]()
-                         {
+        auto submtBtn = std::make_unique<UIButton>(Rectangle{40, 840, 120, 45}, "Submit", 35,
+                                                   textcolor, text1color, clickcolor, midCreamBrown);
+        submtBtn->setFont(font);
+        submtBtn->setOnClick([this]()
+                             {
                              AudioManager::getInstance().playSoundEffect("click");
                              SceneDataHub::getInstance().setSelectedVillagers(this->getSelectedVillagers());
-                         });
-    ui.add(std::move(submtBtn));
+                             SceneManager::getInstance().goTo(scenekey); });
+        ui.add(std::move(submtBtn));
+    }
 }
 
 std::vector<Villager *> &VillagerSelectionScene::getSelectedVillagers()
@@ -241,4 +262,16 @@ void VillagerSelectionScene::toggleSelection(Villager *villager)
         selected.push_back(villager);
     else
         selected.erase(it);
+}
+
+void VillagerSelectionScene::creatErroreLabels()
+{
+    const char *text = "There are no  villagers to display";
+    int fontSize = 50;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
+    auto errorText = std::make_unique<UILabel>(
+        Vector2{(1600 - textSize.x) / 2.0f, 450}, text, fontSize, 0.0f, WHITE);
+    errorText->setFont(errorFont);
+    ui.add(std::move(errorText));
 }
