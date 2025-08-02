@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <string>
 #include "core/Game.hpp"
 
 void HeroSelectionScene::onEnter()
@@ -103,7 +104,16 @@ void HeroSelectionScene::creatButton()
 
                                    try
                                    {
-                                       game.reset();
+                                        std::string name1 = game.getName1();
+                                        std::string name2 = game.getName2();
+                                        int time1 = game.getTime1();
+                                        int time2 = game.getTime2();
+
+                                        game.reset();
+
+                                        game.setPlayersTimes(1, name1, std::to_string(time1));
+                                        game.setPlayersTimes(2, name2, std::to_string(time2));
+
                                        game.assignHeroes(
                                            game.getName1(),
                                            heroNameFromIndex(playerSelections[0]),
@@ -125,15 +135,17 @@ void HeroSelectionScene::creatButton()
                                    currentMessage = "Both players have selected their heroes.";
                                    phase = SelectionPhase::Done;
                                    try {
-    auto& summaryScene = SceneManager::getInstance().getScene<PlayerSummaryScene>(SceneKeys::PLAYER_SUMMARY_SCENE);
-    summaryScene.setData(
-        game.getName1(),
-        heroNameFromIndex(playerSelections[0]),
-        game.getName2(),
-        heroNameFromIndex(playerSelections[1]));
-} catch (const std::exception& e) {
-    std::cerr << "Error getting summary scene: " << e.what() << std::endl;
-}
+                                        auto& summaryScene = SceneManager::getInstance().getScene<PlayerSummaryScene>(SceneKeys::PLAYER_SUMMARY_SCENE);
+                                        summaryScene.setData(
+                                            game.getName1(),
+                                            heroNameFromIndex(playerSelections[0]),
+                                            game.getName2(),
+                                            heroNameFromIndex(playerSelections[1]));
+                                            std::cout << game.getName1() << "\t" << game.getName2() << "\n";
+                                        } 
+                                        catch (const std::exception& e) {
+                                                std::cerr << "Error getting summary scene: " << e.what() << std::endl;
+                                        }
 
 
                                    SceneManager::getInstance().goTo(SceneKeys::PLAYER_SUMMARY_SCENE); });
