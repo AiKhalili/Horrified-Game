@@ -13,22 +13,26 @@ private:
     UIManager ui;
     Texture2D background;
     Font font;
+    Font errorFont;
 
     std::vector<Texture2D> villagerTextures;
     std::vector<Villager *> villagers;
     std::vector<Villager *> selected;
     std::vector<Rectangle> villagerRects;
 
+    std::string scenekey;
+
     void loadVillagerTextures();
     void toggleSelection(Villager *villager);
     void createLabels();
+    void creatErroreLabels();
 
 public:
     void onEnter() override;
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
-    void setData(const std::vector<Villager *> &villagers);
+    void setData(const std::vector<Villager *> &villagers, const std::string &newkey);
     std::vector<Villager *> &getSelectedVillagers();
 };
 
