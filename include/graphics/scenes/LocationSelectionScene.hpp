@@ -29,6 +29,8 @@ private:
     std::vector<LocationMarker> locations;
     std::string hoveredLocation;
 
+    std::string scenekey;
+
     void handleClickOnLocation();
     void checkLocationHover();
     void drawGlow();
@@ -42,7 +44,7 @@ public:
     void onExit() override;
     void update(float) override;
     void render() override;
-    void setData(const std::vector<Location *> &Locations);
+    void setData(const std::vector<Location *> &Locations, const std::string &newkey);
     Location *getSelectedLocation();
 };
 #endif
