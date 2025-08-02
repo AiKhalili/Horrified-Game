@@ -15,16 +15,17 @@
 #include "core/Game.hpp"
 #include "raymath.h"
 
-void LocationSelectionScene::setData(const std::vector<Location *> &Locations)
+void LocationSelectionScene::setData(const std::vector<Location *> &Locations, const std::string &newkey)
 {
     Sentlocations = Locations;
+    scenekey = newkey;
 }
 
 void LocationSelectionScene::onEnter()
 {
-    background = TextureManager::getInstance().getOrLoadTexture("board", "assets/images/background/location_selection.jpg");
+    background = TextureManager::getInstance().getOrLoadTexture("LocationSelection", "assets/images/background/location_selection.jpg");
 
-    normalFont = LoadFontEx("assets/fonts/simple.ttf",  30, 0, 0);
+    normalFont = LoadFontEx("assets/fonts/simple.ttf", 30, 0, 0);
     SetTextureFilter(normalFont.texture, TEXTURE_FILTER_BILINEAR);
 
     locationFont = LoadFontEx("assets/fonts/arial.ttf", 30, 0, 0);
@@ -222,30 +223,30 @@ void LocationSelectionScene::createLabels()
         "and have a gray halo, and you cannot select them to move to.",
         "However, permitted locations are colored",
         "and active, and you can select the location",
-        "you want to move to and then click the Submit button."
-    };
+        "you want to move to and then click the Submit button."};
 
     int font1Size = 30;
     float startY = screenHeight * 0.28f;
     float offset = screenHeight * 0.06f;
 
-    auto addLabel = [this, font1Size](Vector2 pos, const std::string &text) {
+    auto addLabel = [this, font1Size](Vector2 pos, const std::string &text)
+    {
         auto label = std::make_unique<UILabel>(pos, text.c_str(), font1Size, 0.0f, WHITE);
         label->setFont(normalFont);
         ui.add(std::move(label));
     };
 
-    for (int i = 0; i < (int)lines.size(); i++) {
+    for (int i = 0; i < (int)lines.size(); i++)
+    {
         addLabel({screenWidth * 0.56f, startY + i * offset}, lines[i]);
     }
 }
-
 
 void LocationSelectionScene::createButtons()
 {
     Color labelcolor = {0, 51, 102, 255};
     Color textcolor = WHITE;
-    Color clickcolor =  {192, 192, 192, 255};
+    Color clickcolor = {192, 192, 192, 255};
 
     auto menuBtn = std::make_unique<UIButton>(Rectangle{1000, 600, 200, 60}, "Main Menu", 40, textcolor, labelcolor, clickcolor, textcolor);
     menuBtn->setFont(normalFont);
@@ -283,7 +284,7 @@ void LocationSelectionScene::createButtons()
         AudioManager::getInstance().playSoundEffect("click");
         locationSelect = nullptr;
         SceneDataHub::getInstance().setSelectedLocation({}); 
-        });
+        SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(nonBtn));
 
     auto submitBtn = std::make_unique<UIButton>(
@@ -294,6 +295,6 @@ void LocationSelectionScene::createButtons()
                           {
         AudioManager::getInstance().playSoundEffect("click");
         SceneDataHub::getInstance().setSelectedLocation(this->getSelectedLocation());
-         });
+        SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(submitBtn));
 }
