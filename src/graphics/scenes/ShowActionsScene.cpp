@@ -98,7 +98,7 @@ void ShowActionsScene::createButtons()
     makeButton("Advance", startXRight, 1, std::bind(&ShowActionsScene::openAdvanceAction, this));
     makeButton("Use Perk", startXRight, 2, std::bind(&ShowActionsScene::openUsePerkAction, this));
 
-    //if (Game::getInstance().shouldShowSpecialAcion() == true)
+    if (Game::getInstance().shouldShowSpecialAcion() == true)
         makeButton("Special", startXRight, 3, std::bind(&ShowActionsScene::openSpecialAction, this));
 
     auto menuBtn = std::make_unique<UIButton>(Rectangle{1400, 820, 160, 50}, "Main Menu", 26, WHITE, DARKGRAY, GRAY, WHITE);
@@ -132,7 +132,7 @@ void ShowActionsScene::createButtons()
 
 void ShowActionsScene::openMoveAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::MoveScene);
+    SceneManager::getInstance().goTo(SceneKeys::MOVE_SCENE);
 }
 
 void ShowActionsScene::openPickUpAction()
