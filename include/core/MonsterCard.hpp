@@ -19,6 +19,7 @@ class MonsterCard{
     Face face;
 
     public:
+    MonsterCard() = default;
     MonsterCard(std::string , int,std::string,int,int,std::vector<std::string>);
 
     //توابعget
