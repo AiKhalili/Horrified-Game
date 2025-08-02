@@ -13,9 +13,10 @@
 #include <cmath>
 #include "core/Game.hpp"
 
-void ItemSelectionScene::setData(const std::vector<Item *> &Items)
+void ItemSelectionScene::setData(const std::vector<Item *> &Items, const std::string &newkey)
 {
     items = Items;
+    scenekey = newkey;
     if (!items.empty())
     {
         hero = Game::getInstance().getCurrentHero();
@@ -265,7 +266,8 @@ void ItemSelectionScene::createActionButtons()
                        {
         AudioManager::getInstance().playSoundEffect("click");
         this->selected.clear();
-        SceneDataHub::getInstance().setSelectedItems({}); });
+        SceneDataHub::getInstance().setSelectedItems({}); 
+        SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(nonBtn));
 
     auto submitBtn = std::make_unique<UIButton>(
@@ -275,6 +277,7 @@ void ItemSelectionScene::createActionButtons()
     submitBtn->setOnClick([this]()
                           {
         AudioManager::getInstance().playSoundEffect("click");
-        SceneDataHub::getInstance().setSelectedItems(this->getSelectedItems()); });
+        SceneDataHub::getInstance().setSelectedItems(this->getSelectedItems());
+        SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(submitBtn));
 }
