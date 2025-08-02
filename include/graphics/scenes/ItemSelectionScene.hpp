@@ -16,6 +16,8 @@ private:
     Texture2D background;
     Font font;
 
+    std::string scenekey;
+
     std::vector<Item *> items;
     Hero *hero = nullptr;
     Location *location = nullptr;
@@ -38,7 +40,7 @@ public:
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
-    void setData(const std::vector<Item *> &Items);
+    void setData(const std::vector<Item *> &Items, const std::string &newkey);
     std::vector<Item *> &getSelectedItems();
 };
 
