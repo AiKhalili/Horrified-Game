@@ -48,7 +48,6 @@ void UILabel::enableBackground(Color bgColor, float pad)
 
 void UILabel::render()
 {
-
     if (duration > 0.0f && timer >= duration)
     {
         return;
@@ -64,19 +63,23 @@ void UILabel::render()
         textSize = {(float)MeasureText(text.c_str(), fontSize), (float)fontSize};
     }
 
-    float bgWidth = textSize.x + 2 * padding;
-    float bgHeight = textSize.y + 2 * padding;
+    Vector2 drawPos = position;
 
     if (drawBackground)
     {
+        float bgWidth = textSize.x + 2 * padding;
+        float bgHeight = textSize.y + 2 * padding;
+
+        // زمینه و کادر
         DrawRectangleRounded({position.x, position.y, bgWidth, bgHeight}, 0.2f, 20, backgroundColor);
         DrawRectangleRoundedLinesEx({position.x, position.y, bgWidth, bgHeight}, 0.2f, 20, 2.0f, cadreColor);
+
+        // وسط‌چینی متن درون کادر
+        drawPos.x = position.x + (bgWidth - textSize.x) / 2.0f;
+        drawPos.y = position.y + (bgHeight - textSize.y) / 2.0f;
     }
 
-    Vector2 drawPos;
-    drawPos.x = position.x + (bgWidth - textSize.x) / 2.0f;
-    drawPos.y = position.y + (bgHeight - textSize.y) / 2.0f;
-
+    // رسم متن
     if (useCustomFont)
     {
         DrawTextEx(font, text.c_str(), drawPos, (float)fontSize, 2, fontColor);
