@@ -4,20 +4,25 @@
 #include "graphics/TextureManager.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
 #include "core/Game.hpp"
+#include "graphics/scenes/ItemSelectionScene.hpp"
+#include "core/SceneDataHub.hpp"
 #include "raymath.h"
 
 void MonsterPhaseScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture("monster_phase", "assets/images/background/monster_phase.png");
     bats = TextureManager::getInstance().getOrLoadTexture("bats", "assets/images/icon/bats.png");
+    frenzy = TextureManager::getInstance().getOrLoadTexture("hex_frenzy", "assets/images/background/hex_frenzy.jpg");
+
+    diceBlank = TextureManager::getInstance().getOrLoadTexture("diceBlank", "assets/images/icon/diceBlank.png");
+    diceStrike = TextureManager::getInstance().getOrLoadTexture("diceStrike", "assets/images/icon/diceStrike.png");
+    dicePower = TextureManager::getInstance().getOrLoadTexture("dicePower", "assets/images/icon/dicePower.png");
 
     normalFont = LoadFont("assets/fonts/simple.ttf");
     spookyFont = LoadFontEx("assets/fonts/spooky.otf", 100, 0, 0);
 
     SetTextureFilter(spookyFont.texture, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(normalFont.texture, TEXTURE_FILTER_BILINEAR);
-
-    AudioManager::getInstance().playMusic();
 }
 
 void MonsterPhaseScene::onExit()
@@ -53,12 +58,11 @@ void MonsterPhaseScene::renderMonsterCard()
     }
 }
 
-void MonsterPhaseScene::showMessage(const std::string &text, Vector2 pos, int fontSize, float time)
+void MonsterPhaseScene::showMessage(const std::string &text, Vector2 pos, int fontSize, float time, Font font, Color color)
 {
-    Color color = {235, 235, 235, 255};
     auto label = std::make_unique<UILabel>(pos, text, fontSize, time, color, color);
     label->enableBackground(BLACK, 20.0f);
-    label->setFont(normalFont);
+    label->setFont(font);
     ui.add(std::move(label));
 }
 
@@ -97,6 +101,18 @@ void MonsterPhaseScene::render()
     case MonsterPhaseStep::RunEvent:
         renderEvents();
         break;
+    case MonsterPhaseStep::MonsterMoveAndRoll:
+        if (game.targetMonster)
+        {
+            renderCurrentMonster();
+        }
+        break;
+    case MonsterPhaseStep::HandleStrike:
+        renderCurrentMonster();
+        break;
+    case MonsterPhaseStep::HandlePower:
+        renderCurrentMonster();
+        break;
     }
 
     ui.render();
@@ -120,6 +136,38 @@ void MonsterPhaseScene::renderEvents()
     {
         render_villagerCard(stepTimer);
     }
+    else if (card.get_name() == "FortuneTeller")
+    {
+        render_villagerCard(stepTimer);
+    }
+    else if (card.get_name() == "FormerEmployer")
+    {
+        render_villagerCard(stepTimer);
+    }
+    else if (card.get_name() == "HurriedAssistant")
+    {
+        render_villagerCard(stepTimer);
+    }
+    else if (card.get_name() == "TheInnocent")
+    {
+        render_villagerCard(stepTimer);
+    }
+    else if (card.get_name() == "EgyptionExpert")
+    {
+        render_villagerCard(stepTimer);
+    }
+    else if (card.get_name() == "TheIchthyologist")
+    {
+        render_villagerCard(stepTimer);
+    }
+    else if (card.get_name() == "HypnoticGaze")
+    {
+        render_HypnoticGaze(stepTimer);
+    }
+    else if (card.get_name() == "OnTheMove")
+    {
+        render_OnTheMove(stepTimer);
+    }
 }
 
 void MonsterPhaseScene::update(float deleteTime)
@@ -138,9 +186,25 @@ void MonsterPhaseScene::update(float deleteTime)
     case MonsterPhaseStep::RunEvent:
         step_RunEvent(deleteTime);
         break;
+    case MonsterPhaseStep::MonsterMoveAndRoll:
+        step_MoveAndRoll(deleteTime);
+        break;
+    case MonsterPhaseStep::HandleStrike:
+        step_HandleStrike(deleteTime);
+        break;
     }
 
     ui.update();
+}
+
+void MonsterPhaseScene::step_MoveAndRoll(float deleteTime)
+{
+    handleMoveAndRoll(deleteTime);
+    if (!rolledDiceResult.empty() && diceShown >= (int)rolledDiceResult.size())
+    {
+        currentStep = MonsterPhaseStep::HandleStrike;
+        processingStrike = false;
+    }
 }
 
 void MonsterPhaseScene::step_CheckMonsterPhasePerk(float deltaTime)
@@ -178,6 +242,14 @@ void MonsterPhaseScene::step_DrawMonsterCard(float deltaTime)
     {
         game.drawMonsterCard();
         card = game.currentMosnterCard;
+        strikes = game.MonstersStrike;
+        // game.setupMonsterStrike();
+        if (!game.targetMonster)
+        {
+            std::cerr << "ERROR: setupMonsterStrike failed! currentStrikeIndex="
+                      << game.currentStrikeIndex
+                      << " strikeName=" << game.MonstersStrike[game.currentStrikeIndex] << std::endl;
+        }
         game.useMonsterCard(card.get_name());
 
         std::string name = card.get_name();
@@ -244,7 +316,7 @@ void MonsterPhaseScene::step_PlaceItems(float deltaTime)
 
         Vector2 center = {500, 600};
 
-        showMessage(msg, center, 35, 5.0f);
+        showMessage(msg, center, 35, 5.0f, normalFont);
 
         for (auto *item : items)
         {
@@ -275,7 +347,8 @@ void MonsterPhaseScene::step_RunEvent(float deleteTime)
         titelAdded = false;
         messageShown = false;
         stepTimer = 0.0f;
-        currentStep = MonsterPhaseStep::Move;
+        game.currentStrikeIndex = 0;
+        currentStep = MonsterPhaseStep::MonsterMoveAndRoll;
     }
 }
 
@@ -334,7 +407,7 @@ void MonsterPhaseScene::render_FormOfTheBat(float deleteTime)
     // پیام پایانی
     if (deleteTime >= 4.0f && !messageShown)
     {
-        showMessage(game.event.msg, {550, 600}, 35, 3.0f);
+        showMessage(game.event.msg, {550, 600}, 35, 3.0f, normalFont);
         messageShown = true;
     }
 }
@@ -353,7 +426,7 @@ void MonsterPhaseScene::render_Thief(float deleteTime)
     if (!titelAdded)
     {
         Color color = {235, 235, 235, 255};
-        Vector2 pos = {700, 100};
+        Vector2 pos = {650, 100};
         auto title = std::make_unique<UILabel>(pos, "Thief", 100, 6.0f, color, color);
         title->setFont(spookyFont);
         ui.add(std::move(title));
@@ -363,7 +436,7 @@ void MonsterPhaseScene::render_Thief(float deleteTime)
 
     if (deleteTime >= 2.0f && !messageShown)
     {
-        showMessage(msg, {550, 600}, 35, 4.0f);
+        showMessage(msg, {550, 600}, 35, 4.0f, normalFont);
         messageShown = true;
     }
 }
@@ -425,7 +498,7 @@ void MonsterPhaseScene::render_Sunrise(float deleteTime)
 
     if (deleteTime >= 0.4f && !messageShown)
     {
-        showMessage(game.event.msg, {450, 600}, 35, 5.6f);
+        showMessage(game.event.msg, {450, 600}, 35, 5.6f, normalFont);
         messageShown = true;
     }
 }
@@ -438,7 +511,7 @@ void MonsterPhaseScene::render_villagerCard(float deleteTime)
         t = 1.0f;
     }
 
-    float fade = (t < 0.4f) ? t / 0.4f : 1.0f;
+    float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
 
     static bool loaded = false;
     if (!loaded)
@@ -463,7 +536,7 @@ void MonsterPhaseScene::render_villagerCard(float deleteTime)
     if (!titelAdded)
     {
         Color color = {235, 235, 235, 255};
-        Vector2 pos = {550, 100};
+        Vector2 pos = {530, 100};
         auto titleLabel = std::make_unique<UILabel>(pos, card.get_name(), 100, 6.0f, color, color);
         titleLabel->setFont(spookyFont);
         ui.add(std::move(titleLabel));
@@ -473,7 +546,376 @@ void MonsterPhaseScene::render_villagerCard(float deleteTime)
     if (deleteTime >= 2.0f && !messageShown)
     {
         std::string msg = game.event.msg;
-        showMessage(msg, {450, 600}, 35, 4.0f);
+        showMessage(msg, {500, 600}, 35, 4.0f, normalFont);
         messageShown = true;
     }
+}
+
+void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
+{
+    float t = deleteTime / 6.0f;
+    if (t > 1.0f)
+    {
+        t = 1.0f;
+    }
+
+    float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
+    Vector2 imagePos;
+    float imageMaxWidth;
+
+    if (game.event.heroName.empty())
+    {
+        imagePos = {-100, -100};
+        imageMaxWidth = 600.0f;
+    }
+    else
+    {
+        imagePos = {0, 0};
+        imageMaxWidth = 350.0f;
+    }
+
+    static Texture2D tex = {};
+    static bool loaded = false;
+    if (!loaded)
+    {
+        std::string name = game.event.villagerName.empty() ? game.event.heroName : game.event.villagerName;
+        std::string folder = game.event.villagerName.empty() ? "heros" : "Villager";
+        std::string path = "assets/images/" + folder + "/" + name + ".png";
+        tex = TextureManager::getInstance().getOrLoadTexture(name, path);
+        loaded = true;
+    }
+
+    float scale = imageMaxWidth / tex.width;
+    float scaledW = tex.width * scale;
+    float scaledH = tex.height * scale;
+
+    Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
+    Rectangle dst = {imagePos.x, imagePos.y, scaledW, scaledH};
+
+    DrawTexturePro(tex, src, dst, {0, 0}, 0.0f, {255, 255, 255, (unsigned char)(fade * 255)});
+
+    if (!titelAdded)
+    {
+        Color color = {235, 235, 235, 255};
+        Vector2 pos = {550, 100};
+        std::string title = "Hypnotic Gaze";
+        auto titleLabel = std::make_unique<UILabel>(pos, title, 100, 6.0f, color, color);
+        titleLabel->setFont(spookyFont);
+        ui.add(std::move(titleLabel));
+        titelAdded = true;
+    }
+
+    if (deleteTime >= 2.0f && !messageShown)
+    {
+        showMessage(game.event.msg, {450, 600}, 35, 4.0f, normalFont);
+        messageShown = true;
+    }
+}
+
+void MonsterPhaseScene::render_OnTheMove(float deleteTime)
+{
+    float t = deleteTime / 6.0f;
+    if (t > 1.0f)
+    {
+        t = 1.0f;
+    }
+
+    float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
+
+    if (deleteTime < 2.5f)
+    {
+        float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
+
+        Rectangle src = {0, 0, (float)frenzy.width, (float)frenzy.height};
+        Rectangle dst = {0, 0, 1600.0, 900.0};
+
+        Color overlayColor = {255, 255, 255, (unsigned char)(fade * 200)};
+
+        DrawTexturePro(frenzy, src, dst, {0, 0}, 0.0f, overlayColor);
+
+        std::string text = game.event.monsterName;
+        DrawTextEx(spookyFont, text.c_str(), {560, 400}, 80, 2, BLACK);
+        return;
+    }
+
+    if (!titelAdded && deleteTime >= 2.5f)
+    {
+        Color color = {235, 235, 235, 255};
+        Vector2 pos = {550, 100};
+        auto titleLabel = std::make_unique<UILabel>(pos, "On The Move", 80, 3.5f, color, color);
+        titleLabel->setFont(spookyFont);
+        ui.add(std::move(titleLabel));
+        titelAdded = true;
+    }
+
+    static std::vector<std::string> villagerNames;
+    static std::vector<Texture2D> villagerTextures;
+    static bool villagerImagesLoaded = false;
+
+    if (!villagerImagesLoaded)
+    {
+        villagerNames.clear();
+        villagerTextures.clear();
+
+        for (auto &pair : game.event.villagersAndLocations)
+        {
+            std::string name = pair.first;
+            villagerNames.push_back(name);
+            std::string path = "assets/images/Villager/" + name + ".png";
+            Texture2D tex = TextureManager::getInstance().getOrLoadTexture(name, path);
+            villagerTextures.push_back(tex);
+        }
+        villagerImagesLoaded = true;
+    }
+
+    float delayPerVillager = 0.4f;
+    float totalTravelTime = 3.5f;
+    float startX = -100.0f;
+    float endX = 1600 + 100.0f;
+    float y = 900 - 120.0f;
+
+    for (size_t i = 0; i < villagerNames.size(); ++i)
+    {
+        float startDelay = i * delayPerVillager;
+        float t = deleteTime - 2.5f - startDelay;
+        if (t < 0.0f || t > totalTravelTime)
+            continue;
+
+        float progress = t / totalTravelTime;
+        float x = startX + (endX - startX) * progress;
+        Texture2D tex = villagerTextures[i];
+        float scale = 60.0f / tex.height;
+        float w = tex.width * scale;
+        float h = tex.height * scale;
+        Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
+        Rectangle dst = {x, y, w, h};
+        DrawTexturePro(tex, src, dst, {0, 0}, 0.0f, WHITE);
+    }
+
+    if (deleteTime >= 3.0f && !messageShown)
+    {
+        std::string msg = "Frenzy marker moved to " + game.event.monsterName + " and villagers moved 1 step toward safety.";
+        showMessage(msg, {330, 600}, 30, 3.0f, normalFont);
+        messageShown = true;
+    }
+}
+
+void MonsterPhaseScene::renderDice(float deltaTime)
+{
+    if (rolledDiceResult.empty())
+    {
+        return;
+    }
+
+    diceTimer += deltaTime;
+
+    if (diceShown < (int)rolledDiceResult.size() && diceTimer >= 1.5f)
+    {
+        diceShown++;
+        diceTimer = 0.0f;
+    }
+
+    float startX = 50;
+    float startY = 500;
+    float spacingY = 120;
+
+    for (int i = 0; i < diceShown; ++i)
+    {
+        const std::string &result = rolledDiceResult[i];
+        Texture2D *tex = nullptr;
+
+        if (result == "Blank")
+        {
+            tex = &diceBlank;
+        }
+        else if (result == "Strike")
+        {
+            tex = &diceStrike;
+        }
+        else if (result == "Power")
+        {
+            tex = &dicePower;
+        }
+
+        if (tex)
+        {
+            float alpha = 1.0f;
+            if (i == diceShown - 1 && diceShown != (int)rolledDiceResult.size())
+            {
+                alpha = std::min(diceTimer / 1.0f, 1.0f);
+            }
+
+            Color c = WHITE;
+            c.a = (unsigned char)(alpha * 255);
+
+            float size = 100.0f;
+            float scale = size / tex->width;
+            Vector2 pos = {startX, startY + i * spacingY};
+
+            DrawTextureEx(*tex, pos, 0.0f, scale, c);
+
+            DrawTextEx(normalFont, result.c_str(), {startX + 120, startY + i * spacingY + 30}, 30, 2, WHITE);
+        }
+    }
+}
+
+void MonsterPhaseScene::executeStrike()
+{
+    StrikeResult result = game.diceStrikeFace();
+
+    if (result == StrikeResult::HeroFound)
+    {
+        std::string msg = game.targetMonster->get_name() + " attacks a " + game.damageHero->getClassName() + "!";
+        showMessage(msg, {500, 600}, 40, 3.0f, spookyFont);
+
+        std::vector<Item *> heroItems = game.damageHero->getItems();
+
+        if (heroItems.empty())
+        {
+            showMessage("Hero has no defense items!", {500, 600}, 35, 3.0f, normalFont);
+            game.sendHeroToHospital();
+            remainingStrikes--;
+            processingStrike = false;
+            return;
+        }
+
+        SceneManager::getInstance().getScene<ItemSelectionScene>(SceneKeys::ITEM_SELECTION_SCENE).setData(heroItems, SceneKeys::MONSTER_PHASE_SCENE);
+
+        SceneManager::getInstance().goTo(SceneKeys::ITEM_SELECTION_SCENE);
+
+        return;
+    }
+    else if (result == StrikeResult::VillagerFound)
+    {
+        std::string msg = "Villager " + game.damageVillager->getName() + " was killed!";
+        showMessage(msg, {500, 600}, 40, 3.0f, spookyFont);
+        remainingStrikes = 0;
+        currentStep = MonsterPhaseStep::EndPhase;
+        processingStrike = false;
+        return;
+    }
+
+    remainingStrikes--;
+    processingStrike = false;
+}
+
+void MonsterPhaseScene::renderCurrentMonster()
+{
+    if (!game.targetMonster)
+    {
+        std::cout << "target monster is NUL\n";
+        return;
+    }
+
+    Monster *m = game.targetMonster;
+    Texture2D tex = TextureManager::getInstance().getOrLoadTexture(
+        m->get_name(), "assets/images/Monsters/" + m->get_name() + ".png");
+
+    Vector2 pos = {50, 50};
+    float imageSize = 270.0f;
+    float scale = imageSize / tex.width;
+    DrawTextureEx(tex, pos, 0.0f, scale, WHITE);
+
+    std::string location = "LOCATION : " + m->get_location()->get_name();
+    showMessage(location, {30, 400}, 35, 0.0f, normalFont, {170, 20, 20, 255});
+
+    renderDice(GetFrameTime());
+}
+
+void MonsterPhaseScene::handleMoveAndRoll(float deleteTime)
+{
+    if (!game.targetMonster)
+    {
+        std::cerr << "[INFO] targetMonster is NULL — calling setupMonsterStrike()\n";
+        game.setupMonsterStrike();
+        processingStrike = false;
+    }
+
+    if (!game.targetMonster)
+    {
+        std::cerr << "[FATAL] targetMonster is STILL NULL after setup — aborting strike\n";
+        return;
+    }
+
+    if (!processingStrike)
+    {
+        processingStrike = true;
+
+        if (!game.targetMonster)
+        {
+            std::cerr << "ERROR: targetMonster is NULL before moveMonster()" << std::endl;
+        }
+        bool moved = game.moveMonster();
+
+        game.diceCount.clear();
+        rolledDiceResult = game.rollingDice();
+        diceTimer = 0.0f;
+        diceShown = 0;
+
+        remainingStrikes = game.diceCount[Face::STRIKE];
+
+        std::cout << "[DEBUG] Remaining Strikes after dice roll: " << remainingStrikes << std::endl;
+
+        if (moved)
+        {
+            std::string msg = game.targetMonster->get_name() + " moved to " +
+                              game.targetMonster->get_location()->get_name() + "!";
+            showMessage(msg, {550, 600}, 35, 3.0f, normalFont);
+        }
+        else
+        {
+            std::string msg = game.targetMonster->get_name() + " stayed at " +
+                              game.targetMonster->get_location()->get_name() + ".";
+            showMessage(msg, {550, 600}, 35, 3.0f, normalFont);
+        }
+    }
+}
+
+void MonsterPhaseScene::step_HandleStrike(float deleteTime)
+{
+    auto &selectedItems = SceneDataHub::getInstance().getSelectedItems();
+
+    if (!selectedItems.empty())
+    {
+        handleDefence(selectedItems);
+        SceneDataHub::getInstance().reset();
+        return;
+    }
+
+    if (remainingStrikes > 0 && !processingStrike)
+    {
+        processingStrike = true;
+        executeStrike();
+    }
+    else if (remainingStrikes <= 0 && currentStep != MonsterPhaseStep::EndPhase)
+    {
+        currentStep = MonsterPhaseStep::HandlePower;
+        processingStrike = false;
+    }
+}
+
+void MonsterPhaseScene::handleDefence(std::vector<Item *> &selectedItems)
+{
+    if (selectedItems.empty())
+    {
+        showMessage("No defense item used!", {500, 600}, 35, 3.0f, normalFont);
+        game.sendHeroToHospital();
+    }
+    else if (selectedItems.size() > 1)
+    {
+        showMessage("Only ONE item allowd for defense!", {500, 600}, 35, 3.0f, normalFont);
+
+        SceneManager::getInstance().goTo(SceneKeys::ITEM_SELECTION_SCENE);
+        return;
+    }
+    else
+    {
+        Item *defItem = selectedItems[0];
+
+        std::string text = "Hero defends using " + defItem->get_name() + "!";
+        showMessage(text, {500, 600}, 35, 3.0f, normalFont);
+        game.defendHero(defItem);
+    }
+
+    processingStrike = false;
 }
