@@ -7,9 +7,11 @@
 #include "raylib.h"
 #include <memory>
 #include "core/Game.hpp"
+#include <queue>
 
 enum class MonsterPhaseStep
 {
+    None,
     CheckMonsterPhasePerk,
     DrawMonsterCard,
     PlaceItems,
@@ -17,6 +19,7 @@ enum class MonsterPhaseStep
     MonsterMoveAndRoll,
     HandleStrike,
     HandlePower,
+    ManageStrike,
     EndPhase
 };
 
@@ -31,9 +34,13 @@ private:
     Texture2D diceBlank;
     Texture2D diceStrike;
     Texture2D dicePower;
+    Texture2D bloodOverLay;
+    Texture2D texHypnoticGaze;
 
     Font normalFont;
     Font spookyFont;
+
+    UILabel *locationLabel = nullptr;
 
     MonsterCard card;
     bool cardDrawn = false;
@@ -54,8 +61,37 @@ private:
     float itemsAlpha = 0.0f;
     bool showItemIcons = false;
 
+    bool showBloodOverlay = false;
+    float bloodOverlayTimer = 0.0f;
+
+    Hero *powerTargetHero = nullptr;
+    Villager *powerTargetVillager = nullptr;
+    bool powerVillagerKilled = false;
+
     bool titelAdded = false;
     bool messageShown = false;
+
+    std::vector<std::string> villagerNames;
+    std::vector<Texture2D> villagerTextures;
+    bool villagerImagesLoaded = false;
+
+    bool loadedVillager = false;
+    bool loadedHypnotic = false;
+
+    bool isWaitingForDefenceSelection = false;
+    bool pendingItemSelection = false;
+    std::vector<Item *> pendingHeroItems;
+
+    MonsterPhaseStep nextStepAfterPower = MonsterPhaseStep::None;
+    std::queue<PowerResult> powerQueue;
+    bool processingPowerQueue = false;
+
+    bool waitingForMessage = false;
+    std::queue<std::unique_ptr<UILabel>> messageQueue;
+    std::queue<float> messageDuration;
+    float messageTimer = 0.0f;
+
+    void displayNextMessage();
 
     std::vector<std::string> strikes;
     bool processingStrike = false;
@@ -66,7 +102,7 @@ private:
 
     int remainingStrikes = 0;
 
-    void showMessage(const std::string &text, Vector2 pos, int fontSize, float time, Font font, Color color = {235, 235, 235, 255});
+    void showMessage(const std::string &text, Vector2 pos, int fontSize, float time, Font font, bool immediate, Color color = {235, 235, 235, 255});
 
     void step_CheckMonsterPhasePerk(float deleteTime);
     void step_DrawMonsterCard(float deleteTime);
@@ -74,6 +110,7 @@ private:
     void step_RunEvent(float deleteTime);
     void step_MoveAndRoll(float deleteTime);
     void step_HandleStrike(float deleteTime);
+    void step_HandlePower(float deleteTime);
 
     void renderBackGround();
     void renderMonsterCard();
@@ -89,12 +126,19 @@ private:
 
     void handleMoveAndRoll(float deleteTime);
     void handleDefence(std::vector<Item *> &selectedItems);
+    void handleManageStrike();
 
     void renderCurrentMonster();
 
     void renderDice(float delerteTime);
 
+    void renderPowerEffect();
+
     void executeStrike();
+
+    void endMonsterPhase();
+
+    void processNextPower();
 
 public:
     void onEnter() override;
