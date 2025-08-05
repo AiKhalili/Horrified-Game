@@ -906,27 +906,29 @@ void MonsterPhaseScene::render_OnTheMove(float deleteTime)
 void MonsterPhaseScene::renderDice(float deltaTime)
 {
     if (rolledDiceResult.empty())
-    {
+    { // Exit early if there are no dice results to show
         return;
     }
 
-    diceTimer += deltaTime;
+    diceTimer += deltaTime; // Accumulate time to control dice reveal timing
 
     if (diceShown < (int)rolledDiceResult.size() && diceTimer >= 1.5f)
-    {
+    { // Show next dice result every 1.5 seconds
         diceShown++;
         diceTimer = 0.0f;
     }
 
+    // Positioning parameters for dice rendering
     float startX = 50;
     float startY = 500;
     float spacingY = 120;
 
     for (int i = 0; i < diceShown; ++i)
-    {
+    { // Loop through shown dice and draw them one by one
         const std::string &result = rolledDiceResult[i];
         Texture2D *tex = nullptr;
 
+        // Choose the correct texture based on dice result
         if (result == "Blank")
         {
             tex = &diceBlank;
@@ -941,10 +943,10 @@ void MonsterPhaseScene::renderDice(float deltaTime)
         }
 
         if (tex)
-        {
+        { // If texture exists, render it
             float alpha = 1.0f;
             if (i == diceShown - 1 && diceShown != (int)rolledDiceResult.size())
-            {
+            { // Apply fade-in effect for the most recently revealed dice
                 alpha = std::min(diceTimer / 1.0f, 1.0f);
             }
 
@@ -957,6 +959,7 @@ void MonsterPhaseScene::renderDice(float deltaTime)
 
             DrawTextureEx(*tex, pos, 0.0f, scale, c);
 
+            // Draw the text label next to the dice
             DrawTextEx(normalFont, result.c_str(), {startX + 120, startY + i * spacingY + 30}, 30, 2, WHITE);
         }
     }
