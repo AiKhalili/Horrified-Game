@@ -196,6 +196,8 @@ void MonsterPhaseScene::renderItems()
     }
 }
 
+// Main render function for MonsterPhaseScene.
+// Responsible for drawing background, monster card, current step visuals, UI, and overlays.
 void MonsterPhaseScene::render()
 {
     renderBackGround();
@@ -206,12 +208,12 @@ void MonsterPhaseScene::render()
          currentStep == MonsterPhaseStep::HandleStrike ||
          currentStep == MonsterPhaseStep::HandlePower ||
          currentStep == MonsterPhaseStep::EndPhase))
-    {
+    { // Render the current active monster during specific steps
         renderCurrentMonster();
     }
 
     switch (currentStep)
-    {
+    { // Render additional visuals depending on the current game step
     case MonsterPhaseStep::PlaceItems:
         renderItems();
         break;
@@ -226,7 +228,7 @@ void MonsterPhaseScene::render()
     ui.render();
 
     if (showBloodOverlay)
-    {
+    { // If blood overlay is enabled, draw it with scaling
         DrawTextureEx(bloodOverLay, {0, 0}, 0.0f, (float)GetScreenHeight() / bloodOverLay.height, WHITE);
     }
 }
