@@ -598,30 +598,31 @@ void MonsterPhaseScene::render_FormOfTheBat(float deleteTime)
 
 void MonsterPhaseScene::render_Thief(float deleteTime)
 {
-    const float flashDuration = 1.0f;
+    const float flashDuration = 1.0f; // Duration of the white flash effect at the start (1 second)
 
+    // Show white flash overlay if within flash duration
     if (deleteTime < flashDuration)
     {
-        float alphaFactor = 1.0f - (deleteTime / flashDuration);
-        unsigned char a = static_cast<unsigned char>(255 * alphaFactor * 0.6f);
-        DrawRectangle(0, 0, 1600, 900, Color{255, 255, 255, a});
+        float alphaFactor = 1.0f - (deleteTime / flashDuration);                // Fade out over time
+        unsigned char a = static_cast<unsigned char>(255 * alphaFactor * 0.6f); // Max alpha capped at 60%
+        DrawRectangle(0, 0, 1600, 900, Color{255, 255, 255, a});                // Full-screen white flash with fading alpha
     }
-    // نوشتن عنوان کارت
+
     if (!titelAdded)
-    {
+    { // Add title label only once
         Color color = {235, 235, 235, 255};
         Vector2 pos = {650, 100};
         auto title = std::make_unique<UILabel>(pos, "Thief", 100, 6.0f, color, color);
         title->setFont(spookyFont);
         ui.add(std::move(title));
-        titelAdded = true;
+        titelAdded = true; // Prevent adding again
     }
     std::string msg = game.event.msg;
 
     if (deleteTime >= 2.0f && !messageShown)
-    {
-        showMessage(msg, {550, 600}, 35, 4.0f, normalFont, true);
-        messageShown = true;
+    { // Show the message after 2 seconds, only once
+        showMessage(msg, {530, 600}, 35, 4.0f, normalFont, true);
+        messageShown = true; // Prevent message from showing again
     }
 }
 
