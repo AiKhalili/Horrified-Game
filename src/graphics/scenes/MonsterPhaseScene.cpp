@@ -108,9 +108,10 @@ void MonsterPhaseScene::renderMonsterCard()
     }
 }
 
-void MonsterPhaseScene::showMessage(const std::string &text, Vector2 pos, int fontSize, float time, Font font, bool immediate, Color color)
+void MonsterPhaseScene::showMessage(const std::string &text, Vector2 pos,
+                                    int fontSize, float time, Font font, bool immediate, Color color, bool center)
 {
-    auto label = std::make_unique<UILabel>(pos, text, fontSize, time, color, color);
+    auto label = std::make_unique<UILabel>(pos, text, fontSize, time, color, color, center);
     label->enableBackground(BLACK, 20.0f);
     label->setFont(font);
 
