@@ -1057,54 +1057,32 @@ void MonsterPhaseScene::renderCurrentMonster()
 
 void MonsterPhaseScene::handleMoveAndRoll(float deleteTime)
 {
-    game.setupMonsterStrike();
-    // if (!game.targetMonster)
-    // {
-    //     std::cerr << "[INFO] targetMonster is NULL — calling setupMonsterStrike()\n";
-    //     game.setupMonsterStrike();
-    //     processingStrike = false;
-    // }
+    game.setupMonsterStrike(); // Prepare the monster
 
     if (!game.targetMonster)
-    {
+    { // Check if targetMonster was set successfully
         std::cerr << "[FATAL] targetMonster is STILL NULL after setup — aborting strike\n";
         return;
     }
 
     if (!processingStrike)
-    {
+    { // Only process strike logic once
         processingStrike = true;
 
-        if (!game.targetMonster)
-        {
-            std::cerr << "ERROR: targetMonster is NULL before moveMonster()" << std::endl;
-        }
+        // Try to move the monster — returns true if it moved
         bool moved = game.moveMonster();
 
-        game.diceCount.clear();
-        rolledDiceResult = game.rollingDice();
+        game.diceCount.clear();                // Clear previous dice results
+        rolledDiceResult = game.rollingDice(); // Roll new dice results
 
-        std::cout << "[DEBUG] Rolled Dice Faces: ";
-        for (auto &faceStr : rolledDiceResult)
-            std::cout << faceStr << " ";
-        std::cout << "\n";
-        std::cout << "[DEBUG] STRIKE Count from diceCount: " << game.diceCount[Face::STRIKE] << "\n";
-        std::cout << "[DEBUG] Setting remainingStrikes = " << game.diceCount[Face::STRIKE] << "\n";
-
+        // Reset dice animation state
         diceTimer = 0.0f;
         diceShown = 0;
 
-        std::cout << "[DEBUG] Dice rolled: ";
-        for (auto f : rolledDiceResult)
-            std::cout << f << " ";
-        std::cout << "\n";
-
-        std::cout << "[DEBUG] STRIKE count = " << game.diceCount[Face::STRIKE] << std::endl;
-
+        // Count how many STRIKE faces were rolled
         remainingStrikes = game.diceCount[Face::STRIKE];
 
-        std::cout << "[DEBUG] Remaining Strikes after dice roll: " << remainingStrikes << std::endl;
-
+        // Show movement message based on whether the monster moved
         if (moved)
         {
             std::string msg = game.targetMonster->get_name() + " moved to " +
@@ -1116,7 +1094,7 @@ void MonsterPhaseScene::handleMoveAndRoll(float deleteTime)
             std::string msg = game.targetMonster->get_name() + " stayed at " +
                               game.targetMonster->get_location()->get_name() + ".";
             showMessage(msg, {550, 600}, 35, 3.0f, normalFont, false);
-            waitingForMessage = true;
+            waitingForMessage = true; // Set flag to wait before continuing
         }
     }
 }
