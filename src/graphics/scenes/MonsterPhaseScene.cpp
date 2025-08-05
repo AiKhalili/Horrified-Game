@@ -57,6 +57,7 @@ void MonsterPhaseScene::onExit()
     loadedVillager = false;
     loadedHypnotic = false;
     isWaitingForDefenceSelection = false;
+    batSoundPlayed = false;
 
     powerTargetHero = nullptr;
     powerTargetVillager = nullptr;
@@ -523,6 +524,7 @@ void MonsterPhaseScene::step_RunEvent(float deleteTime)
     { // Reset flags related to event message display.
         titelAdded = false;
         messageShown = false;
+        batSoundPlayed = false;
         stepTimer = 0.0f;
         game.currentStrikeIndex = 0;
         currentStep = MonsterPhaseStep::MonsterMoveAndRoll;
@@ -531,60 +533,65 @@ void MonsterPhaseScene::step_RunEvent(float deleteTime)
 
 void MonsterPhaseScene::render_FormOfTheBat(float deleteTime)
 {
+    if (!batSoundPlayed)
+    { // Play bat flying sound only once at animation start
+        AudioManager::getInstance().setSoundVolume(10.0f);
+        AudioManager::getInstance().playSoundEffect("flying");
+        AudioManager::getInstance().setSoundVolume(0.5f);
+        batSoundPlayed = true;
+    }
+
+    // Normalize time (0 to 1) over 6 seconds
     float t = deleteTime / 6.0f;
     if (t > 1.0f)
     {
         t = 1.0f;
     }
 
+    // Calculate fade-out effect as animation progresses
     float fadeFactor = 1.0f - powf(t, 1.2f);
     if (fadeFactor < 0.0f)
     {
         fadeFactor = 0.0f;
     }
 
-    // موقعیت اولیه و نهایی
+    // Define start and end positions for bat movement
     Vector2 startPos = {50, 900};
     Vector2 endPos = {800, 0};
 
-    // موقعیت پایه بین دو نقطه
+    // Interpolate bat position over time
     Vector2 basePos = {
         startPos.x + (endPos.x - startPos.x) * t,
         startPos.y + (endPos.y - startPos.y) * t};
 
+    // Apply vertical sinusoidal oscillation for natural flight
     float oscillationAmplitude = 20.0f;
-
     float frequency = 1.0f;
-
     float yOffset = sinf(deleteTime * frequency * 2 * PI) * oscillationAmplitude * (1.0f - t);
-
     basePos.y += yOffset;
 
-    // تغییر مقیاس (از ۲ به حدود ۰.۸)
+    // Gradually scale down the bat image during movement
     float scale = 2.0f - t * 1.2f;
 
-    // محو شدن تدریجی
+    // Set color with alpha for fade-out effect
     Color c = WHITE;
     c.a = (unsigned char)(255 * fadeFactor);
 
-    // رسم خفاش
     DrawTextureEx(bats, basePos, 0.0f, scale, c);
 
-    // نوشتن عنوان کارت
     if (!titelAdded)
-    {
+    { // Add title label once at the beginning
         Color color = {235, 235, 235, 255};
-        Vector2 pos = {500, 100};
+        Vector2 pos = {480, 100};
         auto title = std::make_unique<UILabel>(pos, "Form of the Bat", 100, 6.0f, color, color);
         title->setFont(spookyFont);
         ui.add(std::move(title));
         titelAdded = true;
     }
 
-    // پیام پایانی
-    if (deleteTime >= 4.0f && !messageShown)
-    {
-        showMessage(game.event.msg, {550, 600}, 35, 3.0f, normalFont, true);
+    if (deleteTime >= 3.0f && !messageShown)
+    { // Show event message at halfway point (after 3 seconds)
+        showMessage(game.event.msg, {500, 600}, 35, 3.0f, normalFont, true);
         messageShown = true;
     }
 }
