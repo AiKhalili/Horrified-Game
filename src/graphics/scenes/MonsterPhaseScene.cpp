@@ -403,53 +403,58 @@ void MonsterPhaseScene::step_CheckMonsterPhasePerk(float deltaTime)
     }
 }
 
+// Handles the animation and logic for drawing the monster card.
 void MonsterPhaseScene::step_DrawMonsterCard(float deltaTime)
 {
     if (!cardDrawn)
-    {
+    { // If the card hasn't been drawn yet, initialize it
         game.drawMonsterCard();
         card = game.currentMosnterCard;
         strikes = game.MonstersStrike;
+
         if (!game.targetMonster)
         {
             std::cerr << "ERROR: setupMonsterStrike failed! currentStrikeIndex="
                       << game.currentStrikeIndex
                       << " strikeName=" << game.MonstersStrike[game.currentStrikeIndex] << std::endl;
         }
-        game.useMonsterCard(card.get_name());
+
+        game.useMonsterCard(card.get_name()); // Apply the card's effect
 
         std::string name = card.get_name();
         std::string path = "assets/images/Monster_Cards/" + name + ".png";
         cardTexture = TextureManager::getInstance().getOrLoadTexture(name, path);
 
+        AudioManager::getInstance().playSoundEffect("whoosh");
+
+        // Initialize animation parameters
         cardScale = 0.0f;
         cardDrawn = true;
         stepTimer = 0.0f;
     }
 
-    // انیمیشن کارت
+    // Update animation timer
     stepTimer += deltaTime;
     float animDuration = 1.0f;
     float t = stepTimer / animDuration;
     if (t > 1.0f)
         t = 1.0f;
 
-    // Scale
+    // Scale the card (zoom in effect)
     cardScale = t;
 
-    // Slide
-    float cardW = 300.0f * cardScale;
-    float cardH = 400.0f * cardScale;
+    // Animate card sliding from bottom to corner
+    float cardW = 300.0f * cardScale; // Start at bottom center
+    float cardH = 400.0f * cardScale; // End at top-right corner
 
-    Vector2 startPos = {800 - cardW / 2, 900};   // پایین وسط
-    Vector2 targetPos = {1600 - cardW - 50, 50}; // گوشه راست بالا
+    Vector2 startPos = {800 - cardW / 2, 900};
+    Vector2 targetPos = {1600 - cardW - 50, 50};
 
     cardPos.x = startPos.x + (targetPos.x - startPos.x) * t;
     cardPos.y = startPos.y + (targetPos.y - startPos.y) * t;
 
-    // بعد از انیمیشن برو مرحله بعد
     if (t >= 1.0f && stepTimer >= animDuration + 1.0f)
-    {
+    { // After animation is complete and small delay, move to next step
         currentStep = MonsterPhaseStep::PlaceItems;
         stepTimer = 0.0f;
     }
