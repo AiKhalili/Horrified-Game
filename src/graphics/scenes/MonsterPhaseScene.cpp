@@ -20,6 +20,9 @@ void MonsterPhaseScene::onEnter()
 
     bloodOverLay = TextureManager::getInstance().getOrLoadTexture("bloodOverLay", "assets/images/background/blood.png");
 
+    AudioManager::getInstance().stopMusic();
+    AudioManager::getInstance().playMonsterSelectMusic();
+
     normalFont = LoadFont("assets/fonts/simple.ttf");
     spookyFont = LoadFontEx("assets/fonts/spooky.otf", 100, 0, 0);
 
@@ -73,6 +76,9 @@ void MonsterPhaseScene::onExit()
     itemTex.clear();
 
     currentStep = MonsterPhaseStep::CheckMonsterPhasePerk;
+
+    AudioManager::getInstance().stopMonsterSelectMusic();
+    AudioManager::getInstance().playMusic();
 
     UnloadFont(normalFont);
     UnloadFont(spookyFont);
@@ -179,6 +185,15 @@ void MonsterPhaseScene::render()
     renderBackGround();
     renderMonsterCard();
 
+    if (game.targetMonster &&
+        (currentStep == MonsterPhaseStep::MonsterMoveAndRoll ||
+         currentStep == MonsterPhaseStep::HandleStrike ||
+         currentStep == MonsterPhaseStep::HandlePower ||
+         currentStep == MonsterPhaseStep::EndPhase))
+    {
+        renderCurrentMonster();
+    }
+
     switch (currentStep)
     {
     case MonsterPhaseStep::PlaceItems:
@@ -187,17 +202,7 @@ void MonsterPhaseScene::render()
     case MonsterPhaseStep::RunEvent:
         renderEvents();
         break;
-    case MonsterPhaseStep::MonsterMoveAndRoll:
-        if (game.targetMonster)
-        {
-            renderCurrentMonster();
-        }
-        break;
-    case MonsterPhaseStep::HandleStrike:
-        renderCurrentMonster();
-        break;
     case MonsterPhaseStep::HandlePower:
-        renderCurrentMonster();
         renderPowerEffect();
         break;
     }
@@ -285,6 +290,17 @@ void MonsterPhaseScene::update(float deleteTime)
             {
                 processNextPower();
             }
+        }
+        return;
+    }
+
+    if (delaySceneChange)
+    {
+        sceneChangeTimer -= deleteTime;
+        if (sceneChangeTimer <= 0.0f)
+        {
+            delaySceneChange = false;
+            SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
         }
         return;
     }
@@ -794,7 +810,7 @@ void MonsterPhaseScene::render_OnTheMove(float deleteTime)
     float totalTravelTime = 3.5f;
     float startX = -100.0f;
     float endX = 1600 + 100.0f;
-    float y = 600 ;
+    float y = 600;
 
     for (size_t i = 0; i < villagerNames.size(); ++i)
     {
@@ -1251,6 +1267,8 @@ void MonsterPhaseScene::handleManageStrike()
         // رفتن به مرحله MoveAndRoll برای استرایک بعدی
         currentStep = MonsterPhaseStep::MonsterMoveAndRoll;
         processingStrike = false;
+
+        return;
     }
     else
     {
@@ -1265,5 +1283,8 @@ void MonsterPhaseScene::endMonsterPhase()
 
     game.currentState = GameState::EndMonsterPhase;
 
-    SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
+    delaySceneChange = true;
+    sceneChangeTimer = 2.0f;
+
+    // SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
 }
