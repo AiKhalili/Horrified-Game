@@ -1140,12 +1140,18 @@ void MonsterPhaseScene::step_HandleStrike(float deleteTime)
 void MonsterPhaseScene::handleDefence(std::vector<Item *> &selectedItems)
 {
     if (selectedItems.empty())
-    {
+    { // If no items were selected for defense
         showMessage("No defense item used!", {500, 600}, 35, 3.0f, normalFont, false);
+
+        // Send hero to hospital because they couldn't defend
         game.sendHeroToHospital();
-        SceneDataHub::getInstance().reset();
-        showBloodOverlay = true;
+
+        SceneDataHub::getInstance().reset(); // Clear temporary data
+
+        showBloodOverlay = true; // Show blood overlay effect
         bloodOverlayTimer = 5.0f;
+
+        // End the phase
         remainingStrikes = 0;
         currentStep = MonsterPhaseStep::EndPhase;
         processingStrike = false;
@@ -1153,11 +1159,12 @@ void MonsterPhaseScene::handleDefence(std::vector<Item *> &selectedItems)
         return;
     }
     else if (selectedItems.size() > 1)
-    {
+    { // If more than one item was selected (invalid case)
         std::vector<Item *> heroItems = game.damageHero->getItems();
 
-        SceneDataHub::getInstance().reset();
+        SceneDataHub::getInstance().reset(); // Clear selection so the player selects again
 
+        // Store items to re-trigger item selection
         pendingHeroItems = heroItems;
         pendingItemSelection = true;
 
@@ -1165,15 +1172,18 @@ void MonsterPhaseScene::handleDefence(std::vector<Item *> &selectedItems)
         return;
     }
     else
-    {
+    { // If exactly one item was selected — proceed with defense
         Item *defItem = selectedItems[0];
 
         std::string text = "Hero defends using " + defItem->get_name() + "!";
         showMessage(text, {500, 600}, 35, 3.0f, normalFont, false);
+
+        // Apply the item's defense effect
         game.defendHero(defItem);
         isWaitingForDefenceSelection = false;
     }
 
+    // Clear selection and mark strike as done
     SceneDataHub::getInstance().reset();
     processingStrike = false;
 }
