@@ -102,7 +102,11 @@ private:
 
     int remainingStrikes = 0;
 
-    void showMessage(const std::string &text, Vector2 pos, int fontSize, float time, Font font, bool immediate, Color color = {235, 235, 235, 255});
+    bool delaySceneChange = false;
+    float sceneChangeTimer = 0.0f;
+
+    void showMessage(const std::string &text, Vector2 pos, int fontSize, float time,
+                     Font font, bool immediate, Color color = {235, 235, 235, 255}, bool centerAlignment);
 
     void step_CheckMonsterPhasePerk(float deleteTime);
     void step_DrawMonsterCard(float deleteTime);
