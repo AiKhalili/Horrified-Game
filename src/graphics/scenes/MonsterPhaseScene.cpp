@@ -372,30 +372,32 @@ void MonsterPhaseScene::step_MoveAndRoll(float deleteTime)
     }
 }
 
+// Checks if the monster phase should be skipped due to active Perk Card effects
 void MonsterPhaseScene::step_CheckMonsterPhasePerk(float deltaTime)
 {
     if (stepTimer == 0.0f)
-    {
+    { // Determine if monster phase should be skipped
         skipPhase = !game.canStartMonsterPhase();
 
         if (skipPhase)
         {
-            Vector2 center = {600, 100};
+            Vector2 center = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
             std::string msg = "Monster Phase skipped due to Perk Card!";
+            showMessage(msg, center, 40, 2.5f, normalFont, false, RED, true);
 
-            game.setGameState(GameState::EndMonsterPhase);
+            game.setGameState(GameState::EndMonsterPhase); // Update game state
         }
     }
 
-    stepTimer += deltaTime;
+    stepTimer += deltaTime; // Increment step timer
 
     if (skipPhase && stepTimer >= 3.0f)
-    {
+    { // If skipping, wait then return to board scene
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
     }
 
     if (!skipPhase)
-    {
+    { // If not skipping, proceed to draw monster card
         currentStep = MonsterPhaseStep::DrawMonsterCard;
         stepTimer = 0.0f;
     }
