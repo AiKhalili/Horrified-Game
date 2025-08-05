@@ -115,7 +115,7 @@ void MonsterPhaseScene::renderMonsterCard()
 
 // Create and enqueue a UI label to display a message on screen
 void MonsterPhaseScene::showMessage(const std::string &text, Vector2 pos,
-                                    int fontSize, float time, Font font, bool immediate, Color color, bool center)
+                                    int fontSize, float time, Font font, bool immediate, bool center, Color color)
 {
     // Initialize the UILabel
     auto label = std::make_unique<UILabel>(pos, text, fontSize, time, color, color, center);
@@ -383,7 +383,7 @@ void MonsterPhaseScene::step_CheckMonsterPhasePerk(float deltaTime)
         {
             Vector2 center = {GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f};
             std::string msg = "Monster Phase skipped due to Perk Card!";
-            showMessage(msg, center, 40, 2.5f, normalFont, false, RED, true);
+            showMessage(msg, center, 40, 2.5f, normalFont, false, true, RED);
 
             game.setGameState(GameState::EndMonsterPhase); // Update game state
         }
@@ -460,42 +460,47 @@ void MonsterPhaseScene::step_DrawMonsterCard(float deltaTime)
     }
 }
 
+// Handles the placement and display of items during the Monster Phase.
 void MonsterPhaseScene::step_PlaceItems(float deltaTime)
 {
-    //  فقط یکبار آیتم‌ها رو قرار بده
     if (!itemsPlaced)
     {
-        items = game.placeItemsOnMap(); // از Game آیتم‌ها رو بگیر
+        items = game.placeItemsOnMap(); // Retrieve the items to place on the map
         itemsPlaced = true;
+
+        // Initialize animation-related variables
         itemsTimer = 0.0f;
         itemsAlpha = 0.0f;
         showItemIcons = true;
 
-        // // 🎵 صدای قرار گرفتن آیتم‌ها
-        // AudioManager::getInstance().playSFX("place_items");
+        if (!items.empty())
+        {
+            AudioManager::getInstance().playSoundEffect("magic");
+        }
 
         std::string msg;
 
         if (items.empty())
-        {
+        { // Message if no items were placed
             msg = "No items were placed this round!";
         }
         else
-        {
+        { // Message showing how many items were placed
             msg = std::to_string(items.size()) + " items have been placed on the map!";
         }
 
-        Vector2 center = {500, 600};
+        Vector2 center = {500, 600}; // Position of the message
 
         showMessage(msg, center, 35, 5.0f, normalFont, true);
 
         for (auto *item : items)
-        {
+        { // Load textures for each item to display
             std::string texPath = "assets/images/Items/" + item->get_color_to_string() + "/" + item->get_name() + ".png";
             itemTex.push_back(TextureManager::getInstance().getOrLoadTexture(item->get_name(), texPath));
         }
     }
 
+    // Update timer and fade in alpha for items
     itemsTimer += deltaTime;
     if (itemsAlpha < 1.0f)
     {
@@ -503,7 +508,7 @@ void MonsterPhaseScene::step_PlaceItems(float deltaTime)
     }
 
     if (itemsTimer >= 5.0f)
-    {
+    { // After 5 seconds, hide icons and move to next step
         showItemIcons = false;
         stepTimer = 0.0f;
         currentStep = MonsterPhaseStep::RunEvent;
@@ -1011,12 +1016,13 @@ void MonsterPhaseScene::renderCurrentMonster()
 
 void MonsterPhaseScene::handleMoveAndRoll(float deleteTime)
 {
-    if (!game.targetMonster)
-    {
-        std::cerr << "[INFO] targetMonster is NULL — calling setupMonsterStrike()\n";
-        game.setupMonsterStrike();
-        processingStrike = false;
-    }
+    game.setupMonsterStrike();
+    // if (!game.targetMonster)
+    // {
+    //     std::cerr << "[INFO] targetMonster is NULL — calling setupMonsterStrike()\n";
+    //     game.setupMonsterStrike();
+    //     processingStrike = false;
+    // }
 
     if (!game.targetMonster)
     {
