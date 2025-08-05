@@ -743,13 +743,17 @@ void MonsterPhaseScene::render_villagerCard(float deleteTime)
 
 void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
 {
+    // Normalize time to range [0, 1] over 6 seconds
     float t = deleteTime / 6.0f;
     if (t > 1.0f)
     {
         t = 1.0f;
     }
 
+    // Compute fade-in alpha for the first 0.2 seconds
     float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
+
+    // Determine image position and max width based on whether a hero or villager is shown
     Vector2 imagePos;
     float imageMaxWidth;
 
@@ -765,7 +769,7 @@ void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
     }
 
     if (!loadedHypnotic)
-    {
+    { // Load the correct texture once based on whether it's a hero or villager
         std::string name = game.event.villagerName.empty() ? game.event.heroName : game.event.villagerName;
         std::string folder = game.event.villagerName.empty() ? "heros" : "Villager";
         std::string path = "assets/images/" + folder + "/" + name + ".png";
@@ -773,19 +777,21 @@ void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
         loadedHypnotic = true;
     }
 
+    // Compute final scaled width and height
     float scale = imageMaxWidth / texHypnoticGaze.width;
     float scaledW = texHypnoticGaze.width * scale;
     float scaledH = texHypnoticGaze.height * scale;
 
+    // Prepare source and destination rectangles for drawing
     Rectangle src = {0, 0, (float)texHypnoticGaze.width, (float)texHypnoticGaze.height};
     Rectangle dst = {imagePos.x, imagePos.y, scaledW, scaledH};
 
     DrawTexturePro(texHypnoticGaze, src, dst, {0, 0}, 0.0f, {255, 255, 255, (unsigned char)(fade * 255)});
 
     if (!titelAdded)
-    {
+    { // Add the title label only once
         Color color = {235, 235, 235, 255};
-        Vector2 pos = {550, 100};
+        Vector2 pos = {520, 100};
         std::string title = "Hypnotic Gaze";
         auto titleLabel = std::make_unique<UILabel>(pos, title, 100, 6.0f, color, color);
         titleLabel->setFont(spookyFont);
@@ -794,7 +800,7 @@ void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
     }
 
     if (deleteTime >= 2.0f && !messageShown)
-    {
+    { // Show the message text after 2 seconds
         showMessage(game.event.msg, {450, 600}, 35, 4.0f, normalFont, true);
         messageShown = true;
     }
