@@ -515,11 +515,12 @@ void MonsterPhaseScene::step_PlaceItems(float deltaTime)
     }
 }
 
+// Advances the event phase by accumulating time.
 void MonsterPhaseScene::step_RunEvent(float deleteTime)
 {
     stepTimer += deleteTime;
     if (stepTimer >= 6.0f)
-    {
+    { // Reset flags related to event message display.
         titelAdded = false;
         messageShown = false;
         stepTimer = 0.0f;
