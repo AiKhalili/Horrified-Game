@@ -965,19 +965,21 @@ void MonsterPhaseScene::renderDice(float deltaTime)
     }
 }
 
+// Perform a strike and determine the result (Hero, Villager, or None)
 void MonsterPhaseScene::executeStrike()
 {
     StrikeResult result = game.diceStrikeFace();
 
     if (result == StrikeResult::HeroFound)
-    {
+    { // If a hero is found, display attack message
         std::string msg = game.targetMonster->get_name() + " attacks the " + game.damageHero->getClassName() + "!";
         showMessage(msg, {500, 600}, 40, 3.0f, spookyFont, false);
 
+        // Get hero's defense items
         std::vector<Item *> heroItems = game.damageHero->getItems();
 
         if (heroItems.empty())
-        {
+        { // If hero has no items, show blood overlay and send hero to hospital
             showBloodOverlay = true;
             bloodOverlayTimer = 5.0f;
             showMessage("Hero has no defense items!", {500, 600}, 35, 3.0f, normalFont, false);
@@ -987,6 +989,7 @@ void MonsterPhaseScene::executeStrike()
             processingStrike = false;
             return;
         }
+        // If hero has defense items, go to item selection scene
         remainingStrikes--;
         SceneManager::getInstance().getScene<MonsterPhaseScene>(SceneKeys::MONSTER_PHASE_SCENE).setSkip(true);
         SceneManager::getInstance().getScene<ItemSelectionScene>(SceneKeys::ITEM_SELECTION_SCENE).setData(heroItems, SceneKeys::MONSTER_PHASE_SCENE);
@@ -996,7 +999,7 @@ void MonsterPhaseScene::executeStrike()
         return;
     }
     else if (result == StrikeResult::VillagerFound)
-    {
+    { // If a villager is found, show blood and message, and end the phase
         showBloodOverlay = true;
         bloodOverlayTimer = 3.0f;
         std::string msg = "Villager " + game.damageVillager->getName() + " was killed!";
@@ -1007,7 +1010,7 @@ void MonsterPhaseScene::executeStrike()
         return;
     }
     else
-    {
+    { // If no target found, show a miss message
         std::string msg = game.targetMonster->get_name() + " attacks but finds no one!";
         showMessage(msg, {500, 600}, 35, 3.0f, normalFont, false);
         remainingStrikes--;
