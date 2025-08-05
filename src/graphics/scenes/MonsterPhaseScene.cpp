@@ -359,18 +359,15 @@ void MonsterPhaseScene::update(float deleteTime)
     }
 }
 
+// Handles the monster's movement and dice rolling logic during its turn.
 void MonsterPhaseScene::step_MoveAndRoll(float deleteTime)
 {
-    handleMoveAndRoll(deleteTime);
+    handleMoveAndRoll(deleteTime); // Execute movement and dice roll logic
 
-    std::cout << "[DEBUG] diceShown = " << diceShown
-              << " | rolledDiceResult.size() = " << rolledDiceResult.size() << std::endl;
-
+    // If all dice have been shown and results are ready
     if (!rolledDiceResult.empty() && diceShown >= (int)rolledDiceResult.size())
     {
-        std::cout << "[DEBUG] Switching to HandleStrike step\n";
-
-        currentStep = MonsterPhaseStep::HandleStrike;
+        currentStep = MonsterPhaseStep::HandleStrike; // Move to strike phase
         processingStrike = false;
     }
 }
