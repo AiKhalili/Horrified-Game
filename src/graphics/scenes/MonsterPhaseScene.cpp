@@ -1021,15 +1021,17 @@ void MonsterPhaseScene::executeStrike()
 void MonsterPhaseScene::renderCurrentMonster()
 {
     if (!game.targetMonster)
-    {
-        std::cout << "target monster is NUL\n";
+    { // Check if the target monster is set; if not, log error and return
+        std::cerr << "target monster is NUL\n";
         return;
     }
 
+    // Get the target monster and load its texture from file
     Monster *m = game.targetMonster;
     Texture2D tex = TextureManager::getInstance().getOrLoadTexture(
         m->get_name(), "assets/images/Monsters/" + m->get_name() + ".png");
 
+    // Define position and scale to render monster image
     Vector2 pos = {50, 50};
     float imageSize = 270.0f;
     float scale = imageSize / tex.width;
@@ -1038,17 +1040,18 @@ void MonsterPhaseScene::renderCurrentMonster()
     std::string location = "LOCATION : " + m->get_location()->get_name();
 
     if (!locationLabel)
-    {
+    { // Create location label if it doesn't exist
         locationLabel = new UILabel({30, 400}, location, 35, 0.0f, {170, 20, 20, 255}, {170, 20, 20, 255});
         locationLabel->enableBackground(BLACK, 20.0f);
         locationLabel->setFont(normalFont);
         ui.add(std::unique_ptr<UILabel>(locationLabel));
     }
     else
-    {
+    { // Update label text if it already exists
         locationLabel->setText(location);
     }
 
+    // Render dice results related to the current monster
     renderDice(GetFrameTime());
 }
 
