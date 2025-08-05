@@ -808,14 +808,17 @@ void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
 
 void MonsterPhaseScene::render_OnTheMove(float deleteTime)
 {
+    // Normalize the deleteTime to a 0.0 - 1.0 range for animation timing
     float t = deleteTime / 6.0f;
     if (t > 1.0f)
     {
         t = 1.0f;
     }
 
+    // Calculate the fade-in value for smooth appearance
     float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
 
+    // Early phase: show the frenzy background and monster name
     if (deleteTime < 2.5f)
     {
         float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
@@ -823,17 +826,22 @@ void MonsterPhaseScene::render_OnTheMove(float deleteTime)
         Rectangle src = {0, 0, (float)frenzy.width, (float)frenzy.height};
         Rectangle dst = {0, 0, 1600.0, 900.0};
 
+        // Draw the full-screen frenzy texture with transparency
         Color overlayColor = {255, 255, 255, (unsigned char)(fade * 200)};
 
         DrawTexturePro(frenzy, src, dst, {0, 0}, 0.0f, overlayColor);
 
+        // Center and display monster name text
         std::string text = game.event.monsterName;
-        DrawTextEx(spookyFont, text.c_str(), {560, 400}, 80, 2, BLACK);
+        Vector2 textSize = MeasureTextEx(spookyFont, text.c_str(), 80, 2.0f);
+        Vector2 position = {(1600.0f - textSize.x) / 2.0f - 60, 400};
+
+        DrawTextEx(spookyFont, text.c_str(), position, 80, 2, BLACK);
         return;
     }
 
     if (!titelAdded && deleteTime >= 2.5f)
-    {
+    { // Add title label once, after the initial phase
         Color color = {235, 235, 235, 255};
         Vector2 pos = {550, 100};
         auto titleLabel = std::make_unique<UILabel>(pos, "On The Move", 80, 3.5f, color, color);
@@ -843,7 +851,7 @@ void MonsterPhaseScene::render_OnTheMove(float deleteTime)
     }
 
     if (!villagerImagesLoaded)
-    {
+    { // Load villager images if not already loaded
         villagerNames.clear();
         villagerTextures.clear();
 
@@ -858,18 +866,21 @@ void MonsterPhaseScene::render_OnTheMove(float deleteTime)
         villagerImagesLoaded = true;
     }
 
+    // Villager movement animation parameters
     float delayPerVillager = 0.8f;
     float totalTravelTime = 3.5f;
     float startX = -100.0f;
     float endX = 1600 + 100.0f;
     float y = 600;
 
+    // Animate villagers with delay and smooth movement
     for (size_t i = 0; i < villagerNames.size(); ++i)
     {
         float startDelay = i * delayPerVillager;
         float t = deleteTime - 2.5f - startDelay;
+
         if (t < 0.0f || t > totalTravelTime)
-        {
+        { // Skip if it's not yet their time to appear or already done
             continue;
         }
 
@@ -885,7 +896,7 @@ void MonsterPhaseScene::render_OnTheMove(float deleteTime)
     }
 
     if (deleteTime >= 3.0f && !messageShown)
-    {
+    { // Show the summary message after animation starts
         std::string msg = "Frenzy marker moved to " + game.event.monsterName + " and villagers moved 1 step toward safety.";
         showMessage(msg, {330, 600}, 30, 3.0f, normalFont, true);
         messageShown = true;
