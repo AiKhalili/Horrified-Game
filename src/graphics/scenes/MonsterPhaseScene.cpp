@@ -690,26 +690,32 @@ void MonsterPhaseScene::render_Sunrise(float deleteTime)
 
 void MonsterPhaseScene::render_villagerCard(float deleteTime)
 {
+    // Normalize time to [0, 1] over 6 seconds
     float t = deleteTime / 6.0f;
     if (t > 1.0f)
     {
         t = 1.0f;
     }
 
+    // Determine fade-in factor (only fades in during the first 0.2 seconds)
     float fade = (t < 0.2f) ? t / 0.2f : 1.0f;
 
     if (!loadedVillager)
-    {
+    { // Load the villager texture only once
         std::string path = "assets/images/Villager/" + game.event.villagerName + ".png";
         villagerTex = TextureManager::getInstance().getOrLoadTexture(game.event.villagerName, path);
         loadedVillager = true;
     }
+
+    // Calculate scaling factor to keep image within max width (600px)
     float imageMaxWidth = 600.0f;
     float imageScale = imageMaxWidth / villagerTex.width;
 
+    // Apply the scale to determine final image size
     float scaledWidth = villagerTex.width * imageScale;
     float scaledHeight = villagerTex.height * imageScale;
 
+    // Position to draw
     Vector2 imagePos = {-100, -100};
     Rectangle src = {0, 0, (float)villagerTex.width, (float)villagerTex.height};
     Rectangle dst = {imagePos.x, imagePos.y, scaledWidth, scaledHeight};
@@ -718,19 +724,19 @@ void MonsterPhaseScene::render_villagerCard(float deleteTime)
                    Color{255, 255, 255, (unsigned char)(fade * 255)});
 
     if (!titelAdded)
-    {
+    { // Add the card title (only once)
         Color color = {235, 235, 235, 255};
-        Vector2 pos = {530, 100};
-        auto titleLabel = std::make_unique<UILabel>(pos, card.get_name(), 100, 6.0f, color, color);
+        Vector2 pos = {750, 100};
+        auto titleLabel = std::make_unique<UILabel>(pos, card.get_name(), 100, 6.0f, color, color, true);
         titleLabel->setFont(spookyFont);
         ui.add(std::move(titleLabel));
         titelAdded = true;
     }
 
     if (deleteTime >= 2.0f && !messageShown)
-    {
+    { // Show the event message after a short delay (2 seconds)
         std::string msg = game.event.msg;
-        showMessage(msg, {500, 600}, 35, 4.0f, normalFont, true);
+        showMessage(msg, {750, 600}, 35, 4.0f, normalFont, true, true);
         messageShown = true;
     }
 }
