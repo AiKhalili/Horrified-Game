@@ -85,6 +85,7 @@ void MonsterPhaseScene::onExit()
     ui.clear();
 }
 
+// Clear the screen and draw the monster phase background scaled to fit width
 void MonsterPhaseScene::renderBackGround()
 {
     ClearBackground(BLACK);
@@ -93,6 +94,7 @@ void MonsterPhaseScene::renderBackGround()
     DrawTextureEx(background, {0.0}, 0.0f, scaleX, WHITE);
 }
 
+// Draw the monster card with animation scale and position
 void MonsterPhaseScene::renderMonsterCard()
 {
     if (cardDrawn)
@@ -100,6 +102,7 @@ void MonsterPhaseScene::renderMonsterCard()
         float cardW = 300.0f * cardScale;
         float cardH = 400.0f * cardScale;
 
+        // Define source and destination rectangles for the texture
         Rectangle src = {0, 0, (float)cardTexture.width, (float)cardTexture.height};
         Rectangle dst = {cardPos.x, cardPos.y, cardW, cardH};
         Vector2 origin = {0, 0};
@@ -108,34 +111,39 @@ void MonsterPhaseScene::renderMonsterCard()
     }
 }
 
+// Create and enqueue a UI label to display a message on screen
 void MonsterPhaseScene::showMessage(const std::string &text, Vector2 pos,
                                     int fontSize, float time, Font font, bool immediate, Color color, bool center)
 {
+    // Initialize the UILabel
     auto label = std::make_unique<UILabel>(pos, text, fontSize, time, color, color, center);
     label->enableBackground(BLACK, 20.0f);
     label->setFont(font);
 
     if (time <= 0.0f || immediate)
-    {
+    { // If the message should show immediately or stay permanently, render it now
         ui.add(std::move(label));
         return;
     }
 
+    // Otherwise, queue the message for timed display
     messageQueue.push(std::move(label));
     messageDuration.push(time);
 
     if (!waitingForMessage)
-    {
+    { // If no message is currently being shown, display this one
         displayNextMessage();
     }
 }
 
+// Display the next message from the queue, or handle item selection if needed
 void MonsterPhaseScene::displayNextMessage()
 {
     if (messageQueue.empty())
     {
         waitingForMessage = false;
 
+        // If a pending item selection is required, move to the item selection scene
         if (pendingItemSelection)
         {
             pendingItemSelection = false;
@@ -148,6 +156,7 @@ void MonsterPhaseScene::displayNextMessage()
         return;
     }
 
+    // Pop the next message from the queue and display it
     auto label = std::move(messageQueue.front());
     messageQueue.pop();
 
