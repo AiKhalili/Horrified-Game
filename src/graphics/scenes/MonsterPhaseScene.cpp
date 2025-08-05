@@ -233,6 +233,7 @@ void MonsterPhaseScene::render()
     }
 }
 
+// Render different event animations based on the current card's name.
 void MonsterPhaseScene::renderEvents()
 {
     if (card.get_name() == "FormOfTheBat")
@@ -285,12 +286,14 @@ void MonsterPhaseScene::renderEvents()
     }
 }
 
+// Update logic for the MonsterPhaseScene, called every frame.
 void MonsterPhaseScene::update(float deleteTime)
 {
+    AudioManager::getInstance().update();
     ui.update();
 
     if (showBloodOverlay)
-    {
+    { // Handle blood overlay fade-out effect
         bloodOverlayTimer -= deleteTime;
         if (bloodOverlayTimer <= 0.0f)
         {
@@ -299,11 +302,11 @@ void MonsterPhaseScene::update(float deleteTime)
     }
 
     if (waitingForMessage)
-    {
+    { // If we're waiting for a message to finish displaying
         messageTimer -= deleteTime;
         if (messageTimer <= 0.0f)
         {
-            displayNextMessage();
+            displayNextMessage(); // Show next message
             if (!waitingForMessage && processingPowerQueue)
             {
                 processNextPower();
@@ -313,7 +316,7 @@ void MonsterPhaseScene::update(float deleteTime)
     }
 
     if (delaySceneChange)
-    {
+    { // Handle delayed scene change
         sceneChangeTimer -= deleteTime;
         if (sceneChangeTimer <= 0.0f)
         {
@@ -323,6 +326,7 @@ void MonsterPhaseScene::update(float deleteTime)
         return;
     }
 
+    // Main step-based state machine handling
     switch (currentStep)
     {
     case MonsterPhaseStep::CheckMonsterPhasePerk:
@@ -1302,7 +1306,7 @@ void MonsterPhaseScene::endMonsterPhase()
     game.currentState = GameState::EndMonsterPhase;
 
     delaySceneChange = true;
-    sceneChangeTimer = 2.0f;
+    sceneChangeTimer = 1.0f;
 
     // SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
 }
