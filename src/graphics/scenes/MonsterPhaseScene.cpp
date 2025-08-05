@@ -8,6 +8,7 @@
 #include "core/SceneDataHub.hpp"
 #include "raymath.h"
 
+// called when entering the monster phase scene
 void MonsterPhaseScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture("monster_phase", "assets/images/background/monster_phase.png");
@@ -30,6 +31,7 @@ void MonsterPhaseScene::onEnter()
     SetTextureFilter(normalFont.texture, TEXTURE_FILTER_BILINEAR);
 }
 
+// called when exiting the monster phase scene
 void MonsterPhaseScene::onExit()
 {
     stepTimer = 0.0f;
@@ -168,21 +170,25 @@ void MonsterPhaseScene::displayNextMessage()
     ui.add(std::move(label));
 }
 
+// Renders the item icons at the bottom of the screen if they are enabled and available
 void MonsterPhaseScene::renderItems()
 {
     if (showItemIcons && !itemTex.empty())
     {
-        float startX = 80; // موقعیت شروع
-        float y = 700;     // پایین صفحه
+        // set initial position ans spacing for item icons
+        float startX = 80;
+        float y = 700;
         float spacing = 150;
 
         for (size_t i = 0; i < itemTex.size(); ++i)
         {
-            float size = 120; // اندازه آیکون
+            // Set size and source/destination rectangles for each item
+            float size = 120;
             Rectangle src = {0, 0, (float)itemTex[i].width, (float)itemTex[i].height};
             Rectangle dst = {startX + i * spacing, y, size, size};
             Vector2 origin = {0, 0};
 
+            // Apply fade effect using alpha transparency
             Color fadeColor = WHITE;
             fadeColor.a = (unsigned char)(itemsAlpha * 255);
             DrawTexturePro(itemTex[i], src, dst, origin, 0.0f, fadeColor);
