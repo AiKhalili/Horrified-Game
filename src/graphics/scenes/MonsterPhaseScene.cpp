@@ -1102,31 +1102,37 @@ void MonsterPhaseScene::handleMoveAndRoll(float deleteTime)
 void MonsterPhaseScene::step_HandleStrike(float deleteTime)
 {
     if (waitingForMessage)
-    {
+    { // If we're waiting for a message (e.g., monster movement), skip processing
         return;
     }
 
+    // If waiting for the player to select a defense item
     if (isWaitingForDefenceSelection)
     {
+        // Retrieve the selected items from the shared scene data
         auto &selectedItems = SceneDataHub::getInstance().getSelectedItems();
+
+        // Handle defense logic based on the selected items
         handleDefence(selectedItems);
+
+        // Clear temporary selection data
         SceneDataHub::getInstance().reset();
-        // isWaitingForDefenceSelection = false;
+
         if (!pendingItemSelection)
-        {
+        { // If no more item selections are pending, resume strike process
             isWaitingForDefenceSelection = false;
         }
         return;
     }
 
     if (remainingStrikes > 0 && !processingStrike)
-    {
+    { // If strikes remain and we are not currently processing a strike
         processingStrike = true;
         executeStrike();
     }
     else if (remainingStrikes <= 0 && currentStep != MonsterPhaseStep::EndPhase)
-    {
-        currentStep = MonsterPhaseStep::HandlePower;
+    {                                                // If no strikes remain and we haven't reached the end of the phase
+        currentStep = MonsterPhaseStep::HandlePower; // Go to the next step
         processingStrike = false;
     }
 }
