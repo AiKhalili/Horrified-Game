@@ -628,51 +628,51 @@ void MonsterPhaseScene::render_Thief(float deleteTime)
 
 void MonsterPhaseScene::render_Sunrise(float deleteTime)
 {
-    const float flashDuration = 0.6f;
-    const float glowDuration = 1.5f;
+    const float flashDuration = 0.6f; // Duration of initial bright flash
+    const float glowDuration = 1.5f;  // Duration of soft glowing effect afterward
 
     if (deleteTime < flashDuration)
-    {
-        float alphaFactor = 1.0f - (deleteTime / flashDuration);
-        unsigned char a = static_cast<unsigned char>(255 * alphaFactor * 0.6f);
+    {                                                                           // Bright flash at the beginning (warm orange-white color)
+        float alphaFactor = 1.0f - (deleteTime / flashDuration);                // Linearly decrease opacity
+        unsigned char a = static_cast<unsigned char>(255 * alphaFactor * 0.6f); // Fade out to 60% max
         DrawRectangle(0, 0, 1600, 900, Color{255, 220, 150, a});
     }
 
     if (deleteTime >= flashDuration && deleteTime < flashDuration + glowDuration)
-    {
-        float glowT = (deleteTime - flashDuration) / glowDuration;
+    {                                                              // Glowing sunrise rings and ambient light overlay
+        float glowT = (deleteTime - flashDuration) / glowDuration; // Normalize time [0,1]
         if (glowT > 1.0f)
         {
             glowT = 1.0f;
         }
 
-        float overlayAlphaF = sinf(glowT * PI);
-        unsigned char overlayA = static_cast<unsigned char>(overlayAlphaF * 80);
+        float overlayAlphaF = sinf(glowT * PI);                                  // Smooth glow using sine wave
+        unsigned char overlayA = static_cast<unsigned char>(overlayAlphaF * 80); // Soft orange ambient light
         DrawRectangle(0, 0, 1600, 900, Color{255, 200, 100, overlayA});
 
-        Vector2 moonPos = {710, 335};
+        Vector2 moonPos = {710, 335}; // Center of the glow rings
 
-        float radiusBase = 150.0f + 150.0f * glowT;
-        float intensity = sinf(glowT * PI);
+        float radiusBase = 150.0f + 150.0f * glowT; // Expanding radius over time
+        float intensity = sinf(glowT * PI);         // Smooth intensity
 
-        int rings = 70;
+        int rings = 70; // Number of glow rings
         for (int i = 0; i < rings; ++i)
         {
-            float factor = 1.0f - (float)i / (float)rings;
+            float factor = 1.0f - (float)i / (float)rings; // Inner rings more intense
             float r = radiusBase * factor;
             float aFactor = intensity * factor * 0.2f;
             if (aFactor > 1.0f)
             {
                 aFactor = 1.0f;
             }
-            unsigned char a = static_cast<unsigned char>(255 * aFactor);
+            unsigned char a = static_cast<unsigned char>(255 * aFactor); // Rings opacity
 
             DrawCircleV(moonPos, r, Color{255, 223, 128, a});
         }
     }
 
     if (!titelAdded)
-    {
+    { // Add title once at the top
         Color color = {235, 235, 235, 255};
         Vector2 pos = {600, 100};
         auto title = std::make_unique<UILabel>(pos, "Sunrise", 100, 6.0f, color, color);
@@ -682,8 +682,8 @@ void MonsterPhaseScene::render_Sunrise(float deleteTime)
     }
 
     if (deleteTime >= 0.4f && !messageShown)
-    {
-        showMessage(game.event.msg, {450, 600}, 35, 5.6f, normalFont, true);
+    { // Show event message after short delay
+        showMessage(game.event.msg, {430, 600}, 35, 5.6f, normalFont, true);
         messageShown = true;
     }
 }
