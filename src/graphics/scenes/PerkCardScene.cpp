@@ -5,11 +5,12 @@
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/ui/UILabel.hpp"
 #include "audio/AudioManager.hpp"
+#include "saves/SaveManager.hpp"
 
 void PerkCardScene::onEnter()
 {
     currentHero = Game::getInstance().getCurrentHero();
-    background = LoadTexture("assets/images/background/wooden.png");
+    background = TextureManager::getInstance().getOrLoadTexture("wooden", "assets/images/background/wooden.png");
     font = LoadFontEx("assets/fonts/simple.ttf", 70, 0, 0);
     SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 
@@ -58,6 +59,22 @@ void PerkCardScene::createUI()
         AudioManager::getInstance().playSoundEffect("click");
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
     uiManager.add(std::move(backBtn));
+
+    Rectangle saveBounds = {screenW - 240 - 50, screenH - 90, 240, 60};
+
+    auto saveBtn = std::make_unique<UIButton>(
+        saveBounds, "Save", 28, WHITE,
+        Color{101, 67, 33, 255},
+        Color{50, 30, 20, 200},
+        Color{100, 50, 10, 255});
+
+    saveBtn->setFont(font);
+    saveBtn->setOnClick([]()
+                        {
+                            AudioManager::getInstance().playSoundEffect("click");
+                            SaveManager::getInstance().saveGameToSlot(); });
+
+    uiManager.add(std::move(saveBtn));
 }
 
 void PerkCardScene::onExit()
