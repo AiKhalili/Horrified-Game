@@ -1244,7 +1244,7 @@ void MonsterPhaseScene::processNextPower()
             showBloodOverlay = true;
             bloodOverlayTimer = 5.0f;
             showMessage("Blood spills! " + powerTargetVillager->getName() + " was killed!",
-                        {480, 800}, 40, 5.0f, spookyFont, false);
+                        {450, 600}, 40, 5.0f, spookyFont, false);
 
             // Stop further power processing and go to EndPhase
             waitingForMessage = true;
@@ -1274,23 +1274,22 @@ void MonsterPhaseScene::processNextPower()
 
 void MonsterPhaseScene::renderPowerEffect()
 {
-    std::cout << "[DEBUG] renderPowerEffect CALLED\n";
-
+    // If a hero is targeted by the monster's special power
     if (powerTargetHero)
     {
         std::string name = powerTargetHero->getClassName();
         std::string path = "assets/images/heroes/" + name + ".png";
 
-        std::cout << "[DEBUG] Hero Target: " << name << " | Path: " << path << "\n";
-
         Texture2D heroTex = TextureManager::getInstance().getOrLoadTexture(name, path);
         float desiredSize = 350.0f;
         float scale = desiredSize / heroTex.width;
 
+        // Calculate center position for rendering
         Vector2 center = {
             1600.0f / 2.0f - (heroTex.width * scale) / 2.0f - 80,
             900.0f / 2.0f - (heroTex.height * scale) / 2.0f};
 
+        // Draw the hero texture and a red border around it
         DrawTextureEx(heroTex, center, 0.0f, scale, WHITE);
         DrawRectangleLinesEx(
             {center.x - 5, center.y - 5,
@@ -1298,81 +1297,63 @@ void MonsterPhaseScene::renderPowerEffect()
             8, RED);
 
         DrawTextEx(spookyFont, "The Monster's Special Power targets this Hero!",
-                   {center.x - 150, center.y + (heroTex.height * scale) + 20}, 40, 2, RED);
-
-        std::cout << "[DEBUG] Hero drawn with scale " << scale << "\n";
-    }
-    else
-    {
-        std::cout << "[DEBUG] No Hero target for power effect.\n";
+                   {center.x - 180, center.y + (heroTex.height * scale) + 20}, 40, 2, RED);
     }
 
+    // If a villager is targeted by the monster's special power
     if (powerTargetVillager)
     {
         std::string name = powerTargetVillager->getName();
         std::string path = "assets/images/Villager/" + name + ".png";
 
-        std::cout << "[DEBUG] Villager Target: " << name << " | Path: " << path << "\n";
-
         Texture2D villagerTex = TextureManager::getInstance().getOrLoadTexture(name, path);
         float desiredSize = 600.0f;
         float scale = desiredSize / villagerTex.width;
 
+        // Calculate center position for rendering
         Vector2 center = {
-            1600.0f / 2.0f - (villagerTex.width * scale) / 2.0f - 180,
-            900.0f / 2.0f - (villagerTex.height * scale) / 2.0f - 100};
+            1600.0f / 2.0f - (villagerTex.width * scale) / 2.0f - 30,
+            900.0f / 2.0f - (villagerTex.height * scale) / 2.0f};
 
+        // Draw the villager texture and a red border around it
         DrawTextureEx(villagerTex, center, 0.0f, scale, WHITE);
         DrawRectangleLinesEx(
-            {center.x - 5, center.y - 5,
-             (villagerTex.width * scale) + 20, (villagerTex.height * scale) + 20},
+            {center.x + 150, center.y + 130,
+             (villagerTex.width * scale) - 300, (villagerTex.height * scale) - 300},
             8, RED);
 
         DrawTextEx(spookyFont, "The Monster's Special Power targets this Villager!",
-                   {center.x - 150, center.y + (villagerTex.height * scale) + 20}, 40, 2, RED);
-
-        std::cout << "[DEBUG] Villager drawn with scale " << scale << "\n";
-    }
-    else
-    {
-        std::cout << "[DEBUG] No Villager target for power effect.\n";
+                   {center.x - 80, center.y + (villagerTex.height * scale) - 150}, 40, 2, RED);
     }
 }
 
+// Handles transitioning between multiple monster strikes during the monster phase
 void MonsterPhaseScene::handleManageStrike()
 {
-    std::cout << "[DEBUG] Entered handleManageStrike\n";
-    std::cout << "[DEBUG] currentStrikeIndex = " << game.currentStrikeIndex
-              << " / total = " << game.MonstersStrike.size() << "\n";
 
     if (game.currentStrikeIndex < (int)game.MonstersStrike.size() - 1)
-    {
-        game.currentStrikeIndex++;
-        std::cout << "[DEBUG] Advancing to next strike: index = " << game.currentStrikeIndex << "\n";
+    { // If there are more strikes left in the queue
 
-        game.setupMonsterStrike();
+        game.currentStrikeIndex++; // Move to the next strike
 
-        // رفتن به مرحله MoveAndRoll برای استرایک بعدی
+        game.setupMonsterStrike(); // Prepare data for the next monster strike
+
         currentStep = MonsterPhaseStep::MonsterMoveAndRoll;
         processingStrike = false;
 
         return;
     }
     else
-    {
-        std::cout << "[DEBUG] All strikes processed. Going to EndPhase.\n";
+    { // If no more strikes remain, move to end of phase
         currentStep = MonsterPhaseStep::EndPhase;
     }
 }
 
 void MonsterPhaseScene::endMonsterPhase()
 {
-    std::cout << "[DEBUG] Ending Monster Phase...\n";
-
     game.currentState = GameState::EndMonsterPhase;
 
+    // Delay the scene change to allow for animations and messages
     delaySceneChange = true;
     sceneChangeTimer = 1.0f;
-
-    // SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
 }
