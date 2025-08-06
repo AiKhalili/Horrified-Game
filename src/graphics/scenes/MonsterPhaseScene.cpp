@@ -1190,25 +1190,35 @@ void MonsterPhaseScene::handleDefence(std::vector<Item *> &selectedItems)
 
 void MonsterPhaseScene::step_HandlePower(float delta)
 {
+    // Exit early if waiting for a message to finish displaying or still processing previous powers
     if (waitingForMessage || processingPowerQueue)
     {
         return;
     }
 
+    // Get the number of POWER dice rolled
     int powerCount = game.diceCount[Face::POWER];
 
     if (powerCount > 0)
-    {
+    { // If there are any POWER faces rolled
         for (int i = 0; i < powerCount; ++i)
-        {
+        { // Trigger the monster's special power once for each POWER face
             PowerResult result = game.targetMonster->specialPower(game.getCurrentHero());
+
+            // Add the result to the queue for later processing
             powerQueue.push(result);
+            if (result.villagerKilled)
+            { // If a villager was killed, stop triggering more powers
+                break;
+            }
         }
+
+        // Begin processing the power effects from the queue
         processingPowerQueue = true;
         processNextPower();
     }
     else
-    {
+    { // If no POWER faces, move to the next monster phase step
         currentStep = MonsterPhaseStep::ManageStrike;
     }
 }
@@ -1231,10 +1241,15 @@ void MonsterPhaseScene::processNextPower()
             bloodOverlayTimer = 4.0f;
             showMessage("Blood spills! " + result.targetVillager->getName() + " was killed!",
                         {550, 800}, 40, msgDuration, spookyFont, false);
+
+            waitingForMessage = true;
+            currentStep = MonsterPhaseStep::EndPhase;
+            processingPowerQueue = false;
+            return;
         }
         else
         {
-            showMessage(game.targetMonster->get_name() + " uses their special power!",
+            showMessage(game.targetMonster->get_name() + " uses its special power!",
                         {550, 800}, 40, msgDuration, spookyFont, false);
         }
 
