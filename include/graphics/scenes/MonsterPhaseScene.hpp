@@ -26,21 +26,20 @@ enum class MonsterPhaseStep
 class MonsterPhaseScene : public Scene
 {
 private:
+    Game &game = Game::getInstance();
+    MonsterPhaseStep currentStep = MonsterPhaseStep::CheckMonsterPhasePerk;
+    bool skipPhase = false;
+    bool delaySceneChange = false;
+    float sceneChangeTimer = 0.0f;
+    float stepTimer = 0.0f;
+
     Texture2D background;
-    Texture2D cardTexture;
-    Texture2D bats;
-    Texture2D villagerTex;
-    Texture2D frenzy;
-    Texture2D diceBlank;
-    Texture2D diceStrike;
-    Texture2D dicePower;
-    Texture2D bloodOverLay;
+    Texture2D cardTexture, bats, frenzy, bloodOverLay;
+    Texture2D diceBlank, diceStrike, dicePower;
     Texture2D texHypnoticGaze;
+    Texture2D villagerTex;
 
-    Font normalFont;
-    Font spookyFont;
-
-    UILabel *locationLabel = nullptr;
+    Font normalFont, spookyFont;
 
     MonsterCard card;
     bool cardDrawn = false;
@@ -48,65 +47,51 @@ private:
     Vector2 cardPos = {0, 0};
 
     UIManager ui;
-    Game &game = Game::getInstance();
+    UILabel *locationLabel = nullptr;
+    std::queue<std::unique_ptr<UILabel>> messageQueue;
+    std::queue<float> messageDuration;
+    float messageTimer = 0.0f;
+    bool waitingForMessage = false;
+    bool titelAdded = false;
+    bool messageShown = false;
 
-    MonsterPhaseStep currentStep = MonsterPhaseStep::CheckMonsterPhasePerk;
-    float stepTimer = 0.0f;
-    bool skipPhase = false;
+    std::vector<std::string> rolledDiceResult;
+    std::vector<std::string> strikes;
+    bool processingStrike = false;
+    float diceTimer = 0.0f;
+    int diceShown = 0;
+    int remainingStrikes = 0;
+
+    std::queue<PowerResult> powerQueue;
+    Hero *powerTargetHero = nullptr;
+    Villager *powerTargetVillager = nullptr;
+    bool powerVillagerKilled = false;
+    bool processingPowerQueue = false;
 
     std::vector<Item *> items;
     std::vector<Texture2D> itemTex;
     bool itemsPlaced = false;
+    bool showItemIcons = false;
     float itemsTimer = 0.0f;
     float itemsAlpha = 0.0f;
-    bool showItemIcons = false;
-
-    bool showBloodOverlay = false;
-    float bloodOverlayTimer = 0.0f;
-
-    Hero *powerTargetHero = nullptr;
-    Villager *powerTargetVillager = nullptr;
-    bool powerVillagerKilled = false;
-
-    bool titelAdded = false;
-    bool messageShown = false;
 
     std::vector<std::string> villagerNames;
     std::vector<Texture2D> villagerTextures;
     bool villagerImagesLoaded = false;
-
     bool loadedVillager = false;
+
     bool loadedHypnotic = false;
+    bool showBloodOverlay = false;
+    bool batSoundPlayed = false;
+    float bloodOverlayTimer = 0.0f;
 
     bool isWaitingForDefenceSelection = false;
     bool pendingItemSelection = false;
     std::vector<Item *> pendingHeroItems;
 
-    MonsterPhaseStep nextStepAfterPower = MonsterPhaseStep::None;
-    std::queue<PowerResult> powerQueue;
-    bool processingPowerQueue = false;
-
-    bool waitingForMessage = false;
-    std::queue<std::unique_ptr<UILabel>> messageQueue;
-    std::queue<float> messageDuration;
-    float messageTimer = 0.0f;
-
-    void displayNextMessage();
-
-    std::vector<std::string> strikes;
-    bool processingStrike = false;
-
-    std::vector<std::string> rolledDiceResult;
-    float diceTimer = 0.0f;
-    int diceShown = 0;
-
-    int remainingStrikes = 0;
-
-    bool delaySceneChange = false;
-    float sceneChangeTimer = 0.0f;
-
     void showMessage(const std::string &text, Vector2 pos, int fontSize, float time,
-                     Font font, bool immediate, Color color = {235, 235, 235, 255}, bool centerAlignment);
+                     Font font, bool immediate, bool centerAlignment = false, Color color = {235, 235, 235, 255});
+    void displayNextMessage();
 
     void step_CheckMonsterPhasePerk(float deleteTime);
     void step_DrawMonsterCard(float deleteTime);
@@ -120,6 +105,9 @@ private:
     void renderMonsterCard();
     void renderItems();
     void renderEvents();
+    void renderCurrentMonster();
+    void renderDice(float delerteTime);
+    void renderPowerEffect();
 
     void render_FormOfTheBat(float deleteTime);
     void render_Thief(float deleteTime);
@@ -131,17 +119,8 @@ private:
     void handleMoveAndRoll(float deleteTime);
     void handleDefence(std::vector<Item *> &selectedItems);
     void handleManageStrike();
-
-    void renderCurrentMonster();
-
-    void renderDice(float delerteTime);
-
-    void renderPowerEffect();
-
     void executeStrike();
-
     void endMonsterPhase();
-
     void processNextPower();
 
 public:
