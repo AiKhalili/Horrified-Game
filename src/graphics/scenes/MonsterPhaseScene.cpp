@@ -1225,38 +1225,44 @@ void MonsterPhaseScene::step_HandlePower(float delta)
 
 void MonsterPhaseScene::processNextPower()
 {
+    // If there are still power effects to process
     if (!powerQueue.empty())
     {
+        // Get the next power result from the queue
         PowerResult result = powerQueue.front();
         powerQueue.pop();
 
+        // Store power targets for rendering
         powerTargetHero = result.targetHero;
         powerTargetVillager = result.targetVillager;
         powerVillagerKilled = result.villagerKilled;
-        float msgDuration = result.villagerKilled ? 4.0f : 3.0f;
 
-        if (result.villagerKilled)
+        // If a villager was killed by this power
+        if (powerVillagerKilled)
         {
+            // Show blood overlay and message about the villager's death
             showBloodOverlay = true;
-            bloodOverlayTimer = 4.0f;
-            showMessage("Blood spills! " + result.targetVillager->getName() + " was killed!",
-                        {550, 800}, 40, msgDuration, spookyFont, false);
+            bloodOverlayTimer = 5.0f;
+            showMessage("Blood spills! " + powerTargetVillager->getName() + " was killed!",
+                        {480, 800}, 40, 5.0f, spookyFont, false);
 
+            // Stop further power processing and go to EndPhase
             waitingForMessage = true;
             currentStep = MonsterPhaseStep::EndPhase;
             processingPowerQueue = false;
             return;
         }
         else
-        {
+        { // Show message indicating monster used its power
             showMessage(game.targetMonster->get_name() + " uses its special power!",
-                        {550, 800}, 40, msgDuration, spookyFont, false);
+                        {470, 800}, 40, 3.0f, spookyFont, false);
         }
 
+        // Wait for the current message to finish before processing the next
         waitingForMessage = true;
     }
     else
-    {
+    { // If all powers are processed, reset related state and move to next phase
         processingPowerQueue = false;
         powerTargetHero = nullptr;
         powerTargetVillager = nullptr;
