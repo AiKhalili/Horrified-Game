@@ -5,11 +5,12 @@
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/ui/UILabel.hpp"
 #include "audio/AudioManager.hpp"
+#include "saves/SaveManager.hpp"
 
 void ChestInfoScene::onEnter()
 {
     currentHero = Game::getInstance().getCurrentHero();
-    background = LoadTexture("assets/images/background/wooden.png");
+    background = TextureManager::getInstance().getOrLoadTexture("wooden", "assets/images/background/wooden.png");
     font = LoadFontEx("assets/fonts/simple.ttf", 70, 0, 0);
     SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 
@@ -27,7 +28,7 @@ void ChestInfoScene::createUI()
     Color titleColor = GOLD;
     Color textColor = {240, 220, 190, 255};
 
-    Vector2 titlePos = {(screenW / 2.0f) - 120, 60};
+    Vector2 titlePos = {(screenW / 2.0f) - 140, 60};
 
     auto titleLabel = std::make_unique<UILabel>(
         titlePos, "Hero's Items", 70, 0.0f, titleColor, titleColor);
@@ -58,6 +59,22 @@ void ChestInfoScene::createUI()
         AudioManager::getInstance().playSoundEffect("click");
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
     uiManager.add(std::move(backBtn));
+
+    Rectangle saveBounds = {screenW - 240 - 50, screenH - 90, 240, 60};
+
+    auto saveBtn = std::make_unique<UIButton>(
+        saveBounds, "Save", 28, WHITE,
+        Color{101, 67, 33, 255},
+        Color{50, 30, 20, 200},
+        Color{100, 50, 10, 255});
+
+    saveBtn->setFont(font);
+    saveBtn->setOnClick([]()
+                        {
+                            AudioManager::getInstance().playSoundEffect("click");
+                            SaveManager::getInstance().saveGameToSlot(); });
+
+    uiManager.add(std::move(saveBtn));
 }
 
 void ChestInfoScene::onExit()
@@ -104,18 +121,25 @@ void ChestInfoScene::render()
 
     int startX = 200;
     int startY = 150;
-    int gapX = 100;
+    int gapX = 160;
     int gapY = 160;
-    int maxPerRow = 10;
+    int maxPerRow = 7;
+    int maxRows = 4;
 
-    int targetSize = 120;
+    int targetSize = 150;
 
     int x = startX;
     int y = startY;
     int count = 0;
+    int row = 0;
 
     for (auto &heroItem : itemTextures)
     {
+        if (row >= maxRows)
+        {
+            break;
+        }
+
         Texture2D &tex = heroItem.tex;
 
         Rectangle src = {0, 0, (float)tex.width, (float)tex.height};
@@ -132,6 +156,7 @@ void ChestInfoScene::render()
             count = 0;
             x = startX;
             y += gapY;
+            row++;
         }
     }
 
