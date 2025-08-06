@@ -102,6 +102,7 @@ void BoardScene::handleSaveAndExit()
 
 void BoardScene::handleGoToMainMenu()
 {
+    Game::getInstance().reset();
     SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE);
 }
 
