@@ -68,7 +68,7 @@ void LoadGamesScene::createButtons()
 
     if (slots.empty())
     {
-        Vector2 center = {600, 100};
+        Vector2 center = {800, 100};
         Color color = {240, 220, 190, 160};
         auto label = std::make_unique<UILabel>(center, "No Saved Games Found!", 44, 0.0f, color, color);
         label->enableBackground(BLACK, 20.0f);
