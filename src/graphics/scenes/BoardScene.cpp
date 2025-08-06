@@ -13,7 +13,7 @@
 void BoardScene::onEnter()
 {
     background = TextureManager::getInstance().getOrLoadTexture("board", "assets/images/background/board.png");
-    skullIcon = TextureManager::getInstance().getOrLoadTexture("skull", "assets/images/icon/skull.jpeg");
+    skullIcon = TextureManager::getInstance().getOrLoadTexture("skull", "assets/images/icon/skull.png");
     chestIcon = TextureManager::getInstance().getOrLoadTexture("chest", "assets/images/icon/chest.png");
     cardIcon = TextureManager::getInstance().getOrLoadTexture("cardIcon", "assets/images/icon/perkCard.png");
     greenFlagIcon = TextureManager::getInstance().getOrLoadTexture("greenFlag", "assets/images/icon/greenFlag.png");
@@ -158,7 +158,7 @@ void BoardScene::DrawTerrorLevel()
 {
     int level = Game::getInstance().getTerrorLevel();
 
-    Vector2 start = {1885, 155};
+    Vector2 start = {940, 50};
 
     float areaWidth = 1160.0f;
     float areaHeight = 100.0f;
@@ -193,11 +193,17 @@ void BoardScene::drawHeroInfo()
 
     Texture2D heroTexture = TextureManager::getInstance().getOrLoadTexture(heroName, heroPath);
 
-    Rectangle destHero = {1200, 95, 380, 500};
+    Rectangle destHero = {1200, 110, 380, 400};
 
     DrawTexturePro(heroTexture,
                    {0, 0, (float)heroTexture.width, (float)heroTexture.height},
                    destHero, {0, 0}, 0.0f, WHITE);
+
+    const char *name = hero->getName().c_str();
+    Vector2 nameSize = MeasureTextEx(normalFont, name, 40, 1);
+    Vector2 namePos = {destHero.x + destHero.width / 2 - nameSize.x / 2,
+                       destHero.y + destHero.height};
+    DrawTextEx(normalFont, name, namePos, 40, 1, WHITE);
 
     Rectangle destChest = {950, 220, 200, 130};
     Rectangle destCard = {950, 375, 200, 130};
@@ -269,9 +275,9 @@ void BoardScene::handleGameStateTransition()
     case GameState::GameOutOfTime:
         SceneManager::getInstance().goTo(SceneKeys::OUT_OF_TIME_SCENE);
         break;
-    case GameState::ShowPerkCard:
-        SceneManager::getInstance().goTo(SceneKeys::PERK_CARD_SCENE);
-        break;
+    // case GameState::ShowPerkCard:
+    //     SceneManager::getInstance().goTo(SceneKeys::PERK_CARD_SCENE);
+    //     break;
     case GameState::StartMonsterPhase:
         SceneManager::getInstance().goTo(SceneKeys::MONSTER_PHASE_SCENE);
         break;
