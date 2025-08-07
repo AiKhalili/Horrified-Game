@@ -22,11 +22,11 @@ void MoveScene::onEnter()
     SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
     SetTextureFilter(errorFont.texture, TEXTURE_FILTER_BILINEAR);
 
-    createLabels();
-    createButtons();
-
     hero = Game::getInstance().getCurrentHero();
     location = Game::getInstance().getCurrentHero()->getLocation();
+
+    createLabels();
+    createButtons();
 
     locselect = SceneDataHub::getInstance().getSelectedLocation();
     villselect = SceneDataHub::getInstance().getSelectedVillagers();
@@ -40,6 +40,8 @@ void MoveScene::onEnter()
 void MoveScene::onExit()
 {
     UnloadFont(font);
+    villselect.clear();
+    locselect = nullptr;
     ui.clear();
 }
 
@@ -122,10 +124,12 @@ void MoveScene::createButtons()
     auto saveBtn = std::make_unique<UIButton>(Rectangle{leftX, topY + gapY + buttonHeight, buttonWidth, buttonHeight}, "Save", fontsize,
                                               textcolor, labelcolor, clickcolor, textcolor);
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(); });
+                            SaveManager::getInstance().saveGameToSlot("MoveScene"); 
+                            const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg); });
     ui.add(std::move(saveBtn));
 
     auto boardBtn = std::make_unique<UIButton>(Rectangle{leftX, topY + 2 * (gapY + buttonHeight), buttonWidth, buttonHeight}, "Board Scene", fontsize,
@@ -134,6 +138,7 @@ void MoveScene::createButtons()
     boardBtn->setOnClick([]()
                          {
                              AudioManager::getInstance().playSoundEffect("click");
+                             SceneDataHub::getInstance().reset();
                              SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
     ui.add(std::move(boardBtn));
 
@@ -154,6 +159,7 @@ void MoveScene::createButtons()
     submtBtn->setOnClick([this]()
                          {
                              AudioManager::getInstance().playSoundEffect("click");
+                             SceneDataHub::getInstance().reset();
                              SceneManager::getInstance().goTo(SceneKeys::SHOW_ACTIONS_SCENE); });
     ui.add(std::move(submtBtn));
 
@@ -163,6 +169,7 @@ void MoveScene::createButtons()
     menuBtn->setOnClick([]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
+                            SceneDataHub::getInstance().reset();
                             SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
     ui.add(std::move(menuBtn));
 
