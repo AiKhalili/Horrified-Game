@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "core/Villager.hpp"
 #include "raylib.h"
 
@@ -22,9 +23,12 @@ private:
 
     std::string scenekey;
 
+    UILabel *errorLabel = nullptr;
+
     void loadVillagerTextures();
     void toggleSelection(Villager *villager);
     void createLabels();
+    void createButtons();
     void creatErroreLabels();
 
 public:
@@ -34,6 +38,9 @@ public:
     void render() override;
     void setData(const std::vector<Villager *> &villagers, const std::string &newkey);
     std::vector<Villager *> &getSelectedVillagers();
+    void showErrorMessage(const std::string &msg);
+    std::vector<Villager *> getVillagers();
+    std::string getscenekey();
 };
 
 #endif
