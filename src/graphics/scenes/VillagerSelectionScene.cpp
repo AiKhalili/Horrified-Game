@@ -30,8 +30,10 @@ void VillagerSelectionScene::onEnter()
     SetTextureFilter(errorFont.texture, TEXTURE_FILTER_BILINEAR);
 
     createLabels();
+    createButtons();
 
-    if(villagers.empty()){
+    if (villagers.empty())
+    {
         creatErroreLabels();
     }
 
@@ -68,7 +70,6 @@ void VillagerSelectionScene::onEnter()
 
         villagerRects.push_back({x, y, itemSize, itemSize});
     }
-
 }
 
 void VillagerSelectionScene::onExit()
@@ -76,6 +77,7 @@ void VillagerSelectionScene::onExit()
     UnloadFont(font);
     ui.clear();
     selected.clear();
+    villagers.clear();
     villagerTextures.clear();
 }
 
@@ -174,6 +176,79 @@ void VillagerSelectionScene::createLabels()
     selectText->setFont(font);
     ui.add(std::move(selectText));
 
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 800}, "", 30, 3.0f, WHITE, WHITE, true);
+    tempLabel->setFont(font);
+
+    errorLabel = tempLabel.get();
+
+    ui.add(std::move(tempLabel));
+
+}
+
+std::vector<Villager *> &VillagerSelectionScene::getSelectedVillagers()
+{
+    return selected;
+}
+
+void VillagerSelectionScene::loadVillagerTextures()
+{
+    villagerTextures.clear();
+    for (auto *villager : villagers)
+    {
+        std::string folder;
+
+        folder = "assets/images/Villager/";
+        std::string path = folder + villager->getName() + ".png";
+        Texture2D tex = TextureManager::getInstance().getOrLoadTexture(villager->getName(), path);
+        villagerTextures.push_back(tex);
+    }
+}
+
+void VillagerSelectionScene::toggleSelection(Villager *villager)
+{
+
+    if (scenekey == "GuidScene")
+    {
+        // فقط یک انتخاب مجازه
+        selected.clear();
+        selected.push_back(villager);
+    }
+
+    auto it = std::find(selected.begin(), selected.end(), villager);
+    if (it == selected.end())
+        selected.push_back(villager);
+    else
+        selected.erase(it);
+}
+
+void VillagerSelectionScene::creatErroreLabels()
+{
+    const char *text = "There are no  villagers to display";
+    int fontSize = 50;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
+    auto errorText = std::make_unique<UILabel>(
+        Vector2{(1600 - textSize.x) / 2.0f, 450}, text, fontSize, 0.0f, WHITE);
+    errorText->setFont(errorFont);
+    ui.add(std::move(errorText));
+}
+
+void VillagerSelectionScene::showErrorMessage(const std::string &msg)
+{
+    if (!errorLabel)
+        return;
+
+    errorLabel->setText(msg);
+}
+
+void VillagerSelectionScene::createButtons()
+{
+    Color textcolor = {232, 213, 183, 255};
+    Color labelcolor = {139, 110, 78, 200};
+    Color clickcolor = {74, 59, 42, 150};
+    Color midCreamBrown = {140, 110, 70, 255};
+    Color text1color = {50, 60, 42, 255};
+
     auto menuBtn = std::make_unique<UIButton>(Rectangle{1450, 840, 120, 40}, "Main Menu", 20, textcolor, labelcolor, clickcolor, textcolor);
     menuBtn->setFont(font);
     menuBtn->setOnClick([]()
@@ -183,16 +258,18 @@ void VillagerSelectionScene::createLabels()
 
     ui.add(std::move(menuBtn));
 
-    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
+        SaveManager::getInstance().saveGameToSlot("VillagerSelectionScene"); 
+        const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg); });
 
     ui.add(std::move(saveBtn));
 
-    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
+    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
     boardBtn->setFont(font);
     boardBtn->setOnClick([]()
                          {
@@ -203,10 +280,10 @@ void VillagerSelectionScene::createLabels()
 
     auto backBtn = std::make_unique<UIButton>(Rectangle{1450, 690, 120, 40}, "Back", 20, textcolor, labelcolor, clickcolor, textcolor);
     backBtn->setFont(font);
-    backBtn->setOnClick([]()
-                         {
+    backBtn->setOnClick([this]()
+                        {
         AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo(SceneKeys::MOVE_SCENE); });
+        SceneManager::getInstance().goTo(scenekey); });
 
     ui.add(std::move(backBtn));
 
@@ -236,42 +313,5 @@ void VillagerSelectionScene::createLabels()
     }
 }
 
-std::vector<Villager *> &VillagerSelectionScene::getSelectedVillagers()
-{
-    return selected;
-}
-
-void VillagerSelectionScene::loadVillagerTextures()
-{
-    villagerTextures.clear();
-    for (auto *villager : villagers)
-    {
-        std::string folder;
-
-        folder = "assets/images/Villager/";
-        std::string path = folder + villager->getName() + ".png";
-        Texture2D tex = TextureManager::getInstance().getOrLoadTexture(villager->getName(), path);
-        villagerTextures.push_back(tex);
-    }
-}
-
-void VillagerSelectionScene::toggleSelection(Villager *villager)
-{
-    auto it = std::find(selected.begin(), selected.end(), villager);
-    if (it == selected.end())
-        selected.push_back(villager);
-    else
-        selected.erase(it);
-}
-
-void VillagerSelectionScene::creatErroreLabels()
-{
-    const char *text = "There are no  villagers to display";
-    int fontSize = 50;
-    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
-
-    auto errorText = std::make_unique<UILabel>(
-        Vector2{(1600 - textSize.x) / 2.0f, 450}, text, fontSize, 0.0f, WHITE);
-    errorText->setFont(errorFont);
-    ui.add(std::move(errorText));
-}
+std::string VillagerSelectionScene::getscenekey(){return scenekey;}
+std::vector<Villager *> VillagerSelectionScene::getVillagers(){return villagers;}
