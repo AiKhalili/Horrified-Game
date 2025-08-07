@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "core/Location.hpp"
 #include "raylib.h"
 #include <vector>
@@ -31,6 +32,8 @@ private:
 
     std::string scenekey;
 
+    UILabel *errorLabel = nullptr;
+
     void handleClickOnLocation();
     void checkLocationHover();
     void drawGlow();
@@ -46,5 +49,9 @@ public:
     void render() override;
     void setData(const std::vector<Location *> &Locations, const std::string &newkey);
     Location *getSelectedLocation();
+    void showErrorMessage(const std::string &msg);
+
+   std::vector<Location *> getSentlocations();
+   std::string getscenekey();
 };
 #endif
