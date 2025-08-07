@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "raylib.h"
 
 class ShowActionsScene : public Scene
@@ -12,6 +13,7 @@ private:
     UIManager ui;
     Texture2D background;
     Font font;
+    UILabel *errorLabel = nullptr;
     void createLabels();
     void createButtons();
 
@@ -29,6 +31,8 @@ public:
     void openGuideAction();
     void openAdvanceAction();
     void openUsePerkAction();
+
+    void showErrorMessage(const std::string &msg);
 };
 
 #endif
