@@ -11,6 +11,7 @@
 #include "graphics/ui/UIManager.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/scenes/SceneManager.hpp"
+#include "saves/SaveManager.hpp"
 
 void LocationInfoScene::onEnter()
 {
@@ -120,10 +121,15 @@ void LocationInfoScene::createUI()
         ui.add(std::move(locLabel));
     }
 
-    Rectangle backBounds = {screenW - 180, screenH - 80, 150, 50};
+    float btnWidth = 150;
+    float btnHeight = 45;
+    float btnMargin = 20;
+    float btnX = screenW - btnWidth - 40;
+
+    Rectangle backBounds = {btnX, screenH - btnHeight * 2 - btnMargin * 2, btnWidth, btnHeight};
 
     auto backBtn = std::make_unique<UIButton>(
-        backBounds, "Back", 26, WHITE,
+        backBounds, "Back", 28, WHITE,
         Color{101, 67, 33, 255}, Color{50, 30, 20, 200}, Color{100, 50, 10, 255});
 
     backBtn->setFont(font);
@@ -132,6 +138,22 @@ void LocationInfoScene::createUI()
         AudioManager::getInstance().playSoundEffect("click");
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
     ui.add(std::move(backBtn));
+
+    Rectangle saveBounds = {btnX, screenH - btnHeight - btnMargin, btnWidth, btnHeight};
+
+    auto saveBtn = std::make_unique<UIButton>(
+        saveBounds, "Save", 28, WHITE,
+        Color{101, 67, 33, 255},
+        Color{50, 30, 20, 200},
+        Color{100, 50, 10, 255});
+
+    saveBtn->setFont(font);
+    saveBtn->setOnClick([]()
+                        {
+                            AudioManager::getInstance().playSoundEffect("click");
+                            SaveManager::getInstance().saveGameToSlot(); });
+
+    ui.add(std::move(saveBtn));
 }
 
 void LocationInfoScene::drawCoffin()
@@ -184,7 +206,6 @@ void LocationInfoScene::drawHeroAndMonster()
     float screenW = GetScreenWidth();
     float screenH = GetScreenHeight();
     float startY = 200;
-    float imageSize = 200.0f;
     float padding = 20.0f;
 
     float posX = 130;
@@ -192,22 +213,34 @@ void LocationInfoScene::drawHeroAndMonster()
     for (int i = 0; i < heroTextures.size() && i < 2; ++i)
     {
         Texture2D &tex = heroTextures[i];
-        float scale = imageSize / tex.width;
+        float scale = 220.0f / tex.width;
         float drawW = tex.width * scale;
         float drawH = tex.height * scale;
         float posY = startY + i * (drawH + padding);
         DrawTextureEx(tex, {posX, posY}, 0.0f, scale, WHITE);
     }
 
+    Monster *frenzy = Game::getInstance().getFrenzyMonster();
+    auto monsters = currentLocation->get_monsters();
+
     posX = 380;
 
     for (int i = 0; i < monsterTextures.size() && i < 2; ++i)
     {
         Texture2D &tex = monsterTextures[i];
-        float scale = imageSize / tex.width;
+        float scale = 200.0f / tex.width;
         float drawW = tex.width * scale;
         float drawH = tex.height * scale;
         float posY = startY + i * (drawH + padding);
+
+        if (monsters[i]->get_name() == frenzy->get_name())
+        {
+            float circleX = posX + drawW / 2.0f;
+            float circleY = posY + drawH / 2.0f;
+            float radius = drawW / 2.0f + 10;
+            DrawCircleV({circleX, circleY}, radius, {170, 20, 20, 255});
+        }
+
         DrawTextureEx(tex, {posX, posY}, 0.0f, scale, WHITE);
     }
 }
@@ -216,21 +249,25 @@ void LocationInfoScene::drawVillagers()
 {
     float screenW = GetScreenWidth();
     float screenH = GetScreenHeight();
+    const int columns = 3;
+    const int rows = 3;
+    const int maxItems = columns * rows;
+    float imageSize = 250.0f;
+    float paddingX = -100.0f;
+    float paddingY = -50.0f;
+    float startX = 580.0f;
+    float startY = 130.0f;
 
-    const int maxPerRow = 5;
-    float imageSize = 90.0f;
-    float padding = 20.0f;
-    float startX = 650.0f;
-    float startY = 200.0f;
-
-    for (int i = 0; i < villagerTextures.size() && i < maxPerRow; ++i)
+    for (int i = 0; i < villagerTextures.size() && i < maxItems; ++i)
     {
         Texture2D &tex = villagerTextures[i];
         float scale = imageSize / tex.width;
         float drawW = tex.width * scale;
         float drawH = tex.height * scale;
-        float posX = startX + i * (imageSize + padding);
-        float posY = startY;
+        int row = i / columns;
+        int col = i % columns;
+        float posX = startX + col * (imageSize + paddingX);
+        float posY = startY + row * (imageSize + paddingY);
         DrawTextureEx(tex, {posX, posY}, 0.0f, scale, WHITE);
     }
 }
@@ -240,8 +277,8 @@ void LocationInfoScene::drawItems()
     float screenW = GetScreenWidth();
     float screenH = GetScreenHeight();
 
-    const int maxCols = 3;
-    const int maxRows = 4;
+    const int maxCols = 4;
+    const int maxRows = 3;
     const int maxItems = maxCols * maxRows;
 
     float imageSize = 150.0f;
@@ -254,8 +291,8 @@ void LocationInfoScene::drawItems()
 
     for (int i = 0; i < drawCount; ++i)
     {
-        int row = i / maxRows;
-        int col = i % maxRows;
+        int row = i / maxCols;
+        int col = i % maxCols;
 
         Texture2D &tex = itemTextures[i].tex;
 
