@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "core/Monster.hpp"
 #include "raylib.h"
 
@@ -28,13 +29,20 @@ private:
     std::vector<std::string> monsterNames;
     std::string clickedMonsterName = "";
     
+    std::string scenekey;
+
+    UILabel *errorLabel = nullptr;
+
 public:
     void onEnter() override;
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
-    void setDate(std::vector<Monster *> &Monsters);
+    void setDate(const std::vector<Monster *> &Monsters, const std::string &newkey);
     Monster* getSelectedMonster();
+    void showErrorMessage(const std::string &msg);
+    std::vector<Monster *> getMonsters();
+    std::string getscenekey();
 };
 
 #endif
