@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "raylib.h"
 
 class PlayerSummaryScene : public Scene
@@ -17,6 +18,8 @@ private:
     Texture2D hero1Texture;
     Texture2D hero2Texture;
 
+    UILabel *errorLabel = nullptr;
+
     void createLabels();
     void creatButtons();
     void LoadHeroTexturs();
@@ -28,5 +31,7 @@ public:
     void render() override;
     void setData(const std::string &player1Name, const std::string &hero1,
                  const std::string &player2Name, const std::string &hero2);
+    void showErrorMessage(const std::string &msg);
+    std::vector<std::string> getData();
 };
 #endif
