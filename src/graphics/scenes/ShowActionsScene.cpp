@@ -6,6 +6,7 @@
 #include "graphics/TextureManager.hpp"
 #include "audio/AudioManager.hpp"
 #include "saves/SaveManager.hpp"
+#include "graphics/scenes/PerkSelectionScene.hpp"
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -56,6 +57,14 @@ void ShowActionsScene::createLabels()
         Vector2{(1600 - textSize.x) / 2.0f, 50}, text, fontSize, 0.0f, WHITE);
     selectText->setFont(font);
     ui.add(std::move(selectText));
+
+
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 800}, "", 45, 3.0f, WHITE, WHITE, true);
+    tempLabel->setFont(font);
+
+    errorLabel = tempLabel.get();
+
+    ui.add(std::move(tempLabel));
 }
 
 void ShowActionsScene::createButtons()
@@ -101,7 +110,7 @@ void ShowActionsScene::createButtons()
     if (Game::getInstance().shouldShowSpecialAcion() == true)
         makeButton("Special", startXRight, 3, std::bind(&ShowActionsScene::openSpecialAction, this));
 
-    auto menuBtn = std::make_unique<UIButton>(Rectangle{1400, 820, 160, 50}, "Main Menu", 26, WHITE, DARKGRAY, GRAY, WHITE);
+    auto menuBtn = std::make_unique<UIButton>(Rectangle{1450, 840, 120, 40}, "Main Menu", 20, WHITE, DARKGRAY, GRAY, WHITE);
     menuBtn->setFont(font);
     menuBtn->setOnClick([]()
                         {
@@ -110,7 +119,7 @@ void ShowActionsScene::createButtons()
 
     ui.add(std::move(menuBtn));
 
-    auto backBtn = std::make_unique<UIButton>(Rectangle{1400, 745, 160, 50}, "Back", 26, WHITE, DARKGRAY, GRAY, WHITE);
+    auto backBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Back", 20, WHITE, DARKGRAY, GRAY, WHITE);
     backBtn->setFont(font);
     backBtn->setOnClick([]()
                         {
@@ -119,12 +128,14 @@ void ShowActionsScene::createButtons()
 
     ui.add(std::move(backBtn));
 
-    auto saveBtn = std::make_unique<UIButton>(Rectangle{1400, 670, 160, 50}, "Save", 26, WHITE, DARKGRAY, GRAY, WHITE);
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Save", 20, WHITE, DARKGRAY, GRAY, WHITE);
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot();
+        SaveManager::getInstance().saveGameToSlot("ShowActionsScene");
+        const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg); 
     });
 
     ui.add(std::move(saveBtn));
@@ -137,35 +148,45 @@ void ShowActionsScene::openMoveAction()
 
 void ShowActionsScene::openPickUpAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::PickupScene);
+    SceneManager::getInstance().goTo(SceneKeys::PICK_UP_SCENE);
 }
 
 void ShowActionsScene::openDefeatAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::DefeatScene);
+    SceneManager::getInstance().goTo(SceneKeys::DEFEAT_SCENE);
 }
 
 void ShowActionsScene::openHelpAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::HelpScene);
+    SceneManager::getInstance().goTo(SceneKeys::HELP_SCENE);
 }
 
 void ShowActionsScene::openGuideAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::GuideScene);
+    SceneManager::getInstance().goTo(SceneKeys::GUID_SCENE);
 }
 
 void ShowActionsScene::openAdvanceAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::AdvanceScene);
+    SceneManager::getInstance().goTo(SceneKeys::ADVANCE_SCENE);
 }
 
 void ShowActionsScene::openUsePerkAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::UsePerkScene);
+    auto& perkselect = SceneManager::getInstance().getScene<PerkSelectionScene>(SceneKeys::PERK_SELECTION_SCENE);
+                            perkselect.setData(Game::getInstance().getCurrentHero()->getPerkCard(), "ShowActionsScene");
+                           SceneManager::getInstance().goTo(SceneKeys::PERK_SELECTION_SCENE);
 }
 
 void ShowActionsScene::openSpecialAction()
 {
-    // SceneManager::getInstance().goTo(SceneKeys::SpecialScene);
+    SceneManager::getInstance().goTo(SceneKeys::SPECIAL_SCENE);
+}
+
+void ShowActionsScene::showErrorMessage(const std::string &msg)
+{
+    if (!errorLabel)
+        return;
+
+    errorLabel->setText(msg);
 }
