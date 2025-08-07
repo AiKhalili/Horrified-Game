@@ -218,6 +218,13 @@ void LocationSelectionScene::createLabels()
     selectText->setFont(normalFont);
     ui.add(std::move(selectText));
 
+    auto tempLabel = std::make_unique<UILabel>(Vector2{1250, 875}, "", 30, 3.0f, WHITE, WHITE, true);
+    tempLabel->setFont(locationFont);
+
+    errorLabel = tempLabel.get();
+
+    ui.add(std::move(tempLabel));
+
     const std::vector<std::string> lines = {
         "Locations that you are not allowed to go to are inactive",
         "and have a gray halo, and you cannot select them to move to.",
@@ -259,10 +266,12 @@ void LocationSelectionScene::createButtons()
 
     auto saveBtn = std::make_unique<UIButton>(Rectangle{1000, 680, 200, 60}, "Save", 40, textcolor, labelcolor, clickcolor, textcolor);
     saveBtn->setFont(normalFont);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
+        SaveManager::getInstance().saveGameToSlot("LocationSelectionScene");
+    const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg);  });
 
     ui.add(std::move(saveBtn));
 
@@ -298,3 +307,14 @@ void LocationSelectionScene::createButtons()
         SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(submitBtn));
 }
+
+void LocationSelectionScene::showErrorMessage(const std::string &msg)
+{
+    if (!errorLabel)
+        return;
+
+    errorLabel->setText(msg);
+}
+
+std::vector<Location *> LocationSelectionScene::getSentlocations(){return Sentlocations;}
+std::string LocationSelectionScene::getscenekey(){return scenekey;}
