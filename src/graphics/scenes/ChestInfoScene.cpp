@@ -28,7 +28,7 @@ void ChestInfoScene::createUI()
     Color titleColor = GOLD;
     Color textColor = {240, 220, 190, 255};
 
-    Vector2 titlePos = {(screenW / 2.0f) - 140, 60};
+    Vector2 titlePos = {(screenW / 2.0f) - 160, 60};
 
     auto titleLabel = std::make_unique<UILabel>(
         titlePos, "Hero's Items", 70, 0.0f, titleColor, titleColor);
@@ -37,7 +37,7 @@ void ChestInfoScene::createUI()
 
     if (currentHero && currentHero->getItems().empty())
     {
-        Vector2 centerPos = {(screenW / 2.0f) - 205, screenH / 2.0f};
+        Vector2 centerPos = {(screenW / 2.0f) - 230, screenH / 2.0f};
 
         auto noItemsLabel = std::make_unique<UILabel>(
             centerPos, "Your inventory is empty.", 45, 0.0f, textColor, textColor);
@@ -47,7 +47,12 @@ void ChestInfoScene::createUI()
         uiManager.add(std::move(noItemsLabel));
     }
 
-    Rectangle backBounds = {screenW / 2.0f - 120, screenH - 90, 240, 60};
+    float btnWidth = 150;
+    float btnHeight = 45;
+    float btnMargin = 20;
+    float btnX = screenW - btnWidth - 40;
+
+    Rectangle backBounds = {btnX, screenH - btnHeight * 2 - btnMargin * 2, btnWidth, btnHeight};
 
     auto backBtn = std::make_unique<UIButton>(
         backBounds, "Back", 28, WHITE,
@@ -60,7 +65,7 @@ void ChestInfoScene::createUI()
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
     uiManager.add(std::move(backBtn));
 
-    Rectangle saveBounds = {screenW - 240 - 50, screenH - 90, 240, 60};
+    Rectangle saveBounds = {btnX, screenH - btnHeight - btnMargin, btnWidth, btnHeight};
 
     auto saveBtn = std::make_unique<UIButton>(
         saveBounds, "Save", 28, WHITE,
