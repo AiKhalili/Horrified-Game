@@ -47,7 +47,12 @@ void PerkCardScene::createUI()
         uiManager.add(std::move(noItemsLabel));
     }
 
-    Rectangle backBounds = {screenW / 2.0f - 120, screenH - 90, 240, 60};
+    float btnWidth = 150;
+    float btnHeight = 45;
+    float btnMargin = 20;
+    float btnX = screenW - btnWidth - 40;
+
+    Rectangle backBounds = {btnX, screenH - btnHeight * 2 - btnMargin * 2, btnWidth, btnHeight};
 
     auto backBtn = std::make_unique<UIButton>(
         backBounds, "Back", 28, WHITE,
@@ -60,7 +65,7 @@ void PerkCardScene::createUI()
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
     uiManager.add(std::move(backBtn));
 
-    Rectangle saveBounds = {screenW - 240 - 50, screenH - 90, 240, 60};
+    Rectangle saveBounds = {btnX, screenH - btnHeight - btnMargin, btnWidth, btnHeight};
 
     auto saveBtn = std::make_unique<UIButton>(
         saveBounds, "Save", 28, WHITE,
