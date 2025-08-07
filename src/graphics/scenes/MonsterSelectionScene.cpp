@@ -13,7 +13,7 @@
 #include <cmath>
 #include "core/Game.hpp"
 
-void MonsterSelectionScene::setDate(std::vector<Monster *> &Monsters)
+void MonsterSelectionScene::setDate(const std::vector<Monster *> &Monsters, const std::string &newkey)
 {
     monsters = Monsters;
     monsterNames.clear();
@@ -21,18 +21,21 @@ void MonsterSelectionScene::setDate(std::vector<Monster *> &Monsters)
     {
         monsterNames.push_back(m->get_name());
     }
+    scenekey = newkey;
 }
 
 void MonsterSelectionScene::onEnter()
 {
+    clickedMonster = -1;
     background = TextureManager::getInstance().getOrLoadTexture("MonsterSelection", "assets/images/background/monster_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
+
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
     LoadeMonsterTextures();
 
     createButtons();
     createLabels();
 
-    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
     AudioManager::getInstance().stopMusic();
     AudioManager::getInstance().playMonsterSelectMusic();
 }
@@ -40,6 +43,10 @@ void MonsterSelectionScene::onEnter()
 void MonsterSelectionScene::onExit()
 {
     UnloadFont(font);
+    monsters.clear();
+    monsterNames.clear();
+    selectedMonster = nullptr;
+    clickedMonster = -1;
     ui.clear();
     AudioManager::getInstance().stopMonsterSelectMusic();
     AudioManager::getInstance().playMusic();
@@ -192,21 +199,34 @@ void MonsterSelectionScene::createButtons()
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
     ui.add(std::move(menuBtn));
 
-    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
+        SaveManager::getInstance().saveGameToSlot("MonsterSelectionScene");
+        const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg);  });
     ui.add(std::move(saveBtn));
 
-    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
+    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
     boardBtn->setFont(font);
     boardBtn->setOnClick([]()
                          {
         AudioManager::getInstance().playSoundEffect("click");
         SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
+
     ui.add(std::move(boardBtn));
+
+    auto backBtn = std::make_unique<UIButton>(Rectangle{1450, 690, 120, 40}, "Back", 20, textcolor, labelcolor, clickcolor, textcolor);
+    backBtn->setFont(font);
+    backBtn->setOnClick([this]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(scenekey); });
+
+    ui.add(std::move(backBtn));
+
 
     auto submtBtn = std::make_unique<UIButton>(Rectangle{745, 590, 120, 60}, "Submit", 40,
                                                textcolor, labelcolor, clickcolor, textcolor);
@@ -226,7 +246,8 @@ void MonsterSelectionScene::createButtons()
         }
     }
 
-    SceneDataHub::getInstance().setSelectedMonster(selectedMonster); });
+    SceneDataHub::getInstance().setSelectedMonster(selectedMonster); 
+    SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(submtBtn));
 }
 
@@ -249,12 +270,21 @@ void MonsterSelectionScene::createLabels()
     selectText->setFont(font);
     ui.add(std::move(selectText));
 
-    for (int i = 0; i < monsters.size(); i++) {
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 850}, "", 30, 3.0f, WHITE, WHITE, true);
+    tempLabel->setFont(font);
+
+    errorLabel = tempLabel.get();
+
+    ui.add(std::move(tempLabel));
+
+    for (int i = 0; i < monsters.size(); i++)
+    {
         if (monsters[i]->is_defeated())
             continue;
 
         const std::string &name = monsters[i]->get_name();
-        if (name == "Dracula") {
+        if (name == "Dracula")
+        {
             auto nameBtn = std::make_unique<UILabel>(Vector2{390, 700}, "Monster Name:  Dracula", 30, 0.0f,
                                                      labelcolor, labelcolor);
             nameBtn->setFont(font);
@@ -266,8 +296,9 @@ void MonsterSelectionScene::createLabels()
             wealthBtn->setFont(font);
             wealthBtn->enableBackground(textcolor, 10.0f);
             ui.add(std::move(wealthBtn));
-        } 
-        else if (name == "InvisibleMan") {
+        }
+        else if (name == "InvisibleMan")
+        {
             auto name1Btn = std::make_unique<UILabel>(Vector2{890, 700}, "Monster Name:  InvisibleMan", 30, 0.0f,
                                                       labelcolor, labelcolor);
             name1Btn->setFont(font);
@@ -282,3 +313,14 @@ void MonsterSelectionScene::createLabels()
         }
     }
 }
+
+void MonsterSelectionScene::showErrorMessage(const std::string &msg)
+{
+    if (!errorLabel)
+        return;
+
+    errorLabel->setText(msg);
+}
+
+std::vector<Monster *> MonsterSelectionScene::getMonsters(){return monsters;}
+std::string MonsterSelectionScene::getscenekey(){return scenekey;}
