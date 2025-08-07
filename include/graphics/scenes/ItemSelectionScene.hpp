@@ -3,6 +3,7 @@
 
 #include "graphics/scenes/Scene.hpp"
 #include "graphics/ui/UIManager.hpp"
+#include "graphics/ui/UILabel.hpp"
 #include "core/Item.hpp"
 #include "core/Hero.hpp"
 #include "core/Location.hpp"
@@ -29,9 +30,12 @@ private:
     Rectangle confirmButtonRect;
     bool confirmButtonFocused = false;
 
+    UILabel *errorLabel = nullptr;
+
     void loadItemTextures();
     void toggleSelection(Item *item);
     void createLabels();
+    void createButtons();
     void creatErroreLabels();
     void createActionButtons();
 
@@ -42,6 +46,9 @@ public:
     void render() override;
     void setData(const std::vector<Item *> &Items, const std::string &newkey);
     std::vector<Item *> &getSelectedItems();
+    void showErrorMessage(const std::string &msg);
+    std::vector<Item *> getItems();
+    std::string getscenekey();
 };
 
 #endif
