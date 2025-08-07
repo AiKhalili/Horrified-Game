@@ -69,7 +69,7 @@ void HeroSelectionScene::update(float deltaTime)
 void HeroSelectionScene::creatButton()
 {
     continueButton = std::make_unique<UIButton>(
-        Rectangle{725, 700, 150, 50}, "SUBMIT", 30, WHITE, DARKGRAY, GRAY, WHITE);
+        Rectangle{1400, 820, 150, 50}, "SUBMIT", 30, WHITE, DARKGRAY, GRAY, WHITE);
     continueButton->setFont(font);
     continueButton->setFocus(true);
     continueButton->setOnClick([this]()
@@ -151,7 +151,7 @@ void HeroSelectionScene::creatButton()
                                    SceneManager::getInstance().goTo(SceneKeys::PLAYER_SUMMARY_SCENE); });
 
     backButton = std::make_unique<UIButton>(
-        Rectangle{40, 800, 200, 50}, "Main Menu", 30, WHITE, DARKGRAY, GRAY, WHITE);
+        Rectangle{40, 820, 170, 50}, "Main Menu", 30, WHITE, DARKGRAY, GRAY, WHITE);
     backButton->setFont(font);
     backButton->setOnClick([this]()
                            {
@@ -197,7 +197,7 @@ void HeroSelectionScene::render()
 
     Vector2 textSize = MeasureTextEx(font, currentMessage.c_str(), 50, 0);
     float textX = (1600.0f - textSize.x) / 2.0f;
-    DrawTextEx(font, currentMessage.c_str(), {textX, 50}, 50, 0, WHITE);
+    DrawTextEx(font, currentMessage.c_str(), {80, 50}, 50, 0, WHITE);
 
     uiManager.render();
     EndDrawing();
