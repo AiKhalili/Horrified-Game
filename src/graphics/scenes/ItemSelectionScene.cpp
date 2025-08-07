@@ -29,8 +29,10 @@ void ItemSelectionScene::onEnter()
     background = TextureManager::getInstance().getOrLoadTexture(
         "ItemSelection", "assets/images/background/item_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 
     createLabels();
+    createButtons();
 
     if (!items.empty())
     {
@@ -83,7 +85,6 @@ void ItemSelectionScene::onEnter()
         itemRects.push_back(rect);
     }
 
-    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
 }
 
 void ItemSelectionScene::onExit()
@@ -93,6 +94,7 @@ void ItemSelectionScene::onExit()
     selected.clear();
     items.clear();
     itemRects.clear();
+    itemTextures.clear();
 }
 
 void ItemSelectionScene::update(float deltaTime)
@@ -164,34 +166,12 @@ void ItemSelectionScene::createLabels()
     selectText->setFont(font);
     ui.add(std::move(selectText));
 
-    auto menuBtn = std::make_unique<UIButton>(Rectangle{1450, 840, 120, 40}, "Main Menu", 20, textcolor, labelcolor, clickcolor, textcolor);
-    menuBtn->setFont(font);
-    menuBtn->setOnClick([]()
-                        {
-        AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 750}, "", 30, 3.0f, WHITE, WHITE, true);
+    tempLabel->setFont(font);
 
-    ui.add(std::move(menuBtn));
+    errorLabel = tempLabel.get();
 
-    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
-    saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
-                        {
-        AudioManager::getInstance().playSoundEffect("click");
-        SaveManager::getInstance().saveGameToSlot(); });
-
-    ui.add(std::move(saveBtn));
-
-    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
-    boardBtn->setFont(font);
-    boardBtn->setOnClick([]()
-                         {
-        AudioManager::getInstance().playSoundEffect("click");
-        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
-
-    ui.add(std::move(boardBtn));
-
-    Color midCreamBrown = {140, 110, 70, 255};
+    ui.add(std::move(tempLabel));
 }
 
 void ItemSelectionScene::loadItemTextures()
@@ -281,3 +261,60 @@ void ItemSelectionScene::createActionButtons()
         SceneManager::getInstance().goTo(scenekey); });
     ui.add(std::move(submitBtn));
 }
+
+void ItemSelectionScene::showErrorMessage(const std::string &msg)
+{
+    if (!errorLabel)
+        return;
+
+    errorLabel->setText(msg);
+}
+
+void ItemSelectionScene::createButtons()
+{
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+    Color clickcolor = {85, 65, 45, 255};
+
+    auto menuBtn = std::make_unique<UIButton>(Rectangle{1450, 840, 120, 40}, "Main Menu", 20, textcolor, labelcolor, clickcolor, textcolor);
+    menuBtn->setFont(font);
+    menuBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
+
+    ui.add(std::move(menuBtn));
+
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
+    saveBtn->setFont(font);
+    saveBtn->setOnClick([this]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SaveManager::getInstance().saveGameToSlot("ItemSelectionScene");
+        const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg); });
+
+    ui.add(std::move(saveBtn));
+
+    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
+    boardBtn->setFont(font);
+    boardBtn->setOnClick([]()
+                         {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
+
+    ui.add(std::move(boardBtn));
+
+    auto backBtn = std::make_unique<UIButton>(Rectangle{1450, 690, 120, 40}, "Back", 20, textcolor, labelcolor, clickcolor, textcolor);
+    backBtn->setFont(font);
+    backBtn->setOnClick([this]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(scenekey); });
+
+    ui.add(std::move(backBtn));
+
+}
+
+std::vector<Item *> ItemSelectionScene::getItems(){return items;}
+std::string ItemSelectionScene::getscenekey(){return scenekey;}
