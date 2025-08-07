@@ -33,11 +33,10 @@ private:
     SaveManager(const SaveManager&) = delete;
     SaveManager& operator=(const SaveManager&) = delete;
 
-
 public:
     static SaveManager& getInstance();
 
-    void saveGameToSlot(); // ذخیره کامل بازی با شماره اسلات
+    void saveGameToSlot(std::string newkey); // ذخیره کامل بازی با شماره اسلات
     void loadGameFromSlot(int); // بارگذاری بازی با شماره اسلاتی که کاربر وارد کرده و میخواد بازی رو ادامه بده
 
     void saveHeroesToFile(const std::string&, const std::vector<Hero*>& ); // ذخیره کردن قهرمان فعال بازی
@@ -81,6 +80,8 @@ public:
 
     std::vector<std::pair<int, std::string>> getAllSaveSlotsWithTimestamps();
 
+    void saveSceneToFile(std::string& filename, std::string scenekey);
+    void loadSceneFromFile(const std::string&);
 };
 
 #endif
