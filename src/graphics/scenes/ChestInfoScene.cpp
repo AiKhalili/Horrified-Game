@@ -77,7 +77,7 @@ void ChestInfoScene::createUI()
     saveBtn->setOnClick([]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(); });
+                            SaveManager::getInstance().saveGameToSlot(SceneKeys::CHEST_INFO_SCENE); });
 
     uiManager.add(std::move(saveBtn));
 }
