@@ -39,6 +39,7 @@ void SpecialScene::onEnter()
 void SpecialScene::onExit()
 {
     UnloadFont(font);
+    UnloadFont(errorFont);
     itemselect.clear();
     locselect = nullptr;
     ui.clear();
@@ -220,6 +221,7 @@ void SpecialScene::createButtons()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
                             SceneDataHub::getInstance().reset();
+                            Game::getInstance().reset();
                             SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
     ui.add(std::move(menuBtn));
 }
