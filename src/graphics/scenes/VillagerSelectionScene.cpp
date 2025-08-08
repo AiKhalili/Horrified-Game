@@ -75,6 +75,7 @@ void VillagerSelectionScene::onEnter()
 void VillagerSelectionScene::onExit()
 {
     UnloadFont(font);
+    UnloadFont(errorFont);
     ui.clear();
     selected.clear();
     villagers.clear();
@@ -254,6 +255,7 @@ void VillagerSelectionScene::createButtons()
     menuBtn->setOnClick([]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
+        Game::getInstance().reset();
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     ui.add(std::move(menuBtn));
