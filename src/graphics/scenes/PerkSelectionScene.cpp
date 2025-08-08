@@ -19,7 +19,7 @@ void PerkSelectionScene::setData(const std::vector<PerkCard> &Perks, const std::
 {
     perks = Perks;
     scenekey = newkey;
-    hero = Game::getInstance().getCurrentHero();
+   // hero = Game::getInstance().getCurrentHero();
 }
 void PerkSelectionScene::onEnter()
 {
@@ -102,8 +102,9 @@ void PerkSelectionScene::onExit()
 void PerkSelectionScene::update(float deltaTime)
 {
     AudioManager::getInstance().update();
-    Vector2 mousePos = GetMousePosition();
     hoveredPerkIndex = -1;
+
+    Vector2 mousePos = GetMousePosition();
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
     {
@@ -169,30 +170,42 @@ void PerkSelectionScene::render()
                    Vector2{0, 0}, 0.0f, WHITE);
 
     float padding = 6.0f;
+    float offsetTopRow = -30.0f;
+    float borderExtra = 8.0f;
 
     for (size_t i = 0; i < perkTextures.size(); ++i)
     {
+        float yPos = perkRects[i].y;
+        if (i < 3) 
+            yPos += offsetTopRow;
+
+        Rectangle targetRect = {
+            perkRects[i].x - padding,
+            yPos - padding,
+            250,
+            300
+        };
+
         DrawTexturePro(
             perkTextures[i],
             Rectangle{0, 0, (float)perkTextures[i].width, (float)perkTextures[i].height},
-            perkRects[i],
+            targetRect,
             Vector2{0, 0}, 0.0f, WHITE);
 
-        Rectangle rectWithPadding = {
-            perkRects[i].x - padding,
-            perkRects[i].y - padding,
-            perkRects[i].width + 2 * padding,
-            perkRects[i].height + 2 * padding};
+        Rectangle borderRect = {
+            targetRect.x - borderExtra,
+            targetRect.y - borderExtra,
+            targetRect.width + 2 * borderExtra,
+            targetRect.height + 2 * borderExtra
+        };
 
         if ((int)i == hoveredPerkIndex)
-        {
-            DrawRectangleLinesEx(rectWithPadding, 3, WHITE);
-        }
+            DrawRectangleLinesEx(borderRect, 3, WHITE);
 
         if (hasPendingSelected && perks[i].getName() == pendingSelectedPerk.getName())
         {
             Color selectedColor = {100, 80, 50, 255};
-            DrawRectangleLinesEx(rectWithPadding, 6, selectedColor);
+            DrawRectangleLinesEx(borderRect, 6, selectedColor);
         }
     }
 
@@ -249,7 +262,6 @@ void PerkSelectionScene::createLabels()
     errorLabel = tempLabel.get();
 
     ui.add(std::move(tempLabel));
-    
 }
 
 void PerkSelectionScene::creatErroreLabels()
@@ -374,7 +386,12 @@ void PerkSelectionScene::handleLocationSelectionRequest()
                 for (auto secondLoc : loc->get_neighbors())
                 {
                     if (std::find(allloc.begin(), allloc.end(), secondLoc) == allloc.end())
-                        allloc.push_back(secondLoc);
+                    {
+                        if (secondLoc != monsters[0]->get_location())
+                            allloc.push_back(secondLoc);
+                        else
+                            continue;
+                    }
                 }
             }
             auto &locationselect = SceneManager::getInstance().getScene<LocationSelectionScene>(SceneKeys::LOCATION_SELECTION_SCENE);
@@ -388,7 +405,12 @@ void PerkSelectionScene::handleLocationSelectionRequest()
                 for (auto secondLoc : loc->get_neighbors())
                 {
                     if (std::find(allloc.begin(), allloc.end(), secondLoc) == allloc.end())
-                        allloc.push_back(secondLoc);
+                    {
+                        if (secondLoc != monsters[1]->get_location())
+                            allloc.push_back(secondLoc);
+                        else
+                            continue;
+                    }
                 }
             }
             auto &locationselect = SceneManager::getInstance().getScene<LocationSelectionScene>(SceneKeys::LOCATION_SELECTION_SCENE);
@@ -407,7 +429,12 @@ void PerkSelectionScene::handleLocationSelectionRequest()
                 for (auto secondLoc : loc->get_neighbors())
                 {
                     if (std::find(allloc.begin(), allloc.end(), secondLoc) == allloc.end())
-                        allloc.push_back(secondLoc);
+                    {
+                        if (secondLoc != heros[0]->getLocation())
+                            allloc.push_back(secondLoc);
+                        else
+                            continue;
+                    }
                 }
             }
         }
@@ -418,7 +445,12 @@ void PerkSelectionScene::handleLocationSelectionRequest()
                 for (auto secondLoc : loc->get_neighbors())
                 {
                     if (std::find(allloc.begin(), allloc.end(), secondLoc) == allloc.end())
-                        allloc.push_back(secondLoc);
+                    {
+                        if (secondLoc != heros[1]->getLocation())
+                            allloc.push_back(secondLoc);
+                        else
+                            continue;
+                    }
                 }
             }
         }
@@ -507,5 +539,5 @@ void PerkSelectionScene::createButtons()
     ui.add(std::move(backBtn));
 }
 
-std::vector<PerkCard> PerkSelectionScene::getperks(){return perks;}
-std::string PerkSelectionScene::getscenekey(){return scenekey;}
+std::vector<PerkCard> PerkSelectionScene::getperks() { return perks; }
+std::string PerkSelectionScene::getscenekey() { return scenekey; }
