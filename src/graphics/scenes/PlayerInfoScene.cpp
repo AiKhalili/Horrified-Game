@@ -139,6 +139,7 @@ void PlayerInfoScene::createButtons()
         currentPlayer = 1;
         if (playerLabel) playerLabel->setText("Player 1 entering info");
         resetInputsForNextPlayer();
+        Game::getInstance().reset();
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 }
 
