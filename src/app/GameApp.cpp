@@ -3,6 +3,7 @@
 #include "audio/AudioManager.hpp"
 #include "graphics/scenes/SceneManager.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/TextureManager.hpp"
 
 void GameApp::run()
 {
@@ -23,6 +24,7 @@ void GameApp::run()
         EndDrawing();
     }
 
+    TextureManager::getInstance().unloadAll();
     AudioManager::getInstance().dispose();
     CloseWindow();
 }
