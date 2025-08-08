@@ -35,6 +35,12 @@ public:
     void playTimeOutMusic();
     void stopTimeOutMusic();
 
+    void playAdDefSelectMusic();
+    void stopAdDefSelectMusic();
+
+    void playPerkSelectMusic();
+    void stopPerkSelectMusic();
+
 private:
     AudioManager() = default;
     Music backgroundMusic;
@@ -44,6 +50,8 @@ private:
     Music winMusic;
     Music loseMusic;
     Music timeoutMusic;
+    Music perkMusic;
+    Music AdDefMusic;
 
     bool monsterSelectStarted = false;
     bool rescueStarted = false;
@@ -52,6 +60,8 @@ private:
     bool winStarted = false;
     bool loseStarted = false;
     bool timeoutStarted = false;
+    bool perkSelectStarted = false;
+    bool AdDefSelectStarted = false;
 
     std::unordered_map<std::string, Sound> soundsEffects;
     float musicVolume = 0.5f;
