@@ -1,13 +1,20 @@
 #ifndef SCENEDATAHUB_HPP
 #define SCENEDATAHUB_HPP
 
+#include "core/Item.hpp"
+#include "core/Monster.hpp"
+#include "core/Villager.hpp"
+#include "core/Location.hpp"
 #include <vector>
 #include <string>
 
 class SceneDataHub
 {
 private:
-    std::vector<std::string> monsterPhaseLog;
+    std::vector<Item *> items;
+    Monster *monster = nullptr;
+    std::vector<Villager *> villagers;
+    Location *location = nullptr;
     SceneDataHub() = default;
 
 public:
@@ -17,9 +24,17 @@ public:
 
     void reset();
 
-    void setMonsterPhaseLog(const std::vector<std::string> &log);
+    void setSelectedItems(const std::vector<Item *> &Items);
+    std::vector<Item *> &getSelectedItems();
 
-    std::vector<std::string> getMonsterPhaseLog() const;
+    void setSelectedMonster(Monster *monster);
+    Monster *getSelectedMonster();
+
+    void setSelectedVillagers(const std::vector<Villager *> &Villagers);
+    std::vector<Villager *> &getSelectedVillagers();
+
+    void setSelectedLocation(Location *location);
+    Location *getSelectedLocation();
 };
 
 #endif
