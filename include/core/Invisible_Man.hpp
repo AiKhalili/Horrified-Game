@@ -21,15 +21,14 @@ public:
     virtual std::vector<Location *> getAdvanceLocation() override;
     virtual void advanceMission(Location *) override;
     virtual bool canbedefeated() const override;
-    void specialPower(Hero *) override;
+    PowerResult specialPower(Hero *) override;
     virtual std::vector<Item> getAdvanceRequirement() const override;
     virtual std::vector<Item> getDefeatRequirement() const override;
     virtual int getCounter() const override;
     virtual bool isAdvanceLocation(const std::string &) const override;
     virtual std::string serialize() const override;
-    void setEvidence(const std::map<std::string, bool>& newEvidence);
+    void setEvidence(const std::map<std::string, bool> &newEvidence);
     virtual Location *moveTowardTarget(std::vector<Hero *> heroes, std::vector<Villager *> villagers, int maxSteps) override;
-
 };
 
 #endif
