@@ -37,6 +37,7 @@ void PickUpScene::onEnter()
 void PickUpScene::onExit()
 {
     UnloadFont(font);
+    UnloadFont(errorFont);
     itemselect.clear();
     ui.clear();
 }
