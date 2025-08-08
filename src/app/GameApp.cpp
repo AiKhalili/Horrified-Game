@@ -4,6 +4,7 @@
 #include "graphics/scenes/SceneManager.hpp"
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/TextureManager.hpp"
+#include "core/Game.hpp"
 
 void GameApp::run()
 {
@@ -24,6 +25,7 @@ void GameApp::run()
         EndDrawing();
     }
 
+    Game::getInstance().reset();
     TextureManager::getInstance().unloadAll();
     AudioManager::getInstance().dispose();
     CloseWindow();
