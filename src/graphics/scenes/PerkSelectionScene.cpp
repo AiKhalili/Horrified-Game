@@ -472,6 +472,7 @@ void PerkSelectionScene::createButtons()
     menuBtn->setOnClick([]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
+        Game::getInstance().reset();
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     ui.add(std::move(menuBtn));
