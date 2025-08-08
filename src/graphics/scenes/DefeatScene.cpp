@@ -115,7 +115,7 @@ void DefeatScene::createLabels()
     selectText->setFont(font);
     ui.add(std::move(selectText));
 
-    auto tempLabel = std::make_unique<UILabel>(Vector2{600, 800}, "", 30, 3.0f, WHITE);
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 800}, "", 30, 3.0f, WHITE, WHITE, true);
     tempLabel->setFont(errorFont);
 
     errorLabel = tempLabel.get();
