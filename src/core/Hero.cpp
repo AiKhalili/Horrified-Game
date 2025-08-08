@@ -81,7 +81,7 @@ void Hero::guide(vector<Villager *> villager, Location *destination)
     else if (villagerLocation == location && location->isNeighbor(destination))
     { // بررسی هم مکان بودن محلی و قهرمان
         villager[0]->getCurrentLocation()->removeVillager(villager[0]);
-        location->addVillager(villager[0]);
+        destination->addVillager(villager[0]);
         useAction();
         cout << "The select villager move to the select place!\n";
     }
@@ -165,7 +165,7 @@ void Hero::advanced(Monster *monster, const vector<Item *> &selectedItems)
         throw GameException("You are not in a valid location to advance this monster's task!\n");
     }
 
-    if (monster->get_name() == "Invisible Man")
+    if (monster->get_name() == "InvisibleMan")
     {
         const vector<Item> &reqs = monster->getAdvanceRequirement(); // شامل لوکیشن‌هایی که هنوز advance نشدن
         for (const Item &required : reqs)
@@ -646,9 +646,9 @@ Hero* Hero::deserialize(const string& line) {
             getline(itemParts, pickedFrom);
 
             COlOR color;
-            if (colorStr == "red") color = COlOR::red;
-            else if (colorStr == "blue") color = COlOR::blue;
-            else if (colorStr == "yellow") color = COlOR::yellow;
+            if (colorStr == "Red") color = COlOR::red;
+            else if (colorStr == "Blue") color = COlOR::blue;
+            else if (colorStr == "Yellow") color = COlOR::yellow;
             else throw GameException("Invalid color: " + colorStr);
 
             Location* from = Map::get_instanse()->getLocation(pickedFrom);
