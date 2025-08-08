@@ -156,6 +156,7 @@ void HeroSelectionScene::creatButton()
     backButton->setOnClick([this]()
                            {
         AudioManager::getInstance().playSoundEffect("click");
+        Game::getInstance().reset();
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     uiManager.add(std::move(continueButton));
