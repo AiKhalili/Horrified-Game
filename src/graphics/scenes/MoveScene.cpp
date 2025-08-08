@@ -40,6 +40,7 @@ void MoveScene::onEnter()
 void MoveScene::onExit()
 {
     UnloadFont(font);
+    UnloadFont(errorFont);
     villselect.clear();
     locselect = nullptr;
     ui.clear();
@@ -170,6 +171,7 @@ void MoveScene::createButtons()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
                             SceneDataHub::getInstance().reset();
+                            Game::getInstance().reset();
                             SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
     ui.add(std::move(menuBtn));
 
