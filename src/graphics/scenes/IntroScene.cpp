@@ -11,6 +11,8 @@ void IntroScene::onEnter()
 
 void IntroScene::onExit()
 {
+    timer = 0.0f;
+    progress = 0.0f;
     AudioManager::getInstance().stopIntroMusic();
 }
 
