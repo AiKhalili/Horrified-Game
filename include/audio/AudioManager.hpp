@@ -20,12 +20,39 @@ public:
     void setSoundVolume(float volume);
     void dispose(); // Releasing the memory used by sounds and music
 
+    void playMonsterSelectMusic();
+    void stopMonsterSelectMusic();
+
+    void playRescueMusic();
+    void stopRescueMusic();
+
+    void playWinMusic();
+    void stopWinMusic();
+
+    void playLoseMusic();
+    void stopLoseMusic();
+
+    void playTimeOutMusic();
+    void stopTimeOutMusic();
+
 private:
     AudioManager() = default;
     Music backgroundMusic;
     Music introMusic;
+    Music monsterSelectMusic;
+    Music rescueMusic;
+    Music winMusic;
+    Music loseMusic;
+    Music timeoutMusic;
+
+    bool monsterSelectStarted = false;
+    bool rescueStarted = false;
     bool introStarted = false;
     bool musicStarted = false;
+    bool winStarted = false;
+    bool loseStarted = false;
+    bool timeoutStarted = false;
+
     std::unordered_map<std::string, Sound> soundsEffects;
     float musicVolume = 0.5f;
     float sounDVolume = 0.5f;
