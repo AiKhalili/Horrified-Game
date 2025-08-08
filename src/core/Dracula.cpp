@@ -45,14 +45,18 @@ bool Dracula::canbedefeated() const
     return true;
 }
 
-void Dracula::specialPower(Hero *hero)
+PowerResult Dracula::specialPower(Hero *hero)
 {
+    PowerResult result;
     if (this->get_location() != hero->getLocation()) // اگر قبلا در یک مکان نبودند
     {
         hero->getLocation()->removeHero(hero);
         hero->setLocation(this->get_location()); // دراکولا قهرمان به سمت خودش می کشه
         hero->getLocation()->addHero(hero);
+        result.targetHero = hero;
     }
+
+    return result;
 }
 
 vector<Item> Dracula::getAdvanceRequirement() const
