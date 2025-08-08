@@ -151,7 +151,7 @@ void LocationInfoScene::createUI()
     saveBtn->setOnClick([]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(); });
+                            SaveManager::getInstance().saveGameToSlot(SceneKeys::LOCATION_INFO_SCENE); });
 
     ui.add(std::move(saveBtn));
 }
@@ -277,8 +277,8 @@ void LocationInfoScene::drawItems()
     float screenW = GetScreenWidth();
     float screenH = GetScreenHeight();
 
-    const int maxCols = 4;
-    const int maxRows = 3;
+    const int maxCols = 3;
+    const int maxRows = 4;
     const int maxItems = maxCols * maxRows;
 
     float imageSize = 150.0f;
