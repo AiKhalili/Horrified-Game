@@ -20,6 +20,18 @@ class RescueResultScene : public Scene
     Font font;
     UIManager uiManager;
 
+    float elapsedTime = 0.0f;
+
+    float villagerAlpha = 0.0f;
+    const float fadeDuration = 3.0f;
+    bool villagerFadeDone = false;
+
+    float perkY = -500.0f;
+    const float perkTargetY = 430.0f;
+    const float slideSpeed = 400.0f;
+    bool perkSlideStarted = false;
+    bool perkSlideDone = false;
+
     void loadtextures();
     void createUI();
 
