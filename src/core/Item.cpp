@@ -95,7 +95,6 @@ Item* Item::deserialize(const std::string& line)
     Location* location = (part == "null") ? nullptr : Map::get_instanse()->getLocation(part);
 
     Item* item = new Item(strength, color, name, location);
-    //Map::get_instanse()->addItemTo(location->get_name(), item);
     item->set_pickedFrom(part);
 
     return item;
