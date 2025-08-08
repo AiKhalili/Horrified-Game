@@ -21,6 +21,14 @@ enum class TargetType
     Villager
 };
 
+struct PowerResult
+{
+    Hero *targetHero = nullptr;
+    Villager *targetVillager = nullptr;
+    bool villagerKilled = false;
+};
+
+
 class Monster
 {
 private:
@@ -53,7 +61,7 @@ public:
     virtual std::vector<Item> getAdvanceRequirement() const = 0;
     virtual std::vector<Item> getDefeatRequirement() const = 0;
     virtual int getCounter() const = 0;
-    virtual void specialPower(Hero *) = 0;
+    virtual PowerResult specialPower(Hero *) = 0;
     virtual bool isAdvanceLocation(const std::string &) const = 0;
 
     virtual std::string serialize() const = 0; // مخصوص هر هیولا
