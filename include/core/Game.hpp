@@ -241,8 +241,6 @@ public:
     void handleGameOver();
     void prepareForSaving();
     bool shouldShowSpecialAcion();
-
-    bool shouldShowSpecialAcion();
 };
 
 #endif
