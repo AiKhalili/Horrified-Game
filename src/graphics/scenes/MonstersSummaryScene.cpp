@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "core/Game.hpp"
 
 void MonstersSummaryScene::onEnter()
 {
@@ -135,6 +136,7 @@ void MonstersSummaryScene::creatButtons()
     menuBtn->setOnClick([]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
+        Game::getInstance().reset();
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     ui.add(std::move(menuBtn));
