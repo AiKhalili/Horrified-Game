@@ -17,13 +17,14 @@ private:
     Font font;                  // فونت متن
     bool useCustomFont = false; // آیا از فونت سفارشی استفاده بشه یا نه؟
     bool drawBackground = false;
+    bool centerAligment = false;
     float duration;     // چند ثانیه نمایش داده بشه
     float timer = 0.0f; // شمارنده زمان سپری شده
     float padding;      // فاصله بین متن و کادر
 
 public:
     UILabel(Vector2 pos, const std::string &text, int fontSize = 20, float duration = 0.0f,
-            Color fontcolor = BLACK, Color cadreColor = RED);
+            Color fontcolor = BLACK, Color cadreColor = RED , bool centerAligment = false);
     void render() override;
     void update() override;
     void setFont(const Font &);
