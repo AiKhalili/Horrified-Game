@@ -239,6 +239,7 @@ void DefeatScene::createButtons()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
                             SceneDataHub::getInstance().reset();
+                            Game::getInstance().reset();
                             SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
     ui.add(std::move(menuBtn));
 
