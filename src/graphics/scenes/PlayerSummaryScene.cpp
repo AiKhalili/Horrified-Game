@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include "core/Game.hpp"
 
 void PlayerSummaryScene::setData(const std::string &player1Name, const std::string &hero1,
                                  const std::string &player2Name, const std::string &hero2)
@@ -134,6 +135,7 @@ void PlayerSummaryScene::creatButtons()
     menuBtn->setOnClick([]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
+        Game::getInstance().reset();
         SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
 
     ui.add(std::move(menuBtn));
