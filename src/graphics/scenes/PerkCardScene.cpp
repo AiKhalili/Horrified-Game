@@ -77,7 +77,7 @@ void PerkCardScene::createUI()
     saveBtn->setOnClick([]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(); });
+                            SaveManager::getInstance().saveGameToSlot(SceneKeys::PERK_CARD_SCENE); });
 
     uiManager.add(std::move(saveBtn));
 }
