@@ -44,6 +44,7 @@ void AdvanceScene::onEnter()
 void AdvanceScene::onExit()
 {
     UnloadFont(font);
+    UnloadFont(errorFont);
     itemselect.clear();
     monselect = nullptr;
     ui.clear();
