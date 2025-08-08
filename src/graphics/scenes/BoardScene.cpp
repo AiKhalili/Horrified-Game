@@ -96,7 +96,7 @@ void BoardScene::handleSelectAction()
 
 void BoardScene::handleSaveAndExit()
 {
-    SaveManager::getInstance().saveGameToSlot();
+    SaveManager::getInstance().saveGameToSlot(SceneKeys::BOARD_SCENE);
     SceneManager::getInstance().requestExit();
 }
 
@@ -119,6 +119,11 @@ void BoardScene::handleEndHeroPhase()
 void BoardScene::onExit()
 {
     UnloadFont(normalFont);
+    UnloadFont(locationFont);
+
+    locations.clear();
+    hoveredLocation.clear();
+
     ui.clear();
 }
 
@@ -268,17 +273,17 @@ void BoardScene::handleGameStateTransition()
     switch (state)
     {
     case GameState::GameWon:
-        SceneManager::getInstance().goTo(SceneKeys::GAME_WON_SCENE);
+        SceneManager::getInstance().goTo(SceneKeys::END_GAME_SCENE);
         break;
     case GameState::GameLost:
-        SceneManager::getInstance().goTo(SceneKeys::GAME_LOST_SCENE);
+        SceneManager::getInstance().goTo(SceneKeys::END_GAME_SCENE);
         break;
     case GameState::GameOutOfTime:
-        SceneManager::getInstance().goTo(SceneKeys::OUT_OF_TIME_SCENE);
+        SceneManager::getInstance().goTo(SceneKeys::END_GAME_SCENE);
         break;
-    // case GameState::ShowPerkCard:
-    //     SceneManager::getInstance().goTo(SceneKeys::PERK_CARD_SCENE);
-    //     break;
+    case GameState::ShowPerkCard:
+        SceneManager::getInstance().goTo(SceneKeys::RESCUE_RESULT_SCENE);
+        break;
     case GameState::StartMonsterPhase:
         SceneManager::getInstance().goTo(SceneKeys::MONSTER_PHASE_SCENE);
         break;
