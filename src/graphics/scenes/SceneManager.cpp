@@ -11,6 +11,23 @@
 #include "graphics/scenes/ChestInfoScene.hpp"
 #include "graphics/scenes/PerkCardScene.hpp"
 #include "graphics/scenes/LocationInfoScene.hpp"
+#include "graphics/scenes/ItemSelectionScene.hpp"
+#include "graphics/scenes/MonsterPhaseScene.hpp"
+#include "graphics/scenes/VillagerSelectionScene.hpp"
+#include "graphics/scenes/LocationSelectionScene.hpp"
+#include "graphics/scenes/PlayerSummaryScene.hpp"
+#include "graphics/scenes/MoveScene.hpp"
+#include "graphics/scenes/PickUpScene.hpp"
+#include "graphics/scenes/RescueResultScene.hpp"
+#include "graphics/scenes/EndGameScene.hpp"
+#include "graphics/scenes/MonsterSelectionScene.hpp"
+#include "graphics/scenes/GuidScene.hpp"
+#include "graphics/scenes/AdvanceScene.hpp"
+#include "graphics/scenes/DefeatScene.hpp"
+#include "graphics/scenes/SpecialScene.hpp"
+#include "graphics/scenes/HelpScene.hpp"
+#include "graphics/scenes/PerkSelectionScene.hpp"
+#include "graphics/scenes/MonstersSummaryScene.hpp"
 #include <iostream>
 
 SceneManager &SceneManager::getInstance()
@@ -40,7 +57,23 @@ void SceneManager::registerAllScenes()
     registerScene(SceneKeys::CHEST_INFO_SCENE, std::make_unique<ChestInfoScene>());
     registerScene(SceneKeys::PERK_CARD_SCENE, std::make_unique<PerkCardScene>());
     registerScene(SceneKeys::LOCATION_INFO_SCENE, std::make_unique<LocationInfoScene>());
-    // registerScene(SceneKeys::GAME_WON_SCENE)
+    registerScene(SceneKeys::ITEM_SELECTION_SCENE, std::make_unique<ItemSelectionScene>());
+    registerScene(SceneKeys::MONSTER_PHASE_SCENE, std::make_unique<MonsterPhaseScene>());
+    registerScene(SceneKeys::VILLAGER_SELECTION_SCENE, std::make_unique<VillagerSelectionScene>());
+    registerScene(SceneKeys::LOCATION_SELECTION_SCENE, std::make_unique<LocationSelectionScene>());
+    registerScene(SceneKeys::MOVE_SCENE, std::make_unique<MoveScene>());
+    registerScene(SceneKeys::PICK_UP_SCENE, std::make_unique<PickUpScene>());
+    registerScene(SceneKeys::PLAYER_SUMMARY_SCENE, std::make_unique<PlayerSummaryScene>());
+    registerScene(SceneKeys::RESCUE_RESULT_SCENE, std::make_unique<RescueResultScene>());
+    registerScene(SceneKeys::END_GAME_SCENE, std::make_unique<EndGameScene>());
+    registerScene(SceneKeys::MONSTER_SELECTION_SCENE, std::make_unique<MonsterSelectionScene>());
+    registerScene(SceneKeys::GUID_SCENE, std::make_unique<GuidScene>());
+    registerScene(SceneKeys::ADVANCE_SCENE, std::make_unique<AdvanceScene>());
+    registerScene(SceneKeys::DEFEAT_SCENE, std::make_unique<DefeatScene>());
+    registerScene(SceneKeys::SPECIAL_SCENE, std::make_unique<SpecialScene>());
+    registerScene(SceneKeys::HELP_SCENE, std::make_unique<HelpScene>());
+    registerScene(SceneKeys::PERK_SELECTION_SCENE, std::make_unique<PerkSelectionScene>());
+    registerScene(SceneKeys::MONSTERS_SUMMARY_SCENE, std::make_unique<MonstersSummaryScene>());
 }
 
 void SceneManager::goTo(const std::string &name)
@@ -50,17 +83,24 @@ void SceneManager::goTo(const std::string &name)
     { // if the scene was registered befor , change the scene
         if (currentScene)
         {
-            currentScene->onExit(); // before change the scene
+            if (!currentScene->getSkip())
+            {
+                currentScene->onExit(); // before change the scene
+            }
         }
         currentScene = it->second.get();
         if (currentScene)
         {
-            currentScene->onEnter(); // after change the scene
+            if (!currentScene->getSkip())
+            {
+                currentScene->onEnter(); // after change the scene
+            }
+            currentScene->setSkip(false);
         }
-    }
-    else
-    {
-        std::cerr << "Scene <" << name << "> not found!\n";
+        else
+        {
+            std::cerr << "Scene <" << name << "> not found!\n";
+        }
     }
 }
 
