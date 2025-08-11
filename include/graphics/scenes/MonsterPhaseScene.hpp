@@ -29,8 +29,6 @@ private:
     Game &game = Game::getInstance();
     MonsterPhaseStep currentStep = MonsterPhaseStep::CheckMonsterPhasePerk;
     bool skipPhase = false;
-    bool delaySceneChange = false;
-    float sceneChangeTimer = 0.0f;
     float stepTimer = 0.0f;
 
     Texture2D background;
