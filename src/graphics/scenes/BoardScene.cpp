@@ -320,7 +320,12 @@ void BoardScene::drawMonsterGlow()
 
     for (auto *monster : monsters)
     {
-        std::string monsterLocation = monster->get_location()->get_name();
+        auto locationPtr = monster->get_location();
+        if (!locationPtr)
+        {
+            continue;
+        }
+        std::string monsterLocation = locationPtr->get_name();
 
         for (const auto &loc : locations)
         {
