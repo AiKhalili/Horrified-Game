@@ -24,6 +24,7 @@ void AudioManager::init()
     timeoutMusic = LoadMusicStream("assets/audio/music/timeout.mp3");
     perkMusic = LoadMusicStream("assets/audio/music/Perk.wav");
     AdDefMusic = LoadMusicStream("assets/audio/music/Ad&De.mp3");
+    backgroundMusic = LoadMusicStream("assets/audio/music/main_music.mp3");
 
     setMusicVolume(musicVolume);
 }
