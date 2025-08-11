@@ -31,6 +31,7 @@ namespace SceneKeys
     inline const std::string PICK_UP_SCENE = "PickUpScene";
     inline const std::string RESCUE_RESULT_SCENE = "RescueResultScene";
     inline const std::string END_GAME_SCENE = "EndGameScene";
+    inline const std::string PERK_SELECTION_SCENE = "PerkSelectionScene";
 }
 
 #endif
