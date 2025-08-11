@@ -316,17 +316,6 @@ void MonsterPhaseScene::update(float deleteTime)
         return;
     }
 
-    if (delaySceneChange)
-    { // Handle delayed scene change
-        sceneChangeTimer -= deleteTime;
-        if (sceneChangeTimer <= 0.0f)
-        {
-            delaySceneChange = false;
-            SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
-        }
-        return;
-    }
-
     // Main step-based state machine handling
     switch (currentStep)
     {
@@ -1020,7 +1009,7 @@ void MonsterPhaseScene::executeStrike()
 
 void MonsterPhaseScene::renderCurrentMonster()
 {
-    if (!game.targetMonster)
+    if (!game.targetMonster || game.targetMonster->is_defeated())
     { // Check if the target monster is set; if not, log error and return
         std::cerr << "target monster is NUL\n";
         return;
@@ -1061,7 +1050,7 @@ void MonsterPhaseScene::handleMoveAndRoll(float deleteTime)
 
     if (!game.targetMonster)
     { // Check if targetMonster was set successfully
-        std::cerr << "[FATAL] targetMonster is STILL NULL after setup — aborting strike\n";
+        currentStep = MonsterPhaseStep::ManageStrike;
         return;
     }
 
@@ -1240,6 +1229,7 @@ void MonsterPhaseScene::processNextPower()
         // If a villager was killed by this power
         if (powerVillagerKilled)
         {
+            game.terrorLevel++;
             // Show blood overlay and message about the villager's death
             showBloodOverlay = true;
             bloodOverlayTimer = 5.0f;
@@ -1330,30 +1320,21 @@ void MonsterPhaseScene::renderPowerEffect()
 // Handles transitioning between multiple monster strikes during the monster phase
 void MonsterPhaseScene::handleManageStrike()
 {
+    game.currentStrikeIndex++;
+    game.setupMonsterStrike();
 
-    if (game.currentStrikeIndex < (int)game.MonstersStrike.size() - 1)
-    { // If there are more strikes left in the queue
-
-        game.currentStrikeIndex++; // Move to the next strike
-
-        game.setupMonsterStrike(); // Prepare data for the next monster strike
-
-        currentStep = MonsterPhaseStep::MonsterMoveAndRoll;
-        processingStrike = false;
-
+    if (!game.targetMonster)
+    {
+        currentStep = MonsterPhaseStep::EndPhase;
         return;
     }
-    else
-    { // If no more strikes remain, move to end of phase
-        currentStep = MonsterPhaseStep::EndPhase;
-    }
+
+    currentStep = MonsterPhaseStep::MonsterMoveAndRoll;
+    processingStrike = false;
 }
 
 void MonsterPhaseScene::endMonsterPhase()
 {
     game.currentState = GameState::EndMonsterPhase;
-
-    // Delay the scene change to allow for animations and messages
-    delaySceneChange = true;
-    sceneChangeTimer = 1.0f;
+    SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE);
 }
