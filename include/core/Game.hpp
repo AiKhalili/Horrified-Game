@@ -128,8 +128,6 @@ private:
     void rescueVillagerIfSafe(Hero *); // بررسی نجات یافتن محلی ها
     PerkCard drawPerkCard();           // کشیدن یک پرک کارت
 
-    // اجرای کارت های بازی
-    void usePerkCard();
     void useMonsterCard(const std::string &);
 
     void nextTurn();
