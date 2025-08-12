@@ -93,6 +93,7 @@ void MonsterSelectionScene::update(float deltaTime)
 
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && hoverMonster != -1)
     {
+        AudioManager::getInstance().playSoundEffect("click");
         if (clickedMonster == hoverMonster)
         {
             clickedMonster = -1;
@@ -207,7 +208,7 @@ void MonsterSelectionScene::createButtons()
         AudioManager::getInstance().playSoundEffect("click");
         SaveManager::getInstance().saveGameToSlot("MonsterSelectionScene");
         const std::string msg = "The game was successfully saved!";
-                            showErrorMessage(msg);  });
+                            showErrorMessage(msg); });
     ui.add(std::move(saveBtn));
 
     auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
@@ -227,7 +228,6 @@ void MonsterSelectionScene::createButtons()
         SceneManager::getInstance().goTo(scenekey); });
 
     ui.add(std::move(backBtn));
-
 
     auto submtBtn = std::make_unique<UIButton>(Rectangle{745, 590, 120, 60}, "Submit", 40,
                                                textcolor, labelcolor, clickcolor, textcolor);
@@ -292,8 +292,14 @@ void MonsterSelectionScene::createLabels()
             nameBtn->enableBackground(textcolor, 10.0f);
             ui.add(std::move(nameBtn));
 
-            auto wealthBtn = std::make_unique<UILabel>(Vector2{440, 765}, "Wealth: Coffins", 30, 0.0f,
-                                                       labelcolor, labelcolor);
+            std::string WealText = "Wealth(Evidences): " +
+                       std::to_string(4-(monsters[i]->getCounter())) +
+                       '/' +
+                       std::to_string(4);
+
+
+            auto wealthBtn = std::make_unique<UILabel>(Vector2{540, 805}, WealText, 30, 0.0f,
+                                                       labelcolor, labelcolor, true);
             wealthBtn->setFont(font);
             wealthBtn->enableBackground(textcolor, 10.0f);
             ui.add(std::move(wealthBtn));
@@ -306,8 +312,13 @@ void MonsterSelectionScene::createLabels()
             name1Btn->enableBackground(textcolor, 10.0f);
             ui.add(std::move(name1Btn));
 
-            auto wealth1Btn = std::make_unique<UILabel>(Vector2{960, 765}, "Wealth: Evidences", 30, 0.0f,
-                                                        labelcolor, labelcolor);
+            std::string WealText = "Wealth(Evidences): " +
+                                   std::to_string(5-(monsters[i]->getCounter())) +
+                                   '/' +
+                                   std::to_string(5);
+
+            auto wealth1Btn = std::make_unique<UILabel>(Vector2{1080, 805}, WealText, 30, 0.0f,
+                                                        labelcolor, labelcolor, true);
             wealth1Btn->setFont(font);
             wealth1Btn->enableBackground(textcolor, 10.0f);
             ui.add(std::move(wealth1Btn));
@@ -323,5 +334,5 @@ void MonsterSelectionScene::showErrorMessage(const std::string &msg)
     errorLabel->setText(msg);
 }
 
-std::vector<Monster *> MonsterSelectionScene::getMonsters(){return monsters;}
-std::string MonsterSelectionScene::getscenekey(){return scenekey;}
+std::vector<Monster *> MonsterSelectionScene::getMonsters() { return monsters; }
+std::string MonsterSelectionScene::getscenekey() { return scenekey; }
