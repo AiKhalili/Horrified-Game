@@ -59,28 +59,28 @@ void Hero::guide(vector<Villager *> villager, Location *destination)
     { // بررسی وجود اکشن
         throw GameException("No actions left!\n");
     }
-    if (!villager[0] || !destination)
+    if (villager.empty() || !villager[0] || !destination)
     { // بررسی معتبر بودن ورودی ها
         throw GameException("Invalid villager or destination!\n");
     }
-    if (villager.size() > 1)
+    if (villager.size() != 1)
     {
         throw GameException("You should choose one villager to guide!\n");
     }
 
     Location *villagerLocation = villager[0]->getCurrentLocation();
+    Location *heroLocation = location;
 
-    if (villagerLocation->isNeighbor(location) && destination == location)
+    if (villagerLocation->isNeighbor(heroLocation) && destination == heroLocation)
     { // بررسی مجاور بودن محلی نسبت به قهرمان
-        villager[0]->getCurrentLocation()->removeVillager(villager[0]);
+        villagerLocation->removeVillager(villager[0]);
         location->addVillager(villager[0]);
         useAction();
         cout << "The select villager move to the hero's place!\n";
     }
-
-    else if (villagerLocation == location && location->isNeighbor(destination))
+    else if (villagerLocation == heroLocation && heroLocation->isNeighbor(destination))
     { // بررسی هم مکان بودن محلی و قهرمان
-        villager[0]->getCurrentLocation()->removeVillager(villager[0]);
+        villagerLocation->removeVillager(villager[0]);
         destination->addVillager(villager[0]);
         useAction();
         cout << "The select villager move to the select place!\n";
