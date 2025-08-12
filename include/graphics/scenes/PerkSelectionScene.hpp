@@ -49,16 +49,23 @@ private:
     float timerToNextScene = 0.0f;
     const float waitDuration = 2.0f;
 
-     bool isReturningFromLocationSelection = false;
+    bool isReturningFromLocationSelection = false;
 
-     UILabel *errorLabel = nullptr;
+    UILabel *errorLabel = nullptr;
 
-    void loadPerkTextures();
+    void loadPerkTextures(size_t);
     void toggleSelection(PerkCard &perk);
     void createLabels();
     void createButtons();
     void creatErroreLabels();
     void createActionButtons();
+
+    void showDesMessage(PerkCard &perk);
+    void handleLocationSelectionRequest();
+
+    void recalcPerkRects(size_t);
+
+    void creatHelpLable(bool);
 
 public:
     void onEnter() override;
@@ -68,8 +75,6 @@ public:
     void setData(const std::vector<PerkCard> &Perks, const std::string &newkey);
     PerkCard &getSelectedPerks();
 
-    void showDesMessage(PerkCard &perk);
-    void handleLocationSelectionRequest();
     int getSelectedPerkIndex();
     void showErrorMessage(const std::string &msg);
 
