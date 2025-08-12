@@ -207,12 +207,11 @@ void VillagerSelectionScene::loadVillagerTextures()
 
 void VillagerSelectionScene::toggleSelection(Villager *villager)
 {
-
     if (scenekey == "GuidScene")
     {
-        // فقط یک انتخاب مجازه
         selected.clear();
         selected.push_back(villager);
+        return;
     }
 
     auto it = std::find(selected.begin(), selected.end(), villager);
