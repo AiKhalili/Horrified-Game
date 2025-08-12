@@ -32,7 +32,7 @@ void GuidScene::onEnter()
     if (!villselect.empty())
         villloc = villselect[0]->getCurrentLocation();
 
-    if (villloc == hero->getLocation())
+    if (villloc != hero->getLocation())
     {
         locselect = hero->getLocation();
     }
@@ -54,7 +54,7 @@ void GuidScene::onExit()
 
     villselect.clear();
     locselect = nullptr;
-    
+
     ui.clear();
 }
 
@@ -87,7 +87,7 @@ void GuidScene::createLabels()
     selectText->setFont(font);
     ui.add(std::move(selectText));
 
-    auto tempLabel = std::make_unique<UILabel>(Vector2{600, 800}, "", 30, 3.0f, WHITE);
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 800}, "", 30, 3.0f, WHITE, WHITE, true);
     tempLabel->setFont(errorFont);
 
     errorLabel = tempLabel.get();
@@ -152,7 +152,7 @@ void GuidScene::createButtons()
     locBtn->setOnClick([this]()
                        {
                            AudioManager::getInstance().playSoundEffect("click");
-                            if (locselect == nullptr) {
+                            if (villselect.empty()) {
                                 std::string msg = "First select a villager to move to!";
                                 showErrorMessage(msg);
                                 return;
@@ -160,9 +160,11 @@ void GuidScene::createButtons()
 
                             if (villloc != hero->getLocation()){
                                 showErrorMessage("A villager was moved from her location to the hero's location and there is no need to select a location");
+                                locselect =  hero->getLocation();
                                 return;
                                 }
 
+    
                             errorLabel->setText("");
 
 
