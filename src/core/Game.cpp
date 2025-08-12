@@ -165,7 +165,7 @@ void Game::updateHeroPhase()
     }
     if (hero->getActionsLeft() <= 0)
     {
-        currentState = GameState::StartMonsterPhase;
+        currentState = GameState::EndHeroPhase;
     }
 }
 
@@ -367,7 +367,7 @@ void Game::setupPerkCards()
     { // ساخت کارت‌ها طبق تعداد مشخص
         perkDeck.emplace_back(PerkType::VISIT_FROM_THE_DETECTIVE);
         perkDeck.emplace_back(PerkType::BREAK_OF_DAWN);
-        perkDeck.emplace_back(PerkType::REPEL);
+         perkDeck.emplace_back(PerkType::REPEL);
         perkDeck.emplace_back(PerkType::HURRY);
     }
 
@@ -614,41 +614,36 @@ void Game::usePerkCard(int index, std::vector<Location *> locs)
         }
         case PerkType::REPEL:
         {
-            if (locs.size() < 2)
+            if (locs.empty())
             {
-                cerr << "Not enough locations selected.\n";
+                cerr << "No locations selected.\n";
                 break;
             }
 
-            // هیولای اول
-            if (monsters.size() > 0 && monsters[0])
+            int locIndex = 0;
+            for (auto monster : monsters)
             {
-                Location *targetLoc1 = locs[0];
-                Location *oldLoc1 = monsters[0]->get_location();
+                if (!monster || monster->is_defeated())
+                    continue; // از هیولاهای مرده عبور کن
 
-                if (oldLoc1 && oldLoc1 != targetLoc1)
+                if (locIndex >= locs.size())
                 {
-                    oldLoc1->removeMonster(monsters[0]);
+                    cerr << "Not enough locations selected for all alive monsters.\n";
+                    break;
                 }
-                targetLoc1->addMonster(monsters[0]);
-            }
 
-            // هیولای دوم
-            if (monsters.size() > 1 && monsters[1])
-            {
-                Location *targetLoc2 = locs[1];
-                Location *oldLoc2 = monsters[1]->get_location();
+                Location *targetLoc = locs[locIndex++];
+                Location *oldLoc = monster->get_location();
 
-                if (oldLoc2 && oldLoc2 != targetLoc2)
+                if (oldLoc && oldLoc != targetLoc)
                 {
-                    oldLoc2->removeMonster(monsters[1]);
+                    oldLoc->removeMonster(monster);
                 }
-                targetLoc2->addMonster(monsters[1]);
+                targetLoc->addMonster(monster);
             }
 
             break;
         }
-
         case PerkType::HURRY:
         {
             if (locs.size() < 2)
