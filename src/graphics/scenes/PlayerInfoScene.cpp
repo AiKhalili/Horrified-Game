@@ -186,6 +186,7 @@ void PlayerInfoScene::createLabels()
     auto errorLabelUPtr = std::make_unique<UILabel>(
         Vector2{925, 800}, "", 35, 3.0f, errorText);
     errorLabelUPtr->setFont(font);
-    errorLabel = errorLabelUPtr.get();
+    //errorLabel = errorLabelUPtr.get();
     static std::unique_ptr<UILabel> staticErrorLabel = std::move(errorLabelUPtr);
+    errorLabel = staticErrorLabel.get();
 }
