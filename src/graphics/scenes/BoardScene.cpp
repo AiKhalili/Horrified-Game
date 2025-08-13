@@ -329,7 +329,7 @@ void BoardScene::drawMonsterGlow()
 
         for (const auto &loc : locations)
         {
-            if (loc.locatonName == monsterLocation)
+            if (loc.locatonName == monsterLocation && !monster->is_defeated())
             {
                 Color glowColor = {255, 50, 50, 20};
 
