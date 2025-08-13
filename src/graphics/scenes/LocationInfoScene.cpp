@@ -227,6 +227,11 @@ void LocationInfoScene::drawHeroAndMonster()
 
     for (int i = 0; i < monsterTextures.size() && i < 2; ++i)
     {
+        if (!monsters[i] || monsters[i]->is_defeated())
+        {
+            continue;
+        }
+        
         Texture2D &tex = monsterTextures[i];
         float scale = 200.0f / tex.width;
         float drawW = tex.width * scale;
