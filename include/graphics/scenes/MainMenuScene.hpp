@@ -9,7 +9,6 @@ class MainMenuScene : public Scene
 {
 private:
     Texture2D background;
-    Font titleFont;
     Font normalFont;
     UIManager ui;
     void startGame();
