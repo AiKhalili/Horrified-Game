@@ -10,16 +10,16 @@ class MonstersSummaryScene : public Scene
 {
 
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font Titlefont;
     Font Simplefont;
-    std::vector<Texture2D> monsterassets;
+    std::vector<Texture2D> monsterassets; // Load images related to Setup and Mat Munster
 
-    UILabel *errorLabel = nullptr;
+    UILabel *errorLabel = nullptr; // Label for showing error messages
 
-    void createLabels();
-    void creatButtons();
+    void createLabels(); // Creates labels
+    void creatButtons(); // Creates buttons
     void LoadMonsterAssetsTexturs();
 
 public:
@@ -27,6 +27,7 @@ public:
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
-    void showErrorMessage(const std::string &msg);
+    void showErrorMessage(const std::string &msg); // Show error message on screen.
+
 };
 #endif
