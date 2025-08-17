@@ -11,6 +11,8 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void MonsterSelectionScene::setDate(const std::vector<Monster *> &Monsters, const std::string &newkey)
@@ -22,11 +24,15 @@ void MonsterSelectionScene::setDate(const std::vector<Monster *> &Monsters, cons
         monsterNames.push_back(m->get_name());
     }
     scenekey = newkey;
+    if (firstDeserialize == false)
+    {
+        selectedMonster = nullptr;
+        clickedMonster = -1;
+    }
 }
 
 void MonsterSelectionScene::onEnter()
 {
-    clickedMonster = -1;
     background = TextureManager::getInstance().getOrLoadTexture("MonsterSelection", "assets/images/background/monster_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
 
@@ -292,7 +298,7 @@ void MonsterSelectionScene::createLabels()
             nameBtn->enableBackground(textcolor, 10.0f);
             ui.add(std::move(nameBtn));
 
-            std::string WealText = "Wealth(Evidences): " +
+            std::string WealText = "Wealth(Coffins): " +
                        std::to_string(4-(monsters[i]->getCounter())) +
                        '/' +
                        std::to_string(4);
@@ -336,3 +342,105 @@ void MonsterSelectionScene::showErrorMessage(const std::string &msg)
 
 std::vector<Monster *> MonsterSelectionScene::getMonsters() { return monsters; }
 std::string MonsterSelectionScene::getscenekey() { return scenekey; }
+
+void MonsterSelectionScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+
+    outFile << "SceneKey:MonsterSelectionScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "ReturnScene:" << scenekey << "\n";
+
+    if (selectedMonster)
+        outFile << "SelectedMonster:" << selectedMonster->get_name() << "\n";
+    else
+        outFile << "SelectedMonster:None\n";
+
+    outFile << "ClickedMonster:" << clickedMonsterName << "\n";
+
+    outFile.close();
+}
+
+void MonsterSelectionScene::deserialize(const std::string &filename)
+{
+    monsters = Game::getInstance().getMonsters();
+    monsterNames.clear();
+    for (auto m : monsters)
+    {
+        monsterNames.push_back(m->get_name());
+    }
+
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isMonsterSelectionScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isMonsterSelectionScene)
+        {
+            if (line == "SceneKey:MonsterSelectionScene")
+            {
+                isMonsterSelectionScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        auto pos = line.find(':');
+        if (pos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        if (key == "ReturnScene")
+        {
+            scenekey = value;
+        }
+        else if (key == "SelectedMonster" && value != "None")
+        {
+            selectedMonster = nullptr;
+            for (auto &m : Game::getInstance().getMonsters())
+            {
+                if (m->get_name() == value)
+                {
+                    selectedMonster = m;
+                    SceneDataHub::getInstance().setSelectedMonster(selectedMonster);
+                    break;
+                }
+            }
+        }
+        else if (key == "ClickedMonster")
+        {
+            clickedMonsterName = value;
+            clickedMonster = -1;
+            for (int i = 0; i < monsters.size(); i++)
+            {
+                if (monsters[i]->get_name() == clickedMonsterName)
+                {
+                    clickedMonster = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    firstDeserialize = false;
+    inFile.close();
+}
