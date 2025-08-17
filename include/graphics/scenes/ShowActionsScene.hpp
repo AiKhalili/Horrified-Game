@@ -10,12 +10,13 @@ class ShowActionsScene : public Scene
 {
 
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font font;
-    UILabel *errorLabel = nullptr;
-    void createLabels();
-    void createButtons();
+    UILabel *errorLabel = nullptr; // Labels to indicate various errors
+
+    void createLabels();  // Creating scene labels
+    void createButtons(); // Creatin scene buttons
 
 public:
     void onEnter() override;
@@ -23,16 +24,17 @@ public:
     void update(float deltaTime) override;
     void render() override;
 
-    void openMoveAction();
-    void openPickUpAction();
-    void openDefeatAction();
-    void openHelpAction();
-    void openSpecialAction();
-    void openGuideAction();
-    void openAdvanceAction();
-    void openUsePerkAction();
+    void openMoveAction();    // Handle move action
+    void openPickUpAction();  // Handle Pick Up action
+    void openDefeatAction();  // Handle Defeat action
+    void openHelpAction();    // Handle Help action
+    void openSpecialAction(); // Handle Special action
+    void openGuideAction();   // Handle Guid action
+    void openAdvanceAction(); // Handle Advance action
+    void openUsePerkAction(); // Handle Use Perk action
 
-    void showErrorMessage(const std::string &msg);
+    void showErrorMessage(const std::string &msg); // Control the display of various errors
+
 };
 
 #endif
