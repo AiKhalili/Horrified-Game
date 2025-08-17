@@ -21,11 +21,12 @@ SaveManager &SaveManager::getInstance()
     return instance;
 }
 
+std::vector<Item *> &SaveManager::getItemInter() { return ItemInter; }
+
 void SaveManager::saveGameToSlot(std::string newkey)
 {
     int slotNumber;
 
-    // اگر بازی از فایل لود شده روی همون فایل ذخیره کنیم
     if (Game::getInstance().getLoadedFromFile())
     {
         slotNumber = Game::getInstance().getCurrentSaveSlot();
@@ -39,6 +40,10 @@ void SaveManager::saveGameToSlot(std::string newkey)
         throw GameException("slotNumber can not be less than 1!\n");
 
     std::string filename = "save" + std::to_string(slotNumber) + ".txt";
+
+    std::ofstream outFile(filename, std::ios::out | std::ios::trunc); // قبلی پاک می‌شود
+    if (!outFile.is_open())
+        return;
 
     saveHeroesToFile(filename, Game::getInstance().getHeroes());
     saveCurrentHeroStateToFile(filename, Game::getInstance().getCurrentHeroIndex(),
@@ -58,7 +63,8 @@ void SaveManager::saveGameToSlot(std::string newkey)
     Game::getInstance().setCurrentSaveSlot(slotNumber);
 
     Game::getInstance().setLoadedFromFile(true);
-    saveSceneToFile(filename, newkey);
+
+    saveAllScenesToFile(filename, newkey);
 }
 
 void SaveManager::loadGameFromSlot(int slotNumber)
@@ -93,7 +99,10 @@ void SaveManager::loadGameFromSlot(int slotNumber)
     for (Item *item : items)
     {
         if (item->get_location())
+        {
             item->get_location()->addItem(item);
+            ItemInter.push_back(item);
+        }
     }
     std::vector<MonsterCard> cards = loadMonsterCardsFromFile(filename);
     Game::getInstance().setMonsterDeck(cards);
@@ -114,8 +123,7 @@ void SaveManager::loadGameFromSlot(int slotNumber)
     Game::getInstance().setSlot(slotNumber);
     Game::getInstance().setCurrentSaveSlot(slotNumber);
 
-    SaveManager::getInstance().loadSceneFromFile(filename);
-
+    loadAllScenesFromFile(filename);
 }
 
 void SaveManager::saveHeroesToFile(const std::string &filename, const std::vector<Hero *> &heroes)
@@ -128,7 +136,6 @@ void SaveManager::saveHeroesToFile(const std::string &filename, const std::vecto
     {
         outFile << hero->serialize() << "\n";
     }
-
     outFile.close();
 }
 
@@ -362,56 +369,6 @@ int SaveManager::loadTerrorLevel(const std::string &filename)
     return 0;
 }
 
-void SaveManager::saveCurrentTurn(const std::string &filename, int index)
-{
-    std::ofstream outFile(filename, std::ios::app);
-    outFile << "CurrentTurn|" << index << "\n";
-}
-
-int SaveManager::loadCurrentTurn(const std::string &filename)
-{
-    std::ifstream inFile(filename);
-    std::string line;
-    while (std::getline(inFile, line))
-    {
-        if (line.rfind("CurrentTurn|", 0) == 0)
-            return std::stoi(line.substr(12));
-    }
-    return 0;
-}
-
-void SaveManager::saveTimes(const std::string &filename, int t1, int t2)
-{
-    std::ofstream outFile(filename, std::ios::app);
-    if (!outFile.is_open())
-        throw std::runtime_error("Cannot open file to save times!\n");
-
-    outFile << "Times|" << t1 << "," << t2 << "\n";
-    outFile.close();
-}
-
-void SaveManager::loadTimes(const std::string &filename, int &t1, int &t2)
-{
-    std::ifstream inFile(filename);
-    if (!inFile.is_open())
-        throw std::runtime_error("Cannot open file to load times!\n");
-
-    std::string line;
-    while (std::getline(inFile, line))
-    {
-        if (line.rfind("Times|", 0) == 0)
-        {
-            std::string rest = line.substr(6);
-            size_t commaPos = rest.find(',');
-            t1 = std::stoi(rest.substr(0, commaPos));
-            t2 = std::stoi(rest.substr(commaPos + 1));
-            return;
-        }
-    }
-
-    t1 = t2 = 0;
-}
-
 void SaveManager::saveFrenzy(const std::string &filename, const std::string &monsterName)
 {
     std::ofstream outFile(filename, std::ios::app); // append
@@ -433,7 +390,7 @@ Monster *SaveManager::loadFrenzy(const std::string &filename, const std::vector<
     {
         if (line.rfind("Frenzy|", 0) == 0)
         {
-            std::string name = line.substr(7); // بعد از "Frenzy|"
+            std::string name = line.substr(7);
             for (Monster *m : monsters)
             {
                 if (m && m->get_name() == name)
@@ -443,7 +400,7 @@ Monster *SaveManager::loadFrenzy(const std::string &filename, const std::vector<
         }
     }
 
-    return nullptr; // اگر پیدا نشد
+    return nullptr; 
 }
 
 void SaveManager::savePerkDeckToFile(const std::string &filename, const std::vector<PerkCard> &deck)
@@ -469,7 +426,6 @@ std::vector<PerkCard> SaveManager::loadPerkDeckFromFile(const std::string &filen
 
     while (std::getline(inFile, line))
     {
-        // فقط اگر خط با PerkCard| شروع شد، دی‌سریالایز کن
         if (line.rfind("PerkCard|", 0) == 0)
         {
             cards.push_back(PerkCard::deserialize(line));
@@ -540,7 +496,6 @@ std::string SaveManager::readSaveTimestamp(const std::string &filename)
         }
     }
 
-    // اگر تاریخ پیدا نشد، رشته خالی برگردون یا خطا بده
     return "";
 }
 
@@ -564,183 +519,126 @@ std::vector<std::pair<int, std::string>> SaveManager::getAllSaveSlotsWithTimesta
     return result;
 }
 
-void SaveManager::saveSceneToFile(std::string &filename, std::string scenekey)
+static const std::vector<std::string> allSceneKeys = {
+
+    SceneKeys::PLAYER_SUMMARY_SCENE,
+    SceneKeys::MONSTERS_SUMMARY_SCENE,
+    SceneKeys::BOARD_SCENE,
+    SceneKeys::CHEST_INFO_SCENE,
+    SceneKeys::PERK_CARD_SCENE,
+    SceneKeys::LOCATION_INFO_SCENE,
+    SceneKeys::SHOW_ACTIONS_SCENE,
+    SceneKeys::ITEM_SELECTION_SCENE,
+    SceneKeys::MONSTER_SELECTION_SCENE,
+    SceneKeys::VILLAGER_SELECTION_SCENE,
+    SceneKeys::LOCATION_SELECTION_SCENE,
+    SceneKeys::PERK_SELECTION_SCENE,
+    SceneKeys::MOVE_SCENE,
+    SceneKeys::PICK_UP_SCENE,
+    SceneKeys::GUID_SCENE,
+    SceneKeys::ADVANCE_SCENE,
+    SceneKeys::DEFEAT_SCENE,
+    SceneKeys::SPECIAL_SCENE,
+    SceneKeys::HELP_SCENE,
+    SceneKeys::RESCUE_RESULT_SCENE,
+    SceneKeys::END_GAME_SCENE,
+};
+
+void SaveManager::saveAllScenesToFile(const std::string &filename, const std::string &currentSceneKey)
 {
-    std::ofstream outFile(filename, std::ios::app); // append
+    std::ofstream outFile(filename, std::ios::app);
     if (!outFile.is_open())
-        throw GameException("Cannot open file to save current scene state!");
+        return;
 
-    outFile << "Scene|" << scenekey << "\n";
+    outFile << "CurrentScene:" << currentSceneKey << "\n";
 
-    if (scenekey == "ItemSelectionScene")
+    std::vector<std::string> scenesToSave;
+
+    if (currentSceneKey == SceneKeys::PLAYER_SUMMARY_SCENE)
     {
-        auto &ItemScene = SceneManager::getInstance().getScene<ItemSelectionScene>(SceneKeys::ITEM_SELECTION_SCENE);
-        outFile << "SceneData|ItemSelectionScene\n";
-        outFile << "ReturnScene|" << ItemScene.getscenekey() << "\n";
-        for (Item *item : ItemScene.getItems())
-            outFile << item->serialize() << "\n";
+        scenesToSave.push_back(SceneKeys::PLAYER_SUMMARY_SCENE);
     }
-    else if (scenekey == "VillagerSelectionScene")
+    else if (currentSceneKey == SceneKeys::MONSTERS_SUMMARY_SCENE)
     {
-        auto &VillScene = SceneManager::getInstance().getScene<VillagerSelectionScene>(SceneKeys::VILLAGER_SELECTION_SCENE);
-        outFile << "SceneData|VillagerSelectionScene\n";
-        outFile << "ReturnScene|" << VillScene.getscenekey() << "\n";
-        for (Villager *vill : VillScene.getVillagers())
-            outFile << "Villager|" << vill->serialize() << "\n";
+        scenesToSave.push_back(SceneKeys::PLAYER_SUMMARY_SCENE);
+        scenesToSave.push_back(SceneKeys::MONSTERS_SUMMARY_SCENE);
     }
-    else if (scenekey == "MonsterSelectionScene")
+    else
     {
-        auto &monScene = SceneManager::getInstance().getScene<MonsterSelectionScene>(SceneKeys::MONSTER_SELECTION_SCENE);
-        outFile << "SceneData|MonsterSelectionScene\n";
-        outFile << "ReturnScene|" << monScene.getscenekey() << "\n";
-        for (Monster *mon : monScene.getMonsters())
-            outFile << "Monster|" << mon->serialize() << "\n";
-    }
-    else if (scenekey == "PerkSelectionScene")
-    {
-        auto &perkScene = SceneManager::getInstance().getScene<PerkSelectionScene>(SceneKeys::PERK_SELECTION_SCENE);
-        outFile << "SceneData|PerkSelectionScene\n";
-        outFile << "ReturnScene|" << perkScene.getscenekey() << "\n";
-        for (PerkCard perk : perkScene.getperks())
-            outFile << perk.serialize() << "\n";
-    }
-    else if (scenekey == "PlayerSummaryScene")
-    {
-        auto &sumScene = SceneManager::getInstance().getScene<PlayerSummaryScene>(SceneKeys::PLAYER_SUMMARY_SCENE);
-        outFile << "SceneData|PlayerSummaryScene\n";
-        for (std::string str : sumScene.getData())
-            outFile << "Data|" << str << "\n";
-    }
-    else if (scenekey == "LocationSelectionScene")
-    {
-        auto &locScene = SceneManager::getInstance().getScene<LocationSelectionScene>(SceneKeys::LOCATION_SELECTION_SCENE);
-        outFile << "SceneData|LocationSelectionScene\n";
-        outFile << "ReturnScene|" << locScene.getscenekey() << "\n";
-        for (Location *loc : locScene.getSentlocations())
-            outFile << loc->serialize() << "\n";
+        scenesToSave = allSceneKeys;
     }
 
-    outFile << "EndScene\n";
+    scenesToSave.erase(std::remove(scenesToSave.begin(), scenesToSave.end(), currentSceneKey), scenesToSave.end());
+
+    for (const auto &key : scenesToSave)
+    {
+        Scene *scene = &SceneManager::getInstance().getScene<Scene>(key);
+        if (scene)
+            scene->serialize(filename);
+    }
+
+    Scene *currentScene = &SceneManager::getInstance().getScene<Scene>(currentSceneKey);
+    if (currentScene)
+        currentScene->serialize(filename);
+
+    outFile.close();
 }
 
-void SaveManager::loadSceneFromFile(const std::string &filename)
+void SaveManager::loadAllScenesFromFile(const std::string &filename)
 {
     std::ifstream inFile(filename);
     if (!inFile.is_open())
-        throw GameException("Cannot open file to load scene!");
+        return;
 
-    std::string line, scenekey, subSceneKey;
+    std::string line;
+    std::string currentSceneKey;
+    std::vector<std::string> scenesToLoad;
 
-    // Scene key
-    while (std::getline(inFile, line)) {
-        if (line.rfind("Scene|", 0) == 0) {
-            scenekey = line.substr(6);
+    while (std::getline(inFile, line))
+    {
+        if (line.find("CurrentScene:") == 0)
+        {
+            currentSceneKey = line.substr(std::string("CurrentScene:").length());
             break;
         }
     }
 
-    if (scenekey.empty())
-        throw GameException("No scene key found in save file!");
+    if (currentSceneKey == SceneKeys::PLAYER_SUMMARY_SCENE)
+    {
+        scenesToLoad.push_back(SceneKeys::PLAYER_SUMMARY_SCENE);
+    }
+    else if (currentSceneKey == SceneKeys::MONSTERS_SUMMARY_SCENE)
+    {
+        scenesToLoad.push_back(SceneKeys::PLAYER_SUMMARY_SCENE);
+        scenesToLoad.push_back(SceneKeys::MONSTERS_SUMMARY_SCENE);
+    }
+    else
+    {
+        scenesToLoad = allSceneKeys;
+    }
 
-    //ReturnScene
-    while (std::getline(inFile, line)) {
-        if (line.rfind("SceneData|", 0) == 0) {
-            continue; // نادیده بگیر
+    inFile.clear();
+    inFile.seekg(0);
+
+    for (const auto &key : scenesToLoad)
+    {
+        if (key == currentSceneKey)
+            continue;
+        Scene *scene = &SceneManager::getInstance().getScene<Scene>(key);
+        if (scene)
+        {
+            scene->deserialize(filename);
         }
-        else if (line.rfind("ReturnScene|", 0) == 0) {
-            subSceneKey = line.substr(12);
-            continue; 
-        }
-        else {
-            break; // Data|
-        }
     }
 
-    //بازیابی دیتا برای هر صحنه
-    if (scenekey == "ItemSelectionScene") {
-        auto &scene = SceneManager::getInstance().getScene<ItemSelectionScene>(SceneKeys::ITEM_SELECTION_SCENE);
-        std::vector<Item *> items;
+    if (!currentSceneKey.empty())
+    {
+        Scene *currentScene = &SceneManager::getInstance().getScene<Scene>(currentSceneKey);
+        if (currentScene)
+            currentScene->deserialize(filename);
 
-        do {
-            if (line == "EndScene") break;
-            if (line.rfind("Item|", 0) == 0) {
-                Item *item = Item::deserialize(line.substr(5));
-                if (item) items.push_back(item);
-            }
-        } while (std::getline(inFile, line));
-
-        scene.setData(items, subSceneKey);
-    }
-    else if (scenekey == "VillagerSelectionScene") {
-        auto &scene = SceneManager::getInstance().getScene<VillagerSelectionScene>(SceneKeys::VILLAGER_SELECTION_SCENE);
-        std::vector<Villager *> villagers;
-
-        do {
-            if (line == "EndScene") break;
-            if (line.rfind("Villager|", 0) == 0) {
-                Villager *v = Villager::deserialize(line.substr(9));
-                if (v) villagers.push_back(v);
-            }
-        } while (std::getline(inFile, line));
-
-        scene.setData(villagers, subSceneKey);
-    }
-    else if (scenekey == "MonsterSelectionScene") {
-        auto &scene = SceneManager::getInstance().getScene<MonsterSelectionScene>(SceneKeys::MONSTER_SELECTION_SCENE);
-        std::vector<Monster *> monsters;
-
-        do {
-            if (line == "EndScene") break;
-            if (line.rfind("Monster|", 0) == 0) {
-                Monster *m = Monster::deserialize(line.substr(8));
-                if (m) monsters.push_back(m);
-            }
-        } while (std::getline(inFile, line));
-
-        scene.setDate(monsters, subSceneKey);
-    }
-    else if (scenekey == "PerkSelectionScene") {
-        auto &scene = SceneManager::getInstance().getScene<PerkSelectionScene>(SceneKeys::PERK_SELECTION_SCENE);
-        std::vector<PerkCard> perks;
-
-        do {
-            if (line == "EndScene") break;
-            if (line.rfind("PerkCard|", 0) == 0) {
-                perks.push_back(PerkCard::deserialize(line.substr(5)));
-            }
-        } while (std::getline(inFile, line));
-
-        scene.setData(perks, subSceneKey);
-    }
-    else if (scenekey == "PlayerSummaryScene") {
-        auto &scene = SceneManager::getInstance().getScene<PlayerSummaryScene>(SceneKeys::PLAYER_SUMMARY_SCENE);
-        std::vector<std::string> summary;
-
-        do {
-            if (line == "EndScene") break;
-            if (line.rfind("Data|", 0) == 0)
-                summary.push_back(line.substr(5));
-        } while (std::getline(inFile, line));
-
-        if (summary.size() != 4)
-            throw GameException("Corrupted save file: incomplete summary data");
-
-        scene.setData(summary[0], summary[1], summary[2], summary[3]);
-    }
-    else if (scenekey == "LocationSelectionScene") {
-        auto &scene = SceneManager::getInstance().getScene<LocationSelectionScene>(SceneKeys::LOCATION_SELECTION_SCENE);
-        std::vector<Location *> locations;
-
-        do {
-            if (line == "EndScene") break;
-            if (line.empty()) continue;
-
-            Location *loc = Location::deserialize(line);
-            if (loc) locations.push_back(loc);
-        } while (std::getline(inFile, line));
-
-        scene.setData(locations, subSceneKey);
+        SceneManager::getInstance().goTo(currentSceneKey);
     }
 
-    SceneManager::getInstance().goTo(scenekey);
+    inFile.close();
 }
