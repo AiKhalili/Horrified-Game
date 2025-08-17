@@ -11,6 +11,8 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void GuidScene::onEnter()
@@ -27,6 +29,7 @@ void GuidScene::onEnter()
     createLabels();
     createButtons();
 
+    if(villselect.empty())
     villselect = SceneDataHub::getInstance().getSelectedVillagers();
 
     if (!villselect.empty())
@@ -133,7 +136,8 @@ void GuidScene::createButtons()
                             AudioManager::getInstance().playSoundEffect("click");
                             SaveManager::getInstance().saveGameToSlot("GuidScene"); 
                             const std::string msg = "The game was successfully saved!";
-                            showErrorMessage(msg); });
+                            showErrorMessage(msg); 
+                            SceneDataHub::getInstance().reset(); });
     ui.add(std::move(saveBtn));
 
     auto boardBtn = std::make_unique<UIButton>(Rectangle{leftX, topY + 2 * (gapY + buttonHeight), buttonWidth, buttonHeight}, "Board Scene", fontsize,
@@ -208,6 +212,16 @@ void GuidScene::createButtons()
             showErrorMessage("Please select a villager and a location!");
             return;
         }
+         if (locselect == nullptr)
+        {
+            showErrorMessage("Please select a location!");
+            return;
+        }
+         if (villselect.empty())
+        {
+            showErrorMessage("Please select a villager!");
+            return;
+        }
 
         Game::getInstance().handleGuide(villselect, locselect);
 
@@ -228,4 +242,121 @@ void GuidScene::showErrorMessage(const std::string &msg)
         return;
 
     errorLabel->setText(msg);
+}
+
+void GuidScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+        
+    villselect = SceneDataHub::getInstance().getSelectedVillagers();
+    
+    outFile << "SceneKey:GuidScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "SelectedVillagers:";
+    for (size_t i = 0; i < villselect.size(); ++i)
+    {
+        outFile << villselect[i]->getName();
+        if (i != villselect.size() - 1)
+            outFile << ",";
+    }
+    outFile << "\n";
+
+    outFile << "SelectedLocation:";
+    if (locselect)
+        outFile << locselect->get_name();
+    else
+        outFile << "None";
+    outFile << "\n";
+
+    outFile << "EndScene\n";
+
+    outFile.close();
+}
+
+void GuidScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool inSceneData = false;
+    bool isGuidScene = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (line == "SceneKey:GuidScene")
+        {
+            isGuidScene = true;
+            continue;
+        }
+
+        if (!isGuidScene)
+            continue; 
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        if (line == "EndScene")
+            break;
+
+        std::stringstream ss(line);
+        std::string key;
+        if (std::getline(ss, key, ':'))
+        {
+            std::string value;
+            std::getline(ss, value);
+
+            if (key == "SelectedVillagers")
+            {
+                villselect.clear();
+                std::stringstream vs(value);
+                std::string villName;
+                while (std::getline(vs, villName, ','))
+                {
+                    for (auto *v : hero->getLocation()->getNearByVillagers())
+                    {
+                        if (v->getName() == villName)
+                        {
+                            villselect.push_back(v);
+                            break;
+                        }
+                    }
+                }
+                SceneDataHub::getInstance().setSelectedVillagers(villselect);
+            }
+            else if (key == "SelectedLocation")
+            {
+                if (value != "None")
+                {
+                    locselect = nullptr;
+                    for (auto loc : Map::get_instanse()->getAllLocations())
+                    {
+                        if (loc->get_name() == value)
+                        {
+                            locselect = loc;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    locselect = nullptr;
+                }
+                SceneDataHub::getInstance().setSelectedLocation(locselect);
+            }
+        }
+    }
+    inFile.close();
 }
