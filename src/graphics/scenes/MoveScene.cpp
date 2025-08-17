@@ -11,6 +11,8 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void MoveScene::onEnter()
@@ -28,8 +30,10 @@ void MoveScene::onEnter()
     createLabels();
     createButtons();
 
-    locselect = SceneDataHub::getInstance().getSelectedLocation();
-    villselect = SceneDataHub::getInstance().getSelectedVillagers();
+    if (!locselect)
+        locselect = SceneDataHub::getInstance().getSelectedLocation();
+    if (villselect.empty())
+        villselect = SceneDataHub::getInstance().getSelectedVillagers();
 
     if (errorLabel)
     {
@@ -130,7 +134,8 @@ void MoveScene::createButtons()
                             AudioManager::getInstance().playSoundEffect("click");
                             SaveManager::getInstance().saveGameToSlot("MoveScene"); 
                             const std::string msg = "The game was successfully saved!";
-                            showErrorMessage(msg); });
+                            showErrorMessage(msg); 
+                            SceneDataHub::getInstance().reset(); });
     ui.add(std::move(saveBtn));
 
     auto boardBtn = std::make_unique<UIButton>(Rectangle{leftX, topY + 2 * (gapY + buttonHeight), buttonWidth, buttonHeight}, "Board Scene", fontsize,
@@ -206,7 +211,130 @@ void MoveScene::createButtons()
 void MoveScene::showErrorMessage(const std::string &msg)
 {
     if (!errorLabel)
-        return; 
+        return;
 
     errorLabel->setText(msg);
+}
+
+void MoveScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:MoveScene\n";
+    outFile << "SceneData:\n";
+
+    locselect = SceneDataHub::getInstance().getSelectedLocation();
+    villselect = SceneDataHub::getInstance().getSelectedVillagers();
+
+    if (locselect)
+        outFile << "SelectedLocation:" << locselect->get_name() << "\n";
+    else
+        outFile << "SelectedLocation:None\n";
+
+    outFile << "SelectedVillagers:";
+
+    if (!villselect.empty())
+    {
+        for (size_t i = 0; i < villselect.size(); ++i)
+        {
+            if (villselect[i])
+                outFile << villselect[i]->getName();
+            else
+                outFile << "None";
+
+            if (i != villselect.size() - 1)
+                outFile << ",";
+        }
+    }
+    else
+    {
+        outFile << "None";
+    }
+    outFile << "\n";
+
+    outFile.close();
+}
+
+void MoveScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    location = Game::getInstance().getCurrentHero()->getLocation();
+
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isMoveScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isMoveScene)
+        {
+            if (line == "SceneKey:MoveScene")
+            {
+                isMoveScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        auto pos = line.find(':');
+        if (pos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        if (key == "SelectedLocation")
+        {
+            if (value != "None")
+            {
+                for (auto *loc : hero->getLocation()->get_neighbors())
+                {
+                    if (loc->get_name() == value)
+                    {
+                        locselect = loc;
+                        SceneDataHub::getInstance().setSelectedLocation(loc);
+                        break;
+                    }
+                }
+            }
+        }
+        else if (key == "SelectedVillagers")
+        {
+            villselect.clear();
+            if (value != "None")
+            {
+                std::stringstream villSS(value);
+                std::string villName;
+                while (std::getline(villSS, villName, ','))
+                {
+                    for (auto *vill : Map::get_instanse()->getAllVillagers())
+                    {
+                        if (vill->getName() == villName)
+                        {
+                            villselect.push_back(vill);
+                            break;
+                        }
+                    }
+                }
+
+                SceneDataHub::getInstance().setSelectedVillagers(villselect);
+            }
+        }
+    }
+
+    inFile.close();
 }
