@@ -11,16 +11,17 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void ItemSelectionScene::setData(const std::vector<Item *> &Items, const std::string &newkey)
 {
     items = Items;
     scenekey = newkey;
-    if (!items.empty())
+    if (firstDeserialize == false)
     {
-        hero = Game::getInstance().getCurrentHero();
-        location = Items[0]->get_location();
+        selected.clear();
     }
 }
 
@@ -30,6 +31,12 @@ void ItemSelectionScene::onEnter()
         "ItemSelection", "assets/images/background/item_selection.png");
     font = LoadFont("assets/fonts/simple.ttf");
     SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+
+    if (!items.empty())
+    {
+        hero = Game::getInstance().getCurrentHero();
+        location = items[0]->get_location();
+    }
 
     createLabels();
     createButtons();
@@ -54,10 +61,6 @@ void ItemSelectionScene::onEnter()
             }
         };
         return colorOrder(a->get_color()) < colorOrder(b->get_color()); });
-
-    selected.clear();
-    itemTextures.clear();
-    itemRects.clear();
 
     loadItemTextures();
 
@@ -84,7 +87,6 @@ void ItemSelectionScene::onEnter()
             itemSize};
         itemRects.push_back(rect);
     }
-
 }
 
 void ItemSelectionScene::onExit()
@@ -314,8 +316,118 @@ void ItemSelectionScene::createButtons()
         SceneManager::getInstance().goTo(scenekey); });
 
     ui.add(std::move(backBtn));
-
 }
 
-std::vector<Item *> ItemSelectionScene::getItems(){return items;}
-std::string ItemSelectionScene::getscenekey(){return scenekey;}
+std::vector<Item *> ItemSelectionScene::getItems() { return items; }
+std::string ItemSelectionScene::getscenekey() { return scenekey; }
+
+void ItemSelectionScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:ItemSelectionScene\n";
+    outFile << "ReturnKey:" << scenekey << "\n";
+
+    outFile << "Items:";
+    for (size_t i = 0; i < items.size(); ++i)
+    {
+        outFile << items[i]->get_name();
+        if (i != items.size() - 1)
+            outFile << ",";
+    }
+    outFile << "\n";
+
+    outFile << "Selected:";
+    for (size_t i = 0; i < selected.size(); ++i)
+    {
+        outFile << selected[i]->get_name();
+        if (i != selected.size() - 1)
+            outFile << ",";
+    }
+    outFile << "\n";
+
+    outFile.close();
+}
+
+void ItemSelectionScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    for (auto *i : hero->getItems())
+    {
+        SaveManager::getInstance().getItemInter().push_back(i);
+    }
+
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isItemSelectionScene = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isItemSelectionScene)
+        {
+            if (line == "SceneKey:ItemSelectionScene")
+            {
+                isItemSelectionScene = true;
+            }
+            continue;
+        }
+
+        auto delimiterPos = line.find(':');
+        if (delimiterPos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, delimiterPos);
+        std::string value = line.substr(delimiterPos + 1);
+
+        if (key == "ReturnKey")
+        {
+            scenekey = value;
+        }
+        else if (key == "Items")
+        {
+            items.clear();
+            std::stringstream ss(value);
+            std::string itemName;
+            while (std::getline(ss, itemName, ','))
+            {
+                for (auto item : SaveManager::getInstance().getItemInter())
+                {
+                    if (itemName == item->get_name() &&
+                        std::find(items.begin(), items.end(), item) == items.end())
+                    {
+                        items.push_back(item);
+                        break;
+                    }
+                }
+            }
+        }
+        else if (key == "Selected")
+        {
+            selected.clear();
+            std::stringstream ss(value);
+            std::string itemName;
+            while (std::getline(ss, itemName, ','))
+            {
+                for (auto item : items)
+                {
+                    if (itemName == item->get_name() &&
+                        std::find(selected.begin(), selected.end(), item) == selected.end())
+                    {
+                        selected.push_back(item);
+                        break;
+                    }
+                }
+            }
+
+            SceneDataHub::getInstance().setSelectedItems(selected);
+        }
+    }
+
+    firstDeserialize = false;
+    inFile.close();
+}
