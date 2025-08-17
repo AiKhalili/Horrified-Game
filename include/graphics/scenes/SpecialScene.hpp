@@ -14,21 +14,20 @@
 class SpecialScene : public Scene
 {
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font font;
     Font errorFont;
 
-    void createLabels();
-    void createButtons();
+    void createLabels();  // Creating scene labels
+    void createButtons(); // Creatin scene buttons
 
-    Hero *hero;
+    Hero *hero; // Active hero during the game
 
-    Location *locselect ;
-    std::vector<Item *>itemselect ;
+    Location *locselect;            // The chosen location
+    std::vector<Item *> itemselect; // The chosen items
 
-    UILabel* errorLabel = nullptr;
-
+    UILabel *errorLabel = nullptr; // Labels to indicate various errors
 
 public:
     void onEnter() override;
@@ -36,6 +35,9 @@ public:
     void update(float deltaTime) override;
     void render() override;
 
-    void showErrorMessage(const std::string &msg);
+    void showErrorMessage(const std::string &msg); // Control the display of various errors
+
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
 };
 #endif
