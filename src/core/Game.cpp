@@ -367,7 +367,7 @@ void Game::setupPerkCards()
     { // ساخت کارت‌ها طبق تعداد مشخص
         perkDeck.emplace_back(PerkType::VISIT_FROM_THE_DETECTIVE);
         perkDeck.emplace_back(PerkType::BREAK_OF_DAWN);
-         perkDeck.emplace_back(PerkType::REPEL);
+        perkDeck.emplace_back(PerkType::REPEL);
         perkDeck.emplace_back(PerkType::HURRY);
     }
 
@@ -1556,26 +1556,6 @@ int Game::getCurrentSaveSlot() const { return currentSaveSlot; }
 void Game::setLoadedFromFile(bool b) { isLoadedFromFile = b; }
 bool Game::getLoadedFromFile() const { return isLoadedFromFile; }
 
-void Game::handleGameOver()
-{
-    std::cout << "\n--- GAME OVER ---\n";
-
-    if (getLoadedFromFile() && currentSaveSlot > 0)
-    {
-        std::string filename = "save" + std::to_string(currentSaveSlot) + ".txt";
-        if (std::remove(filename.c_str()) == 0)
-        {
-            std::cout << "Save file deleted: " << filename << "\n";
-        }
-        else
-        {
-            std::cerr << "Error deleting save file: " << filename << "\n";
-        }
-    }
-
-    exit(0);
-}
-
 void Game::handleMove(Location *loc, std::vector<Villager *> vills)
 {
     getCurrentHero()->move(loc, vills);
@@ -1634,17 +1614,6 @@ vector<Hero *> Game::getAllHeroes() const
     return heroes;
 }
 
-void Game::prepareForSaving()
-{
-    if (getCurrentSaveSlot() != 0)
-        return; // اگه قبلاً اسلات اختصاص داده شده، دیگه کاری نکن
-
-    int newSlot = findNextFreeSlot();
-    setSlot(newSlot);
-    setCurrentSaveSlot(newSlot);
-    setLoadedFromFile(false); // چون بازی جدید بوده، لود نشده
-}
-
 bool Game::shouldShowSpecialAcion()
 {
     Hero *hero = getCurrentHero();
@@ -1654,3 +1623,6 @@ bool Game::shouldShowSpecialAcion()
     }
     return false;
 }
+
+void Game::setLastRescuedVillager(Villager *vill) { rescuedVillager = vill; }
+void Game::setLastRewardedPerkCard(PerkCard perk) { rewardedPerkCard = perk; }
