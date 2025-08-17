@@ -13,6 +13,8 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void AdvanceScene::onEnter()
@@ -251,9 +253,9 @@ void AdvanceScene::createButtons()
 
     try
     {
-        if (itemselect.empty() || monselect == nullptr)
+         if (itemselect.empty() || monselect == nullptr)
         {
-            showErrorMessage("You cannot advance if no items are selected or no monster is selected.");
+            showErrorMessage("You cannot defeat if no items are selected and no monster is selected.");
             return;
         }
 
@@ -268,4 +270,124 @@ void AdvanceScene::createButtons()
         showErrorMessage(ex.what());
     } });
     ui.add(std::move(pickBtn));
+}
+
+void AdvanceScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    itemselect = SceneDataHub::getInstance().getSelectedItems();
+    monselect = SceneDataHub::getInstance().getSelectedMonster();
+
+    outFile << "SceneKey:AdvanceScene\n";
+    outFile << "SceneData:\n";
+
+    if (monselect)
+        outFile << "SelectedMonster:" << monselect->get_name() << "\n";
+    else
+        outFile << "SelectedMonster:None\n";
+
+    outFile << "SelectedItems:";
+    bool first = true;
+    for (auto it : itemselect)
+    {
+        if (it)
+        {
+            if (!first)
+                outFile << ",";
+            outFile << it->get_name();
+            first = false;
+        }
+    }
+    outFile << "\n";
+
+    outFile.close();
+}
+
+void AdvanceScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool inDefeatScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (line == "SceneKey:AdvanceScene")
+        {
+            inDefeatScene = true;
+            continue;
+        }
+
+        if (inDefeatScene && line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (inDefeatScene && inSceneData)
+        {
+            if (line.rfind("SceneKey:", 0) == 0)
+                break;
+
+            std::stringstream ss(line);
+            std::string key;
+            if (std::getline(ss, key, ':'))
+            {
+                std::string value;
+                std::getline(ss, value);
+
+                value.erase(0, value.find_first_not_of(" \t"));
+                value.erase(value.find_last_not_of(" \t") + 1);
+
+                if (key == "SelectedMonster")
+                {
+                    monselect = nullptr;
+                    if (value != "None")
+                    {
+                        auto allMonsters = Game::getInstance().getMonsters();
+                        for (auto &m : allMonsters)
+                        {
+                            if (m && m->get_name() == value)
+                            {
+                                monselect = m;
+                                break;
+                            }
+                        }
+                        SceneDataHub::getInstance().setSelectedMonster(monselect);
+                    }
+                }
+                else if (key == "SelectedItems")
+                {
+                    itemselect.clear();
+                    if (!hero)
+                        continue;
+                    std::stringstream itemStream(value);
+                    std::string itemName;
+                    while (std::getline(itemStream, itemName, ','))
+                    {
+                        itemName.erase(0, itemName.find_first_not_of(" \t"));
+                        itemName.erase(itemName.find_last_not_of(" \t") + 1);
+                        for (auto &it : hero->getItems())
+                        {
+                            if (it && it->get_name() == itemName)
+                            {
+                                itemselect.push_back(it);
+                                break;
+                            }
+                        }
+                    }
+                    SceneDataHub::getInstance().setSelectedItems(itemselect);
+                }
+            }
+        }
+    }
+
+    inFile.close();
 }
