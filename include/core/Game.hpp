@@ -236,9 +236,10 @@ public:
     void setSkipNextMonsterPhase(bool);
     void setFrenzyMonster(Monster *);
 
-    void handleGameOver();
-    void prepareForSaving();
     bool shouldShowSpecialAcion();
+
+    void setLastRescuedVillager(Villager *);
+    void setLastRewardedPerkCard(PerkCard);
 };
 
 #endif
