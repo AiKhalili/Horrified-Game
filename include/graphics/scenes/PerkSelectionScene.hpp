@@ -13,72 +13,73 @@ class PerkSelectionScene : public Scene
 {
 
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font font;
+    std::string scenekey; // Key of the previous scene to return to
 
-    std::string scenekey;
+    std::vector<PerkCard> perks;  // List of available perk cards
+    PerkCard selected;            // The perk card finally selected by player
+    PerkCard currentSelectedPerk; // Currently hovered/selected perk
+    Hero *hero = nullptr;         // Active hero during the game
+    Location *location = nullptr; // related location
 
-    std::vector<PerkCard> perks;
-    PerkCard selected;
-    PerkCard currentSelectedPerk;
-    Hero *hero = nullptr;
-    Location *location = nullptr;
+    UILabel *desLabel = nullptr;   // Label for displaying perk description
+    UILabel *errorLabel = nullptr; // Label to show error messages
 
-    std::vector<Texture2D> perkTextures;
-    std::vector<Rectangle> perkRects;
+    std::vector<Texture2D> perkTextures; // Textures for perk cards
+    std::vector<Rectangle> perkRects;    // Positions and sizes of perk cards on screen
 
-    Rectangle confirmButtonRect;
-    bool confirmButtonFocused = false;
-    bool hasSelected = false;
-    bool hasCurrentSelected = false;
+    bool hasSelected = false;        // Has a perk been selected
+    bool hasCurrentSelected = false; // Has a current perk been hovered/selected
 
-    UILabel *desLabel = nullptr;
-    bool needLocationSelection = false;
-    int requiredLocationCount = 0; // Visit = 1 ، Reple/Hurry = 2
-    int currentLocationSelectionCount = 0;
-    std::vector<Location *> selectedLocations;
+    bool needLocationSelection = false;        // Does this perk require location selection
+    int requiredLocationCount = 0;             // Number of locations to select (Visit=1, Repel/Hurry=2)
+    int currentLocationSelectionCount = 0;     // How many locations already selected
+    std::vector<Location *> selectedLocations; // Locations selected for this perk
 
-    int hoveredPerkIndex = -1;
+    int hoveredPerkIndex = -1; // Index of perk currently under mouse
 
-    PerkCard pendingSelectedPerk;
-    bool hasPendingSelected = false;
+    PerkCard pendingSelectedPerk;    // Card pending for final selection
+    bool hasPendingSelected = false; // Is there a pending card
 
-    bool readyToGoNextScene = false;
-    bool isWaitingToGoNextScene = false;
-    float timerToNextScene = 0.0f;
-    const float waitDuration = 2.0f;
+    bool readyToGoNextScene = false;     // Flag to indicate ready to transition
+    bool isWaitingToGoNextScene = false; // Waiting for timer before transition
+    float timerToNextScene = 0.0f;       // Timer for waiting before scene change
+    const float waitDuration = 2.0f;     // Duration to wait before scene change
 
-    bool isReturningFromLocationSelection = false;
+    bool isReturningFromLocationSelection = false; // Flag for returning from location selection
 
-    UILabel *errorLabel = nullptr;
+    void loadPerkTextures(size_t);        // Load textures for perk cards
+    void toggleSelection(PerkCard &perk); // Handle selection of a perk card
+    void createLabels();                  // Creating scene labels
+    void createButtons();                 // Creatin scene buttons
+    void creatErroreLabels();             // Create error message label
+    void createActionButtons();           // Create "None" and "Use Perk" buttons
 
-    void loadPerkTextures(size_t);
-    void toggleSelection(PerkCard &perk);
-    void createLabels();
-    void createButtons();
-    void creatErroreLabels();
-    void createActionButtons();
+    void showDesMessage(PerkCard &perk);   // Display description of selected perk
+    void handleLocationSelectionRequest(); // Handle location selection for special perks
 
-    void showDesMessage(PerkCard &perk);
-    void handleLocationSelectionRequest();
+    void recalcPerkRects(size_t); // Recalculate positions of perk cards
 
-    void recalcPerkRects(size_t);
-
-    void creatHelpLable(bool);
+    void creatHelpLable(bool); // Display helper label for order (heroes/monsters)
 
 public:
     void onEnter() override;
     void onExit() override;
     void update(float deltaTime) override;
     void render() override;
+
     void setData(const std::vector<PerkCard> &Perks, const std::string &newkey);
     PerkCard &getSelectedPerks();
 
-    int getSelectedPerkIndex();
-    void showErrorMessage(const std::string &msg);
+    int getSelectedPerkIndex();                    // Get index of selected perk in perks vector
+    void showErrorMessage(const std::string &msg); // Control the display of various errors
 
     std::vector<PerkCard> getperks();
     std::string getscenekey();
+
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
 };
 #endif
