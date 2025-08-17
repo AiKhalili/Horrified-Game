@@ -11,6 +11,8 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void SpecialScene::onEnter()
@@ -191,7 +193,7 @@ void SpecialScene::createButtons()
                             AudioManager::getInstance().playSoundEffect("click");
                             SaveManager::getInstance().saveGameToSlot("SpecialScene");
                             const std::string msg = "The game was successfully saved!";
-                            showErrorMessage(msg);  });
+                            showErrorMessage(msg); });
     ui.add(std::move(saveBtn));
 
     auto boardBtn = std::make_unique<UIButton>(Rectangle{leftX, topY + 2 * (gapY + buttonHeight), buttonWidth, buttonHeight}, "Board Scene", fontsize,
@@ -232,4 +234,141 @@ void SpecialScene::showErrorMessage(const std::string &msg)
         return;
 
     errorLabel->setText(msg);
+}
+
+void SpecialScene::serialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    locselect = SceneDataHub::getInstance().getSelectedLocation();
+    itemselect = SceneDataHub::getInstance().getSelectedItems();
+
+    outFile << "SceneKey:SpecialScene\n";
+    outFile << "SceneData:\n";
+
+    if (!hero)
+    {
+        std::cerr << "[SpecialScene::serialize] Error: hero is nullptr!" << std::endl;
+        return;
+    }
+
+    if (hero->getClassName() == "Archaeologist")
+    {
+
+        if (locselect)
+            outFile << "SelectedLocation:" << locselect->get_name() << "\n";
+        else
+            outFile << "SelectedLocation:None\n";
+
+        outFile << "SelectedItems:";
+        if (!itemselect.empty())
+        {
+            for (size_t i = 0; i < itemselect.size(); ++i)
+            {
+                outFile << itemselect[i]->get_name();
+                if (i != itemselect.size() - 1)
+                    outFile << ",";
+            }
+        }
+        else
+        {
+            outFile << "None";
+        }
+        outFile << "\n";
+    }
+
+    outFile << "EndScene\n";
+
+    outFile.close();
+}
+
+void SpecialScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isSpecialScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isSpecialScene)
+        {
+            if (line == "SceneKey:SpecialScene")
+            {
+                isSpecialScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        if (line == "EndScene")
+            break;
+
+        hero = Game::getInstance().getCurrentHero();
+        if (!hero)
+        {
+            std::cerr << "[SpecialScene::serialize] Error: hero is nullptr!" << std::endl;
+            return;
+        }
+
+        if (hero->getClassName() == "Archaeologist")
+        {
+            std::stringstream ss(line);
+            std::string key;
+            if (std::getline(ss, key, ':'))
+            {
+                std::string value;
+                std::getline(ss, value);
+
+                if (key == "SelectedLocation" && value != "None")
+                {
+                    locselect = nullptr;
+                    for (auto &loc : hero->getLocation()->get_neighbors())
+                    {
+                        if (loc->get_name() == value)
+                        {
+                            locselect = loc;
+                            SceneDataHub::getInstance().setSelectedLocation(locselect);
+                            break;
+                        }
+                    }
+                }
+                else if (key == "SelectedItems" && value != "None")
+                {
+                    itemselect.clear();
+                    std::stringstream itemsStream(value);
+                    std::string itemName;
+                    while (std::getline(itemsStream, itemName, ','))
+                    {
+                        for (auto &it : locselect->get_items())
+                        {
+                            if (it->get_name() == itemName)
+                            {
+                                itemselect.push_back(it);
+                                break;
+                            }
+                        }
+                    }
+                    SceneDataHub::getInstance().setSelectedItems(itemselect);
+                }
+            }
+        }
+    }
+
+    inFile.close();
 }
