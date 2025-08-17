@@ -12,6 +12,8 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void PlayerSummaryScene::setData(const std::string &player1Name, const std::string &hero1,
@@ -178,4 +180,47 @@ std::vector<std::string> PlayerSummaryScene::getData()
     data[3] = h2Name;
 
     return data;
+}
+
+void PlayerSummaryScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open()) return;
+
+    outFile << "SceneKey:PlayerSummaryScene\n";
+    outFile << "SceneData:\n";
+    outFile << "P1Name:" << p1Name << "\n";
+    outFile << "H1Name:" << h1Name << "\n";
+    outFile << "P2Name:" << p2Name << "\n";
+    outFile << "H2Name:" << h2Name << "\n";
+
+    outFile.close();
+}
+
+void PlayerSummaryScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open()) return;
+
+    std::string line;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (line == "SceneData:") { inSceneData = true; continue; }
+        if (!inSceneData) continue;
+
+        auto pos = line.find(':');
+        if (pos == std::string::npos) continue;
+
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        if (key == "P1Name") p1Name = value;
+        else if (key == "H1Name") h1Name = value;
+        else if (key == "P2Name") p2Name = value;
+        else if (key == "H2Name") h2Name = value;
+    }
+
+    inFile.close();
 }
