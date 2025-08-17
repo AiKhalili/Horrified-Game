@@ -13,22 +13,21 @@
 class MoveScene : public Scene
 {
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font font;
     Font errorFont;
 
-    void createLabels();
-    void createButtons();
+    void createLabels();  // Creating scene labels
+    void createButtons(); // Creatin scene buttons
 
-    Hero *hero;
-    Location *location;
+    Hero *hero;         // Active hero during the game
+    Location *location; // Active hero location during the game
 
-    Location *locselect ;
-    std::vector<Villager *>villselect ;
+    Location *locselect;                // Selected location for movement
+    std::vector<Villager *> villselect; // Villagers of choice to take with you
 
-    UILabel* errorLabel = nullptr;
-
+    UILabel *errorLabel = nullptr; // Labels to indicate various errors
 
 public:
     void onEnter() override;
@@ -36,6 +35,9 @@ public:
     void update(float deltaTime) override;
     void render() override;
 
-    void showErrorMessage(const std::string &msg);
+    void showErrorMessage(const std::string &msg); // Control the display of various errors
+
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
 };
 #endif
