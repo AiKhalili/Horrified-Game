@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void PickUpScene::onEnter()
@@ -23,10 +25,10 @@ void PickUpScene::onEnter()
 
     hero = Game::getInstance().getCurrentHero();
 
+    itemselect = SceneDataHub::getInstance().getSelectedItems();
+
     createLabels();
     createButtons();
-
-    itemselect = SceneDataHub::getInstance().getSelectedItems();
 
     if (errorLabel)
     {
@@ -168,6 +170,7 @@ void PickUpScene::createButtons()
 
     try
     {
+
         if (itemselect.empty())
         {
             showErrorMessage("You cannot pick up if no items are selected.");
@@ -185,4 +188,104 @@ void PickUpScene::createButtons()
         showErrorMessage(ex.what());
     } });
     ui.add(std::move(pickBtn));
+}
+
+void PickUpScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:PickUpScene\n";
+    outFile << "SceneData:\n";
+
+    itemselect = SceneDataHub::getInstance().getSelectedItems();
+
+    if (!itemselect.empty())
+    {
+        outFile << "SelectedItems:";
+        for (size_t i = 0; i < itemselect.size(); ++i)
+        {
+            outFile << itemselect[i]->get_name();
+            if (i != itemselect.size() - 1)
+                outFile << ",";
+        }
+        outFile << "\n";
+    }
+    else
+    {
+        outFile << "SelectedItems:None\n";
+    }
+
+    outFile.close();
+}
+
+void PickUpScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    if (!hero)
+        return;
+
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool inPickUpScene = false;
+    bool inSceneData = false;
+    Hero *currentHero = hero;
+
+    while (std::getline(inFile, line))
+    {
+        if (line == "SceneKey:PickUpScene")
+        {
+            inPickUpScene = true;
+            continue;
+        }
+        if (inPickUpScene && line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        if (line.rfind("SceneKey:", 0) == 0)
+            break;
+
+        auto pos = line.find(':');
+        if (pos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        value.erase(0, value.find_first_not_of(" \t"));
+        value.erase(value.find_last_not_of(" \t") + 1);
+
+        if (key == "SelectedItems" && value != "None")
+        {
+            itemselect.clear();
+
+            std::stringstream ss(value);
+            std::string itemName;
+            while (std::getline(ss, itemName, ','))
+            {
+                itemName.erase(0, itemName.find_first_not_of(" \t"));
+                itemName.erase(itemName.find_last_not_of(" \t") + 1);
+
+                for (auto &item : currentHero->getLocation()->get_items())
+                {
+                    if (item && item->get_name() == itemName)
+                    {
+                        itemselect.push_back(item);
+                        break;
+                    }
+                }
+            }
+            SceneDataHub::getInstance().setSelectedItems(itemselect);
+        }
+    }
+    inFile.close();
 }
