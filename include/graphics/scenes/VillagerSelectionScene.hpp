@@ -9,26 +9,26 @@
 
 class VillagerSelectionScene : public Scene
 {
-
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font font;
     Font errorFont;
+    std::string scenekey; // Key of the previous scene to return to
 
-    std::vector<Texture2D> villagerTextures;
-    std::vector<Villager *> villagers;
-    std::vector<Villager *> selected;
-    std::vector<Rectangle> villagerRects;
+    std::vector<Texture2D> villagerTextures; // Textures of all villagers
+    std::vector<Villager *> villagers;       // List of all villagers in this scene
+    std::vector<Villager *> selected;        // The chosen villagers
+    std::vector<Rectangle> villagerRects;    // Rectangles to display villagers on screen
 
-    std::string scenekey;
+    UILabel *errorLabel = nullptr; // Labels to indicate various errors
 
-    UILabel *errorLabel = nullptr;
+    bool firstDeserialize = true; 
 
-    void loadVillagerTextures();
-    void toggleSelection(Villager *villager);
-    void createLabels();
-    void createButtons();
+    void loadVillagerTextures();              // Loads textures for each villager from file
+    void toggleSelection(Villager *villager); // Toggles selection state for a villager
+    void createLabels();                      // Creating scene labels
+    void createButtons();                     // Creatin scene buttons
     void creatErroreLabels();
 
 public:
@@ -38,9 +38,13 @@ public:
     void render() override;
     void setData(const std::vector<Villager *> &villagers, const std::string &newkey);
     std::vector<Villager *> &getSelectedVillagers();
-    void showErrorMessage(const std::string &msg);
+
+    void showErrorMessage(const std::string &msg); // Control the display of various errors
+
     std::vector<Villager *> getVillagers();
     std::string getscenekey();
-};
 
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
+};
 #endif
