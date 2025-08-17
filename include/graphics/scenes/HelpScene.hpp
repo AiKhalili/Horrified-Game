@@ -8,15 +8,15 @@
 
 class HelpScene : public Scene
 {
-
 private:
-    UIManager ui;
+    UIManager ui; // To control buttons and labels
     Texture2D background;
     Font font;
-    void createLabels();
-    void createButtons();
 
-    UILabel* helpLabel = nullptr;
+    void createLabels();  // Creating scene labels
+    void createButtons(); // Creatin scene buttons
+
+    UILabel *helpLabel = nullptr; // Label to show action help
 
 public:
     void onEnter() override;
@@ -24,16 +24,15 @@ public:
     void update(float deltaTime) override;
     void render() override;
 
-    void openMoveAction();
-    void openPickUpAction();
-    void openDefeatAction();
-    void openHelpAction();
-    void openSpecialAction();
-    void openGuideAction();
-    void openAdvanceAction();
-    void openUsePerkAction();
+    void openMoveAction();    // Handle move action help
+    void openPickUpAction();  // Handle Pick Up action help
+    void openDefeatAction();  // Handle Defeat action help
+    void openHelpAction();    // Handle Help action help
+    void openSpecialAction(); // Handle Special action help
+    void openGuideAction();   // Handle Guid action help
+    void openAdvanceAction(); // Handle Advence action help
+    void openUsePerkAction(); // Handle Use Perk Card action help
 
-    void showHelpMessage(const std::string &msg);
-
+    void showHelpMessage(const std::string &msg); // Control the display of action help
 };
 #endif
