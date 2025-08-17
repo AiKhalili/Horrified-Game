@@ -13,7 +13,10 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
+#include "core/Map.hpp"
 
 void PerkSelectionScene::setData(const std::vector<PerkCard> &Perks, const std::string &newkey)
 {
@@ -108,7 +111,6 @@ void PerkSelectionScene::onExit()
     AudioManager::getInstance().stopPerkSelectMusic();
     AudioManager::getInstance().playMusic();
 }
-
 
 void PerkSelectionScene::toggleSelection(PerkCard &perk)
 {
@@ -547,8 +549,10 @@ void PerkSelectionScene::creatHelpLable(bool felag)
     {
         auto monsters = Game::getInstance().getMonsters();
         int order = 1;
-        for (auto& monster : monsters) {
-            if (!monster->is_defeated()) {
+        for (auto &monster : monsters)
+        {
+            if (!monster->is_defeated())
+            {
                 text += std::to_string(order++) + "." + monster->get_name() + "  ";
             }
         }
@@ -653,4 +657,122 @@ void PerkSelectionScene::update(float deltaTime)
             timerToNextScene = 0.0f;
         }
     }
+}
+
+void PerkSelectionScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:PerkSelectionScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "PreviousSceneKey:" << scenekey << "\n";
+
+    outFile << "HasSelected:" << (hasSelected ? "1" : "0") << "\n";
+    outFile << "HasPendingSelected:" << (hasPendingSelected ? "1" : "0") << "\n";
+    outFile << "HasCurrentSelected:" << (hasCurrentSelected ? "1" : "0") << "\n";
+
+    if (hasPendingSelected)
+        outFile << "PendingPerkName:" << pendingSelectedPerk.getName() << "\n";
+
+    if (hasCurrentSelected)
+        outFile << "CurrentPerkName:" << currentSelectedPerk.getName() << "\n";
+
+    if (hasSelected)
+        outFile << "SelectedPerkName:" << selected.getName() << "\n";
+
+    outFile << "NeedLocationSelection:" << (needLocationSelection ? "1" : "0") << "\n";
+    outFile << "RequiredLocationCount:" << requiredLocationCount << "\n";
+    outFile << "CurrentLocationSelectionCount:" << currentLocationSelectionCount << "\n";
+
+    outFile << "SelectedLocationCount:" << selectedLocations.size() << "\n";
+    for (size_t i = 0; i < selectedLocations.size(); ++i)
+    {
+        outFile << "SelectedLocation" << i << ":" << selectedLocations[i]->get_name() << "\n";
+    }
+
+    outFile << "EndScene\n";
+    outFile.close();
+}
+
+void PerkSelectionScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    hero = Game::getInstance().getCurrentHero();
+    perks = hero->getPerkCard();
+
+    std::string line;
+    bool inSceneData = false;
+    bool isPerkScene = false;
+
+    // reset
+    hasSelected = hasPendingSelected = hasCurrentSelected = false;
+    needLocationSelection = false;
+    selectedLocations.clear();
+    currentLocationSelectionCount = 0;
+    requiredLocationCount = 0;
+
+    while (std::getline(inFile, line))
+    {
+        if (line == "SceneKey:PerkSelectionScene")
+        {
+            isPerkScene = true;
+            continue;
+        }
+
+        if (!isPerkScene)
+            continue;
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        if (line == "EndScene")
+            break;
+
+        std::stringstream ss(line);
+        std::string key, value;
+        if (std::getline(ss, key, ':') && std::getline(ss, value))
+        {
+            if (key == "PreviousSceneKey") scenekey = value;
+            else if (key == "HasSelected") hasSelected = (value == "1");
+            else if (key == "HasPendingSelected") hasPendingSelected = (value == "1");
+            else if (key == "HasCurrentSelected") hasCurrentSelected = (value == "1");
+            else if (key == "NeedLocationSelection") needLocationSelection = (value == "1");
+            else if (key == "RequiredLocationCount") requiredLocationCount = std::stoi(value);
+            else if (key == "CurrentLocationSelectionCount") currentLocationSelectionCount = std::stoi(value);
+            else if (key == "PendingPerkName")
+            {
+                for (auto &perk : perks)
+                    if (perk.getName() == value) { pendingSelectedPerk = perk; break; }
+            }
+            else if (key == "CurrentPerkName")
+            {
+                for (auto &perk : perks)
+                    if (perk.getName() == value) { currentSelectedPerk = perk; break; }
+            }
+            else if (key == "SelectedPerkName")
+            {
+                for (auto &perk : perks)
+                    if (perk.getName() == value) { selected = perk; break; }
+            }
+            else if (key.find("SelectedLocation") == 0)
+            {
+                for (auto loc : Map::get_instanse()->getAllLocations())
+                    if (loc->get_name() == value) { selectedLocations.push_back(loc); break; }
+            }
+        }
+    }
+
+    inFile.close();
 }
