@@ -12,6 +12,8 @@
 #include <iostream>
 #include <string>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void MonstersSummaryScene::onEnter()
@@ -82,7 +84,6 @@ void MonstersSummaryScene::render()
             BeginScissorMode(dest.x, dest.y, dest.width, dest.height);
             DrawTexturePro(monsterassets[idx], src, dest, Vector2{0, 0}, 0.0f, WHITE);
             EndScissorMode();
-
         }
         else
         {
