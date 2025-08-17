@@ -12,6 +12,8 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 #include "raymath.h"
 
@@ -19,6 +21,10 @@ void LocationSelectionScene::setData(const std::vector<Location *> &Locations, c
 {
     Sentlocations = Locations;
     scenekey = newkey;
+    if (firstDeserialize == false)
+    {
+        locationSelect = nullptr;
+    }
 }
 
 void LocationSelectionScene::onEnter()
@@ -273,7 +279,7 @@ void LocationSelectionScene::createButtons()
         AudioManager::getInstance().playSoundEffect("click");
         SaveManager::getInstance().saveGameToSlot("LocationSelectionScene");
     const std::string msg = "The game was successfully saved!";
-                            showErrorMessage(msg);  });
+                            showErrorMessage(msg); });
 
     ui.add(std::move(saveBtn));
 
@@ -318,5 +324,173 @@ void LocationSelectionScene::showErrorMessage(const std::string &msg)
     errorLabel->setText(msg);
 }
 
-std::vector<Location *> LocationSelectionScene::getSentlocations(){return Sentlocations;}
-std::string LocationSelectionScene::getscenekey(){return scenekey;}
+std::vector<Location *> LocationSelectionScene::getSentlocations() { return Sentlocations; }
+std::string LocationSelectionScene::getscenekey() { return scenekey; }
+
+void LocationSelectionScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:LocationSelectionScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "SceneReturnKey:" << scenekey << "\n";
+
+    outFile << "HoveredLocation:" << hoveredLocation << "\n";
+
+    outFile << "SelectedLocation:" << (locationSelect ? locationSelect->get_name() : "") << "\n";
+
+    outFile << "SentLocationCount:" << Sentlocations.size() << "\n";
+    for (auto *loc : Sentlocations)
+    {
+        outFile << "SentLocation:" << loc->get_name() << "\n";
+    }
+
+    outFile << "LocationCount:" << locations.size() << "\n";
+    for (const auto &loc : locations)
+    {
+        outFile << "Location:" << loc.locatonName << ","
+                << loc.posision.x << "," << loc.posision.y << ","
+                << loc.radius << "\n";
+    }
+
+    outFile.close();
+}
+
+void LocationSelectionScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isLocationSelectionScene = false;
+    bool inSceneData = false;
+    std::vector<std::string> sentLocationNames;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isLocationSelectionScene)
+        {
+            if (line == "SceneKey:LocationSelectionScene")
+            {
+                isLocationSelectionScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        std::stringstream ss(line);
+        std::string key;
+        if (std::getline(ss, key, ':'))
+        {
+            std::string value;
+            std::getline(ss, value);
+
+            if (key == "SceneReturnKey")
+            {
+                scenekey = value;
+            }
+            else if (key == "HoveredLocation")
+            {
+                hoveredLocation = value;
+            }
+
+            else if (key == "SelectedLocation")
+            {
+                
+
+                if (value.empty() || value == "None")
+                    continue;
+
+                locationSelect = nullptr;
+                for (auto *loc : Map::get_instanse()->getAllLocations())
+                {
+                    if (loc->get_name() == value)
+                    {
+                        locationSelect = loc;
+                        SceneDataHub::getInstance().setSelectedLocation(locationSelect);
+                        break;
+                    }
+                }
+            }
+
+            else if (key == "SentLocationCount")
+            {
+                sentLocationNames.clear();
+                sentLocationNames.reserve(std::stoi(value));
+            }
+            else if (key == "SentLocation")
+            {
+                sentLocationNames.push_back(value);
+            }
+            else if (key == "LocationCount")
+            {
+                locations.clear();
+                locations.reserve(std::stoi(value));
+            }
+            else if (key == "Location")
+            {
+                std::stringstream locStream(value);
+                std::string name, xStr, yStr, rStr;
+
+                std::getline(locStream, name, ',');
+                std::getline(locStream, xStr, ',');
+                std::getline(locStream, yStr, ',');
+                std::getline(locStream, rStr, ',');
+
+                LocationMarker loc;
+                loc.locatonName = name;
+                loc.posision.x = std::stof(xStr);
+                loc.posision.y = std::stof(yStr);
+                loc.radius = std::stof(rStr);
+
+                locations.push_back(loc);
+            }
+        }
+    }
+
+        Sentlocations.clear();
+        for (const auto &name : sentLocationNames)
+        {
+            for (auto *loc : Map::get_instanse()->getAllLocations())
+            {
+                if (loc->get_name() == name)
+                {
+                    Sentlocations.push_back(loc);
+                    break;
+                }
+            }
+        }
+    
+
+    if (!locationSelect && !hoveredLocation.empty())
+    {
+        for (auto *loc : Sentlocations)
+        {
+            if (loc->get_name() == hoveredLocation)
+            {
+                locationSelect = loc;
+                break;
+            }
+        }
+    }
+
+    if (hoveredLocation.empty() && locationSelect)
+    {
+        hoveredLocation = locationSelect->get_name();
+    }
+
+    firstDeserialize = false;
+    inFile.close();
+}
