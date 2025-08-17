@@ -11,12 +11,18 @@
 #include <vector>
 #include <iostream>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void VillagerSelectionScene::setData(const std::vector<Villager *> &Villagers, const std::string &newkey)
 {
     villagers = Villagers;
     scenekey = newkey;
+     if (firstDeserialize == false)
+    {
+        selected.clear();
+    }
 }
 
 void VillagerSelectionScene::onEnter()
@@ -37,7 +43,6 @@ void VillagerSelectionScene::onEnter()
         creatErroreLabels();
     }
 
-    selected.clear();
     villagerRects.clear();
     villagerRects.reserve(villagers.size());
 
@@ -284,6 +289,7 @@ void VillagerSelectionScene::createButtons()
     backBtn->setOnClick([this]()
                         {
         AudioManager::getInstance().playSoundEffect("click");
+        SceneDataHub::getInstance().setSelectedVillagers({});
         SceneManager::getInstance().goTo(scenekey); });
 
     ui.add(std::move(backBtn));
@@ -316,3 +322,132 @@ void VillagerSelectionScene::createButtons()
 
 std::string VillagerSelectionScene::getscenekey(){return scenekey;}
 std::vector<Villager *> VillagerSelectionScene::getVillagers(){return villagers;}
+
+void VillagerSelectionScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:VillagerSelectionScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "PreviousScene:" << scenekey << "\n";
+
+    outFile << "Villagers:";
+    if (!villagers.empty())
+    {
+        for (size_t i = 0; i < villagers.size(); ++i)
+        {
+            outFile << villagers[i]->getName();
+            if (i != villagers.size() - 1)
+                outFile << ",";
+        }
+    }
+    else
+        outFile << "None";
+    outFile << "\n";
+
+    outFile << "SelectedVillagers:";
+    if (!selected.empty())
+    {
+        for (size_t i = 0; i < selected.size(); ++i)
+        {
+            outFile << selected[i]->getName();
+            if (i != selected.size() - 1)
+                outFile << ",";
+        }
+    }
+    else
+        outFile << "None";
+    outFile << "\n";
+
+    outFile << "EndScene\n";
+    outFile.close();
+}
+
+void VillagerSelectionScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool inSceneData = false;
+    bool isVillagerSelectionScene = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isVillagerSelectionScene)
+        {
+            if (line == "SceneKey:VillagerSelectionScene")
+            {
+                isVillagerSelectionScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        if (line == "EndScene")
+            break;
+
+        std::stringstream ss(line);
+        std::string key;
+        if (std::getline(ss, key, ':'))
+        {
+            std::string value;
+            std::getline(ss, value);
+
+            if (key == "PreviousScene")
+            {
+                scenekey = value;
+            }
+            else if (key == "Villagers" && value != "None")
+            {
+                villagers.clear();
+                std::stringstream vStream(value);
+                std::string villagerName;
+                while (std::getline(vStream, villagerName, ','))
+                {
+                    for (auto &v : Game::getInstance().getVillagers())
+                    {
+                        if (v->getName() == villagerName)
+                        {
+                            villagers.push_back(v);
+                            break;
+                        }
+                    }
+                }
+            }
+            else if (key == "SelectedVillagers" && value != "None")
+            {
+                selected.clear();
+                std::stringstream sStream(value);
+                std::string villagerName;
+                while (std::getline(sStream, villagerName, ','))
+                {
+                    for (auto &v : Game::getInstance().getVillagers())
+                    {
+                        if (v->getName() == villagerName)
+                        {
+                            selected.push_back(v);
+                            break;
+                        }
+                    }
+                }
+                SceneDataHub::getInstance().setSelectedVillagers(selected);
+            }
+        }
+    }
+
+    firstDeserialize = false;
+    inFile.close();
+}
