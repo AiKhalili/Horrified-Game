@@ -9,6 +9,8 @@
 #include <memory>
 #include <vector>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include "core/Game.hpp"
 
 void HelpScene::onEnter()
