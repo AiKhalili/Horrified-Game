@@ -9,6 +9,8 @@
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/scenes/LocationInfoScene.hpp"
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 void BoardScene::onEnter()
 {
@@ -457,4 +459,96 @@ void BoardScene::drawHeroActions()
 
         DrawTexturePro(potionIcon, src, dest, {0, 0}, 0.0f, WHITE);
     }
+}
+
+void BoardScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:BoardScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "HoveredLocation:" << hoveredLocation << "\n";
+
+    outFile << "LocationCount:" << locations.size() << "\n";
+    for (const auto &loc : locations)
+    {
+        outFile << "Location:" << loc.locatonName << ","
+                << loc.posision.x << "," << loc.posision.y << ","
+                << loc.radius << "\n";
+    }
+
+    outFile.close();
+}
+
+void BoardScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isBoardScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isBoardScene)
+        {
+            if (line == "SceneKey:BoardScene")
+            {
+                isBoardScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        std::stringstream ss(line);
+        std::string key;
+        if (std::getline(ss, key, ':'))
+        {
+            std::string value;
+            std::getline(ss, value);
+
+            if (key == "HoveredLocation")
+            {
+                hoveredLocation = value;
+            }
+            else if (key == "LocationCount")
+            {
+                locations.clear();
+                locations.reserve(std::stoi(value));
+            }
+            else if (key == "Location")
+            {
+                std::stringstream locStream(value);
+                std::string name, xStr, yStr, rStr;
+
+                std::getline(locStream, name, ',');
+                std::getline(locStream, xStr, ',');
+                std::getline(locStream, yStr, ',');
+                std::getline(locStream, rStr, ',');
+
+                LocationMarker loc;
+                loc.locatonName = name;
+                loc.posision.x = std::stof(xStr);
+                loc.posision.y = std::stof(yStr);
+                loc.radius = std::stof(rStr);
+
+                locations.push_back(loc);
+            }
+        }
+    }
+
+    inFile.close();
 }
