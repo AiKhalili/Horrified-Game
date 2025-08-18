@@ -16,12 +16,12 @@ void PlayerInfoScene::onEnter()
     fontLoaded = true;
 
     currentPlayer = 1;
-    uiManager.clear();
-    continueButton = nullptr;
-    backButton = nullptr;
-    nameInput = nullptr;
-    timeInput = nullptr;
-    playerLabel = nullptr;
+    errorLabel = nullptr;
+
+    if (errorLabel)
+    {
+        errorLabel->setText("");
+    }
 
     createButtons();
     createInputBoxes();
@@ -48,10 +48,6 @@ void PlayerInfoScene::update(float deltaTime)
 {
     AudioManager::getInstance().update();
     uiManager.update();
-    if (errorLabel && !errorLabel->getText().empty())
-    {
-        errorLabel->update();
-    }
 }
 
 void PlayerInfoScene::render()
@@ -65,11 +61,6 @@ void PlayerInfoScene::render()
                    WHITE);
 
     uiManager.render();
-
-    if (errorLabel && !errorLabel->getText().empty())
-    {
-        errorLabel->render();
-    }
 }
 
 void PlayerInfoScene::resetInputsForNextPlayer()
@@ -82,6 +73,9 @@ void PlayerInfoScene::resetInputsForNextPlayer()
 
 void PlayerInfoScene::showErrorMessage(const std::string &msg)
 {
+    if (!errorLabel)
+        return;
+
     errorLabel->setText(msg);
 }
 
@@ -183,10 +177,10 @@ void PlayerInfoScene::createLabels()
 
     Color errorText = {255, 85, 85, 255};
 
-    auto errorLabelUPtr = std::make_unique<UILabel>(
-        Vector2{925, 800}, "", 35, 3.0f, errorText);
-    errorLabelUPtr->setFont(font);
-    //errorLabel = errorLabelUPtr.get();
-    static std::unique_ptr<UILabel> staticErrorLabel = std::move(errorLabelUPtr);
-    errorLabel = staticErrorLabel.get();
-}
+    auto tempLabel = std::make_unique<UILabel>(Vector2{925, 800}, "", 35, 3.0f, errorText);
+    tempLabel->setFont(font);
+
+    errorLabel = tempLabel.get();
+
+    uiManager.add(std::move(tempLabel));
+ }
