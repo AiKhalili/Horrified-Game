@@ -293,7 +293,7 @@ void LocationSelectionScene::createButtons()
     ui.add(std::move(boardBtn));
 
     auto nonBtn = std::make_unique<UIButton>(
-        Rectangle{1250, 680, 200, 60}, "Non", 40,
+        Rectangle{1250, 680, 200, 60}, "None", 40,
         textcolor, labelcolor, clickcolor, textcolor);
     nonBtn->setFont(normalFont);
     nonBtn->setOnClick([this]()
