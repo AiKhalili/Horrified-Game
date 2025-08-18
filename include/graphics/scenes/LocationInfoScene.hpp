@@ -41,6 +41,9 @@ public:
     void update(float deleteTime) override;
     void render() override;
 
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
+
     void setLocation(Location *loc);
 };
 
