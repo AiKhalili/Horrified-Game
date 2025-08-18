@@ -760,7 +760,7 @@ void MonsterPhaseScene::render_HypnoticGaze(float deleteTime)
     if (!loadedHypnotic)
     { // Load the correct texture once based on whether it's a hero or villager
         std::string name = game.event.villagerName.empty() ? game.event.heroName : game.event.villagerName;
-        std::string folder = game.event.villagerName.empty() ? "heros" : "Villager";
+        std::string folder = game.event.villagerName.empty() ? "heroes" : "Villager";
         std::string path = "assets/images/" + folder + "/" + name + ".png";
         texHypnoticGaze = TextureManager::getInstance().getOrLoadTexture(name, path);
         loadedHypnotic = true;
@@ -1130,7 +1130,7 @@ void MonsterPhaseScene::handleDefence(std::vector<Item *> &selectedItems)
 {
     if (selectedItems.empty())
     { // If no items were selected for defense
-        showMessage("No defense item used!", {500, 600}, 35, 3.0f, normalFont, false);
+        showMessage("No defense item used!", {550, 600}, 35, 3.0f, normalFont, false);
 
         // Send hero to hospital because they couldn't defend
         game.sendHeroToHospital();
