@@ -12,10 +12,14 @@
 #include "graphics/scenes/SceneKeys.hpp"
 #include "graphics/scenes/SceneManager.hpp"
 #include "saves/SaveManager.hpp"
+#include <fstream>
+#include <sstream>
 
 void LocationInfoScene::onEnter()
 {
+    AudioManager::getInstance().setSoundVolume(10.0f);
     AudioManager::getInstance().playSoundEffect("door");
+    AudioManager::getInstance().setSoundVolume(0.5f);
 
     loadTextures();
 
@@ -75,7 +79,7 @@ void LocationInfoScene::loadTextures()
     for (const auto &v : villagers)
     {
         std::string name = v->getName();
-        std::string path = "assets/images/villager/" + name + ".png";
+        std::string path = "assets/images/Villager/" + name + ".png";
         tex = tm.getOrLoadTexture(name, path);
         SetTextureFilter(tex, TEXTURE_FILTER_TRILINEAR);
         villagerTextures.push_back(tex);
@@ -148,10 +152,15 @@ void LocationInfoScene::createUI()
         Color{100, 50, 10, 255});
 
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(SceneKeys::LOCATION_INFO_SCENE); });
+                            SaveManager::getInstance().saveGameToSlot(SceneKeys::LOCATION_INFO_SCENE);
+                                                    Vector2 pos = {780,800};
+                            auto saveLabel = std::make_unique<UILabel>(pos,"The game was successfully saved!",
+                                                                    45,3.0f,WHITE,WHITE,true);
+                            saveLabel->setFont(font);
+                            ui.add(std::move(saveLabel)); });
 
     ui.add(std::move(saveBtn));
 }
@@ -231,7 +240,7 @@ void LocationInfoScene::drawHeroAndMonster()
         {
             continue;
         }
-        
+
         Texture2D &tex = monsterTextures[i];
         float scale = 200.0f / tex.width;
         float drawW = tex.width * scale;
@@ -332,4 +341,80 @@ void LocationInfoScene::render()
     ui.render();
 
     EndDrawing();
+}
+
+void LocationInfoScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:LocationInfoScene\n";
+    outFile << "SceneData:\n";
+
+    if (currentLocation)
+        outFile << "LocationName:" << currentLocation->get_name() << "\n";
+    else
+        outFile << "LocationName:None\n";
+
+    outFile.close();
+}
+
+void LocationInfoScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isLocationInfoScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isLocationInfoScene)
+        {
+            if (line == "SceneKey:LocationInfoScene")
+            {
+                isLocationInfoScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+        if (!inSceneData)
+            continue;
+
+        auto pos = line.find(':');
+        if (pos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, pos);
+        std::string value = line.substr(pos + 1);
+
+        if (key == "LocationName")
+        {
+            currentLocation = nullptr;
+            if (value != "None")
+            {
+                for (auto *loc : Map::get_instanse()->getAllLocations())
+                {
+                    if (loc->get_name() == value)
+                    {
+                        currentLocation = loc;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    inFile.close();
 }
