@@ -19,12 +19,18 @@ void showMenu()
     cout << "*****************************************\n";
 }
 
-void menuHero()
+void menuHero(const std::vector<std::string> &heroes)
 {
-    cout << "\n*****************************************\n";
-    cout << "*\t" << "1.Mayor                         *\n";
-    cout << "*\t" << "2.Archaeologist                 *\n";
-    cout << "*****************************************\n";
+    cout << "\n************************************\n";
+    for (size_t i = 0; i < heroes.size(); ++i)
+    {
+        cout << "*\t" << (i + 1) << "." << heroes[i];
+        int spaceCount = 25 - static_cast<int>(heroes[i].length());
+        for (int j = 0; j < spaceCount; ++j)
+            cout << " ";
+        cout << "*\n";
+    }
+    cout << "************************************\n";
 }
 
 void getPlayersInput(int playerNum)
@@ -60,46 +66,77 @@ void setupPlayers()
 string whoStart()
 {
     Game &game = Game::getInstance();
-    while (true)
-    {
-        if (game.getTime1() <= game.getTime2())
-        {
-            cout << "Player " << game.getName1() << " choose your hero:\t";
-            menuHero();
-            string choice;
-            getline(cin, choice);
-            if (choice == "1")
-            {
-                game.assignHeroes(game.getName1(), "Mayor", "Archaeologist");
-                return game.getName1();
-            }
-            else if (choice == "2")
-            {
-                game.assignHeroes(game.getName1(), "Archaeologist", "Mayor");
-                return game.getName1();
-            }
-        }
-        else
-        {
-            cout << "Player " << game.getName2() << " choose your hero:\t";
-            menuHero();
-            string choice;
-            getline(cin, choice);
-            if (choice == "1")
-            {
-                game.assignHeroes(game.getName2(), "Mayor", "Archaeologist");
-                return game.getName2();
-            }
-            else if (choice == "2")
-            {
-                game.assignHeroes(game.getName2(), "Archaeologist", "Mayor");
-                return game.getName2();
-            }
-        }
-        cout << "Invalid input!\n";
-    }
-}
+    vector<string> heroList = {"Mayor", "Archaeologist", "Scientist", "Courier"};
+    string firstPlayer, secondPlayer;
 
+    if (game.getTime1() <= game.getTime2())
+    {
+        firstPlayer = game.getName1();
+        secondPlayer = game.getName2();
+    }
+    else
+    {
+        firstPlayer = game.getName2();
+        secondPlayer = game.getName1();
+    }
+
+    string choice;
+    int choiceNum;
+
+    while (true)
+    { // انتخاب هیرو توسط بازیکن اول
+        cout << "Player " << firstPlayer << ", choose your hero:\t";
+        menuHero(heroList);
+        getline(cin, choice);
+        try
+        {
+            size_t pos = 0;
+            choiceNum = stoi(choice, &pos);
+            if (choiceNum >= 1 && choiceNum <= heroList.size() && pos == choice.size())
+            {
+                break;
+            }
+            else
+            {
+                cout << "Invalid input! Please choose 1 to 4.\n";
+            }
+        }
+        catch (...)
+        {
+            cout << "Invalid input! Please enter a number.\n";
+        }
+    }
+
+    string firstHero = heroList[choiceNum - 1];
+    heroList.erase(heroList.begin() + (choiceNum - 1)); //  حذف هیرو انتخاب شده از لیست منو
+
+    while (true)
+    { // انتخاب هیرو توسط بازیکن دوم
+        cout << "Player " << secondPlayer << ", choose your hero:\t";
+        menuHero(heroList); // فقط هیروهای باقیمانده
+        getline(cin, choice);
+        try
+        {
+            size_t pos = 0;
+            choiceNum = stoi(choice, &pos);
+            if (choiceNum >= 1 && choiceNum <= heroList.size() && pos == choice.size())
+                break;
+            else
+                cout << "Invalid input! Please choose a valid number.\n";
+        }
+        catch (...)
+        {
+            cout << "Invalid input! Please enter a number.\n";
+        }
+    }
+
+    string secondHero = heroList[choiceNum - 1];
+
+    // ست کردن هیروها
+    game.assignHeroes(firstPlayer, firstHero, secondHero);
+
+    return firstPlayer;
+}
 void ApplyOption(string choice)
 {
     Game &game = Game::getInstance();

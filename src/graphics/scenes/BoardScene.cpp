@@ -1,0 +1,554 @@
+#include "graphics/scenes/BoardScene.hpp"
+#include "audio/AudioManager.hpp"
+#include "graphics/scenes/SceneManager.hpp"
+#include "graphics/TextureManager.hpp"
+#include "core/Game.hpp"
+#include "core/Map.hpp"
+#include "raymath.h"
+#include "saves/SaveManager.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/scenes/LocationInfoScene.hpp"
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+void BoardScene::onEnter()
+{
+    background = TextureManager::getInstance().getOrLoadTexture("board", "assets/images/background/board.png");
+    skullIcon = TextureManager::getInstance().getOrLoadTexture("skull", "assets/images/icon/skull.png");
+    chestIcon = TextureManager::getInstance().getOrLoadTexture("chest", "assets/images/icon/chest.png");
+    cardIcon = TextureManager::getInstance().getOrLoadTexture("cardIcon", "assets/images/icon/perkCard.png");
+    greenFlagIcon = TextureManager::getInstance().getOrLoadTexture("greenFlag", "assets/images/icon/greenFlag.png");
+    potionIcon = TextureManager::getInstance().getOrLoadTexture("potion", "assets/images/icon/potion.png");
+
+    normalFont = LoadFontEx("assets/fonts/simple.ttf", 100, 0, 0);
+    SetTextureFilter(normalFont.texture, TEXTURE_FILTER_BILINEAR);
+    locationFont = LoadFont("assets/fonts/arial.ttf");
+
+    makeButton("Action Select", 0, 0, std::bind(&BoardScene::handleSelectAction, this));
+    makeButton("End Phase", 0, 1, std::bind(&BoardScene::handleEndHeroPhase, this));
+    makeButton("Save & Exit", 1, 0, std::bind(&BoardScene::handleSaveAndExit, this));
+    makeButton("Main Menu", 1, 1, std::bind(&BoardScene::handleGoToMainMenu, this));
+    makeButton("Exit Game", 2, 0, std::bind(&BoardScene::handleExitGame, this), true);
+
+    locations = {
+        {{62, 225}, 40, "Cave"},
+        {{195, 210}, 55, "Camp"},
+        {{340, 180}, 60, "Precinct"},
+        {{480, 153}, 55, "Inn"},
+        {{645, 175}, 55, "Barn"},
+        {{788, 182}, 50, "Dungeon"},
+        {{716, 328}, 55, "Tower"},
+        {{545, 340}, 60, "Theatre"},
+        {{768, 474}, 57, "Docks"},
+        {{240, 465}, 60, "Mansion"},
+        {{87, 530}, 55, "Abbey"},
+        {{62, 682}, 50, "Crypt"},
+        {{190, 667}, 60, "Museum"},
+        {{324, 808}, 47, "Hospital"},
+        {{387, 698}, 60, "Church"},
+        {{508, 795}, 60, "Graveyard"},
+        {{690, 790}, 60, "Institute"},
+        {{590, 666}, 60, "Laboratory"},
+        {{473, 563}, 54, "Shop"}};
+}
+
+void BoardScene::makeButton(const std::string &text, int row, int col, std::function<void()> onClick, bool center)
+{
+    float buttonWidth = 220;
+    float buttonHeight = 60;
+    float gapX = 40;
+    float gapY = 30;
+    float startX = 1000;
+    float startY = 600;
+
+    Color bgColor = {0, 51, 102, 255};
+    Color fontColor = {255, 230, 180, 255};
+
+    float x;
+    if (center)
+    {
+        float totalWidth = (buttonWidth * 2 + gapX);
+        x = startX + (totalWidth - buttonWidth) / 2.0f;
+    }
+    else
+    {
+        x = startX + col * (buttonWidth + gapX);
+    }
+
+    Rectangle bounds = {
+        x,
+        startY + row * (buttonHeight + gapY),
+        buttonWidth,
+        buttonHeight};
+
+    auto btn = std::make_unique<UIButton>(bounds, text, 32, fontColor, bgColor, DARKGRAY, fontColor);
+    btn->setFont(normalFont);
+    btn->setOnClick([onClick]()
+                    {
+        AudioManager::getInstance().playSoundEffect("click");
+        onClick(); });
+    ui.add(std::move(btn));
+}
+
+void BoardScene::handleSelectAction()
+{
+    SceneManager::getInstance().goTo(SceneKeys::SHOW_ACTIONS_SCENE);
+}
+
+void BoardScene::handleSaveAndExit()
+{
+    SaveManager::getInstance().saveGameToSlot(SceneKeys::BOARD_SCENE);
+    SceneManager::getInstance().requestExit();
+}
+
+void BoardScene::handleGoToMainMenu()
+{
+    Game::getInstance().reset();
+    SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE);
+}
+
+void BoardScene::handleExitGame()
+{
+    SceneManager::getInstance().requestExit();
+}
+
+void BoardScene::handleEndHeroPhase()
+{
+    Game::getInstance().setGameState(GameState::EndHeroPhase);
+}
+
+void BoardScene::onExit()
+{
+    UnloadFont(normalFont);
+    UnloadFont(locationFont);
+
+    locations.clear();
+    hoveredLocation.clear();
+
+    ui.clear();
+}
+
+void BoardScene::handleClickOnLocation()
+{
+    if (!hoveredLocation.empty() && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        AudioManager::getInstance().playSoundEffect("click");
+        std::cout << "Clicked on : " << hoveredLocation << '\n'; // just for debug
+
+        Location *selectedLoc = Map::get_instanse()->getLocation(hoveredLocation);
+        if (selectedLoc)
+        {
+            auto &scene = SceneManager::getInstance().getScene<LocationInfoScene>(SceneKeys::LOCATION_INFO_SCENE);
+            scene.setLocation(selectedLoc);
+            SceneManager::getInstance().goTo(SceneKeys::LOCATION_INFO_SCENE);
+        }
+    }
+}
+
+void BoardScene::checkLocationHover()
+{ // is the mouse pointer hovering over one of the locations or not?
+    hoveredLocation.clear();
+    Vector2 mousePos = GetMousePosition();
+
+    for (const auto &loc : locations)
+    {
+        float dist = Vector2Distance(mousePos, loc.posision);
+        if (dist < loc.radius)
+        {
+            hoveredLocation = loc.locatonName;
+            break;
+        }
+    }
+}
+
+void BoardScene::DrawTerrorLevel()
+{
+    int level = Game::getInstance().getTerrorLevel();
+
+    Vector2 start = {940, 50};
+
+    float areaWidth = 1160.0f;
+    float areaHeight = 100.0f;
+    float originalSize = 736.0f;
+    float maxWidthPerIcon = areaWidth / 5.0f;
+    float maxHeightPerIcon = areaHeight;
+
+    float scaleX = maxWidthPerIcon / originalSize;
+    float scaleY = maxHeightPerIcon / originalSize;
+    float scale = std::min(scaleX, scaleY);
+    float iconSize = originalSize * scale;
+    float gap = iconSize;
+
+    for (int i = 0; i < level && i < 5; ++i)
+    {
+        float x = start.x + i * gap;
+        float y = start.y + (areaHeight - iconSize) / 2.0f;
+        DrawTextureEx(skullIcon, {x, y}, 0, scale, WHITE);
+    }
+}
+
+void BoardScene::drawHeroInfo()
+{
+    Hero *hero = Game::getInstance().getCurrentHero();
+    if (!hero)
+    {
+        std::cerr << "No hero found for draw hero info!\n";
+    }
+
+    std::string heroName = hero->getClassName();
+    std::string heroPath = "assets/images/heroes/" + heroName + ".png";
+
+    Texture2D heroTexture = TextureManager::getInstance().getOrLoadTexture(heroName, heroPath);
+
+    Rectangle destHero = {1200, 110, 380, 400};
+
+    DrawTexturePro(heroTexture,
+                   {0, 0, (float)heroTexture.width, (float)heroTexture.height},
+                   destHero, {0, 0}, 0.0f, WHITE);
+
+    const char *name = hero->getName().c_str();
+    Vector2 nameSize = MeasureTextEx(normalFont, name, 40, 1);
+    Vector2 namePos = {destHero.x + destHero.width / 2 - nameSize.x / 2,
+                       destHero.y + destHero.height};
+    DrawTextEx(normalFont, name, namePos, 40, 1, WHITE);
+
+    Rectangle destChest = {950, 220, 200, 130};
+    Rectangle destCard = {950, 375, 200, 130};
+
+    Vector2 mousePos = GetMousePosition();
+
+    bool hoveringChest = CheckCollisionPointRec(mousePos, destChest);
+    bool hoveringCard = CheckCollisionPointRec(mousePos, destCard);
+
+    if (hoveringChest)
+    {
+        DrawRectangleLinesEx(destChest, 4.0f, Color{255, 230, 150, 180});
+    }
+    if (hoveringCard)
+    {
+        DrawRectangleLinesEx(destCard, 4.0f, Color{255, 230, 150, 180});
+    }
+
+    DrawTexturePro(chestIcon,
+                   {0, 0, (float)chestIcon.width, (float)chestIcon.height},
+                   destChest, {0, 0}, 0.0f, WHITE);
+
+    const char *chestLabel = "Your Items";
+    Vector2 chestSize = MeasureTextEx(normalFont, chestLabel, 28, 1);
+    Vector2 chestTextPos = {
+        destChest.x + destChest.width / 2 - chestSize.x / 2,
+        destChest.y + destChest.height};
+    DrawTextEx(normalFont, chestLabel, chestTextPos, 28, 1, WHITE);
+
+    DrawTexturePro(cardIcon,
+                   {0, 0, (float)cardIcon.width, (float)cardIcon.height},
+                   destCard, {0, 0}, 0.0f, WHITE);
+
+    const char *cardLabel = "Your Perk Cards";
+    Vector2 cardSize = MeasureTextEx(normalFont, cardLabel, 28, 1);
+    Vector2 cardTextPos = {
+        destCard.x + destCard.width / 2 - cardSize.x / 2,
+        destCard.y + destCard.height + 8};
+    DrawTextEx(normalFont, cardLabel, cardTextPos, 28, 1, WHITE);
+}
+
+void BoardScene::update(float)
+{
+    checkLocationHover();
+    handleClickOnLocation();
+    handleHeroInfoClick();
+
+    Game::getInstance().update();
+
+    handleGameStateTransition();
+
+    AudioManager::getInstance().update();
+    ui.update();
+}
+
+void BoardScene::handleGameStateTransition()
+{
+    Game &game = Game::getInstance();
+    GameState state = game.getGameState();
+
+    switch (state)
+    {
+    case GameState::GameWon:
+        SceneManager::getInstance().goTo(SceneKeys::END_GAME_SCENE);
+        break;
+    case GameState::GameLost:
+        SceneManager::getInstance().goTo(SceneKeys::END_GAME_SCENE);
+        break;
+    case GameState::GameOutOfTime:
+        SceneManager::getInstance().goTo(SceneKeys::END_GAME_SCENE);
+        break;
+    case GameState::ShowPerkCard:
+        SceneManager::getInstance().goTo(SceneKeys::RESCUE_RESULT_SCENE);
+        break;
+    case GameState::StartMonsterPhase:
+        SceneManager::getInstance().goTo(SceneKeys::MONSTER_PHASE_SCENE);
+        break;
+    default:
+        break;
+    }
+}
+
+void BoardScene::drawGlow()
+{
+    if (!hoveredLocation.empty())
+    {
+        for (const auto &loc : locations)
+        {
+            if (loc.locatonName == hoveredLocation)
+            {
+                Color neonGreen = {57, 255, 20, 255};
+                for (int i = 0; i < 20; i++)
+                {
+                    float radius = loc.radius + i;
+                    float alpha = 1.0f - (float)i / 20;
+                    Color ringColor = Color{neonGreen.r, neonGreen.g, neonGreen.b, (unsigned char)(alpha * 255)};
+                    DrawCircleLinesV(loc.posision, radius, ringColor);
+                }
+                break;
+            }
+        }
+    }
+}
+
+void BoardScene::drawMonsterGlow()
+{
+    auto monsters = Game::getInstance().getMonsters();
+
+    for (auto *monster : monsters)
+    {
+        auto locationPtr = monster->get_location();
+        if (!locationPtr)
+        {
+            continue;
+        }
+        std::string monsterLocation = locationPtr->get_name();
+
+        for (const auto &loc : locations)
+        {
+            if (loc.locatonName == monsterLocation && !monster->is_defeated())
+            {
+                Color glowColor = {255, 50, 50, 20};
+
+                for (int i = 0; i < 15; i++)
+                {
+                    float radius = loc.radius + i * 2;
+                    float alpha = 1.0f - (float)i / 15;
+                    Color ringColor = {
+                        glowColor.r,
+                        glowColor.g,
+                        glowColor.b,
+                        (unsigned char)(glowColor.a * alpha)};
+
+                    DrawCircleV(loc.posision, radius, ringColor);
+                }
+                break;
+            }
+        }
+    }
+}
+
+void BoardScene::render()
+{
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    float scale = 0.5f;
+    Vector2 position = {
+        (1600 - background.width * scale) / 2.0f,
+        (900 - background.height * scale) / 2.0f};
+
+    DrawTextureEx(background, position, 0.0f, scale, WHITE);
+    drawGlow();
+
+    drawHeroPositionMarker();
+    DrawTerrorLevel();
+    drawHeroInfo();
+    drawHeroActions();
+    drawMonsterGlow();
+
+    ui.render();
+
+    if (!hoveredLocation.empty())
+    {
+        Vector2 pos = {(float)GetMouseX() + 15, (float)GetMouseY() - 20};
+        DrawTextEx(locationFont, hoveredLocation.c_str(), pos, 28, 1, {0, 0, 0, 255});
+    }
+
+    EndDrawing();
+}
+
+void BoardScene::drawHeroPositionMarker()
+{
+    Hero *hero = Game::getInstance().getCurrentHero();
+    if (!hero)
+    {
+        std::cerr << "No hero found for draw hero position marker!\n";
+    }
+
+    std::string heroLocation = hero->getLocation()->get_name();
+
+    for (const auto &loc : locations)
+    {
+        if (loc.locatonName == heroLocation)
+        {
+            float originalSize = (float)greenFlagIcon.width;
+            float desiredSize = loc.radius * 2.3f;
+            float scale = desiredSize / originalSize;
+            float x = loc.posision.x - (greenFlagIcon.width * scale) / 2;
+            float y = loc.posision.y - (greenFlagIcon.height * scale);
+
+            DrawTextureEx(greenFlagIcon, {x, y}, 0.0f, scale, WHITE);
+            break;
+        }
+    }
+}
+
+void BoardScene::handleHeroInfoClick()
+{
+    Vector2 mousePos = GetMousePosition();
+
+    Rectangle destChest = {950, 230, 200, 130};
+    Rectangle destCard = {950, 375, 200, 130};
+
+    if (CheckCollisionPointRec(mousePos, destChest) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::CHEST_INFO_SCENE);
+    }
+
+    if (CheckCollisionPointRec(mousePos, destCard) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::PERK_CARD_SCENE);
+    }
+}
+
+void BoardScene::drawHeroActions()
+{
+    Hero *hero = Game::getInstance().getCurrentHero();
+    if (!hero)
+    {
+        std::cerr << "Hero not valid to draw action left in board game scene!\n";
+        return;
+    }
+
+    int remaining = hero->getActionsLeft();
+
+    float startX = 880;
+    float startY = 130;
+    float gap = 0.0f;
+    float size = 65.0f;
+
+    for (int i = 0; i < remaining; i++)
+    {
+        Rectangle src = {
+            0, 0,
+            (float)potionIcon.width,
+            (float)potionIcon.height};
+
+        Rectangle dest = {
+            startX + i * (size + gap),
+            startY,
+            size, size};
+
+        DrawTexturePro(potionIcon, src, dest, {0, 0}, 0.0f, WHITE);
+    }
+}
+
+void BoardScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:BoardScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "HoveredLocation:" << hoveredLocation << "\n";
+
+    outFile << "LocationCount:" << locations.size() << "\n";
+    for (const auto &loc : locations)
+    {
+        outFile << "Location:" << loc.locatonName << ","
+                << loc.posision.x << "," << loc.posision.y << ","
+                << loc.radius << "\n";
+    }
+
+    outFile.close();
+}
+
+void BoardScene::deserialize(const std::string &filename)
+{
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isBoardScene = false;
+    bool inSceneData = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isBoardScene)
+        {
+            if (line == "SceneKey:BoardScene")
+            {
+                isBoardScene = true;
+            }
+            continue;
+        }
+
+        if (line == "SceneData:")
+        {
+            inSceneData = true;
+            continue;
+        }
+
+        if (!inSceneData)
+            continue;
+
+        std::stringstream ss(line);
+        std::string key;
+        if (std::getline(ss, key, ':'))
+        {
+            std::string value;
+            std::getline(ss, value);
+
+            if (key == "HoveredLocation")
+            {
+                hoveredLocation = value;
+            }
+            else if (key == "LocationCount")
+            {
+                locations.clear();
+                locations.reserve(std::stoi(value));
+            }
+            else if (key == "Location")
+            {
+                std::stringstream locStream(value);
+                std::string name, xStr, yStr, rStr;
+
+                std::getline(locStream, name, ',');
+                std::getline(locStream, xStr, ',');
+                std::getline(locStream, yStr, ',');
+                std::getline(locStream, rStr, ',');
+
+                LocationMarker loc;
+                loc.locatonName = name;
+                loc.posision.x = std::stof(xStr);
+                loc.posision.y = std::stof(yStr);
+                loc.radius = std::stof(rStr);
+
+                locations.push_back(loc);
+            }
+        }
+    }
+
+    inFile.close();
+}
