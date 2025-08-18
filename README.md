@@ -1,7 +1,7 @@
-#  Horrified Game - Advanced Programming Project (Phase 1)
+#  Horrified Game - Advanced Programming Final Project 
 
-This project is the **first phase** of the final project for the *Advanced Programming* course, based on the logic of the board game **HORRIFIED**.  
-Implemented in **C++** using object-oriented principles and modular design, this terminal-based game simulates a cooperative experience where two heroes must defeat monsters and save villagers.
+This project is a full implementation of the HORRIFIED board game as the final project for the Advanced Programming course.
+The game was first developed in Phase 1 (Terminal Edition – TUI) and then extended in Phase 2 (Graphical Edition – raylib) with a complete graphical user interface.
 
 > Course Instructor: Dr. Morteza Yousef Sanati  
 > Term: 4032  
@@ -13,9 +13,10 @@ Implemented in **C++** using object-oriented principles and modular design, this
 ##  Build & Run Instructions
 
 ### Prerequisites
-- C++11 or later
+- C++17 or later
 - CMake 3.10+
 - A C++ compiler (e.g., g++, clang++, MSVC)
+- raylib
 
 ### Steps
 
@@ -26,7 +27,7 @@ cd Horified-Game
 mkdir build && cd build
 cmake ..
 make
-./HorrifiedGame
+./Horrified
 ```
 
 ---
@@ -35,21 +36,24 @@ make
 
 ```bash
 .
+├── assets/              # Images, sounds, fonts
 ├── src/                    
-│   ├── Game.cpp / 
-│   ├── Hero.cpp /   
-│   ├── Villager.cpp /  
-│   ├── ItemManager.cpp /  
-│   └── ...
-├── include/
-│   ├── Game.hpp / 
-│   ├── Hero.hpp /   
-│   ├── Villager.hpp /  
-│   ├── ItemManager.hpp /  
-│   └── ...                
-├── CMakeLists.txt        
-├── README.md                       
-└── build/                
+│   ├── app/             #GameApp
+│   ├── audio/           # AudioManager 
+│   ├── core/            # Core game logic (Hero, Monster, Villager, Game)
+│   ├── graphics/ui/     # Custom UI system (UIButton, UILabel, UIManager , ...) 
+│   └── graphics/scenes  # Graphical scenes (Intro, MainMenu, Board, etc.)
+│   └── saves/           # Save/Load system 
+├── include/                  
+│   ├── app/
+│   ├── audio/ 
+│   ├── core/
+│   ├── graphics/ui/
+│   └── graphics/scenes
+│   └── saves/              
+├── CMakeLists.txt  
+├── main.cpp                            
+└── README.md                
 ```
 
 ---
@@ -57,8 +61,10 @@ make
 ##  Project Overview
 
 In this game, two players take on the roles of heroes:
-- **Archaeologist** (with a special ability)
-- **Mayor** (with more actions but no special ability)
+- **Archaeologist** (with a special action)
+- **Mayor** (with more actions but no special action)
+- **Scientist** (with special ability)
+- **Courier** (with special action)
 
 They work together to defeat:
 - **Dracula** (by destroying four coffins)
@@ -71,19 +77,25 @@ The game ends in victory if both monsters are defeated, or in loss if the **Terr
 
 ## Features
 
-- Fully object-oriented C++ implementation
-- Modular & maintainable codebase
-- Heroes and Monsters with unique abilities and logic
-- Game phases: Hero Phase, Monster Phase
-- Action system: `Move`, `Pick Up`, `Guide`, `Advance`, `Defeat`, `Special Action`
-- Complete item management (3 types, 60 items)
-- Perk cards and monster cards system
-- Frenzy system for monster aggression
-- Turn-based dice-driven monster strikes
-- Detailed terminal-based interface (TUI)
+## Phase 1 – Terminal Edition (TUI)
+
+- Fully object-oriented, modular C++ design
+- Core gameplay phases (Hero Phase, Monster Phase)
+- Item management system (3 types, 60 items)
+- Monster & Perk cards
+- Frenzy system and monster
+- Turn-based dice-driven monster attacks
 - Structured exception handling
-- Built with CMake
-- Version controlled via Git
+- Text-based user interface
+
+## Phase 2 – Graphical Edition (raylib)
+
+- Complete graphical environment built with raylib
+- Scene-based architecture (Intro, Main Menu, Board, Save/Load, Info scenes)
+- Custom UI system (UIButton, UILabel, UIManager)
+- Save & Load functionality with multiple slots
+- Sound effects and background music with AudioManager
+- Hover glow effects on locations, visual hero/monster placement
 
 ---
 
@@ -91,19 +103,9 @@ The game ends in victory if both monsters are defeated, or in loss if the **Terr
 
 We followed a Git-based collaboration model:
 
-- Each contributor worked on their own branch (`feature-monster`, `feature-hero`)
+- Each contributor worked on their own branch (`feature-monster`, `feature-hero` ,  `graphics/khalili` , `graphics/shabani`)
 - Commits were made frequently with meaningful messages
 - Final integration was done via merging branches
 - Entire history is visible in the GitHub repository
-
----
-
-##  Game Highlights
-
--  Monster phase uses custom dice logic with symbols (`*`, `!`)
--  Dracula’s defeat requires destroying 4 coffins using red items
--  Invisible Man requires collecting 5 items from specific locations and placing them at the precinct
--  Villagers must be guided to their safe places to earn Perk cards
--  Perk cards can be used at any time in the Hero phase (not counted as actions)
 
 ---
