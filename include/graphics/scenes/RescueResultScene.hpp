@@ -40,6 +40,9 @@ public:
     void render() override;
     void onEnter() override;
     void onExit() override;
+
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
 };
 
 #endif
