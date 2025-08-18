@@ -55,6 +55,9 @@ public:
     void onExit() override;
     void update(float) override;
     void render() override;
+    
+    void serialize(const std::string &filename) override;
+    void deserialize(const std::string &filename) override;
 };
 
 #endif
