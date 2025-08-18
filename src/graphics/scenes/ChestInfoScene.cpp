@@ -74,10 +74,15 @@ void ChestInfoScene::createUI()
         Color{100, 50, 10, 255});
 
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(SceneKeys::CHEST_INFO_SCENE); });
+                            SaveManager::getInstance().saveGameToSlot(SceneKeys::CHEST_INFO_SCENE);
+                            Vector2 pos = {780,800};
+                            auto saveLabel = std::make_unique<UILabel>(pos,"The game was successfully saved!",
+                                                                    45,3.0f,WHITE,WHITE,true);
+                            saveLabel->setFont(font);
+                            uiManager.add(std::move(saveLabel)); });
 
     uiManager.add(std::move(saveBtn));
 }
