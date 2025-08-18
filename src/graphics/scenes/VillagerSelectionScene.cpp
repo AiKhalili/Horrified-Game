@@ -297,7 +297,7 @@ void VillagerSelectionScene::createButtons()
     if (!villagers.empty())
     {
 
-        auto nonBtn = std::make_unique<UIButton>(Rectangle{40, 790, 120, 45}, "Non", 35, textcolor, text1color, clickcolor, midCreamBrown);
+        auto nonBtn = std::make_unique<UIButton>(Rectangle{40, 790, 120, 45}, "None", 35, textcolor, text1color, clickcolor, midCreamBrown);
         nonBtn->setFont(font);
         nonBtn->setOnClick([this]()
                            {
