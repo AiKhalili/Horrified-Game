@@ -1,6 +1,8 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
+#include <string>
+
 class Scene
 {
 private:
@@ -15,6 +17,9 @@ public:
 
     void setSkip(bool skip) { skipExitEnter = skip; }
     bool getSkip() const { return skipExitEnter; }
+
+    virtual void serialize(const std::string &filename) {}
+    virtual void deserialize(const std::string &filename) {}
 };
 
 #endif
