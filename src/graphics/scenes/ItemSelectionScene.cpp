@@ -241,7 +241,7 @@ void ItemSelectionScene::createActionButtons()
     Color midCreamBrown = {140, 110, 70, 255};
 
     auto nonBtn = std::make_unique<UIButton>(
-        Rectangle{570, 790, 130, 60}, "Non", 45,
+        Rectangle{570, 790, 130, 60}, "None", 45,
         labelcolor, textcolor, clickcolor, midCreamBrown);
     nonBtn->setFont(font);
     nonBtn->setOnClick([this]()
