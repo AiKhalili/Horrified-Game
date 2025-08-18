@@ -85,6 +85,9 @@ void EndGameScene::createUI()
 
 void EndGameScene::onExit()
 {
+    AudioManager::getInstance().stopWinMusic();
+    AudioManager::getInstance().stopLoseMusic();
+    AudioManager::getInstance().stopTimeOutMusic();
     UnloadFont(font);
     uiManager.clear();
 }
