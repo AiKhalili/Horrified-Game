@@ -2,6 +2,9 @@
 #include "core/Hero.hpp"
 #include "core/Villager.hpp"
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include "core/Map.hpp"
 using namespace std;
 
 Location::Location(string name)
@@ -145,4 +148,20 @@ void Location::clearAll(){
     monsters.clear();
     villagers.clear();
     heroes.clear();
+}
+
+std::string Location::serialize() const {
+    std::ostringstream ss;
+    ss << "Location|" << name << "\n";
+    return ss.str();
+}
+
+Location* Location::deserialize(const std::string& line) {
+    std::stringstream ss(line);
+    std::string prefix, name;
+
+    getline(ss, prefix, '|');
+    getline(ss, name);
+
+    return Map::get_instanse()->getLocation(name);
 }

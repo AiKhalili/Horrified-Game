@@ -1,0 +1,433 @@
+#include "graphics/scenes/ItemSelectionScene.hpp"
+#include "graphics/scenes/SceneManager.hpp"
+#include "graphics/scenes/SceneKeys.hpp"
+#include "graphics/ui/UIButton.hpp"
+#include "graphics/ui/UILabel.hpp"
+#include "graphics/TextureManager.hpp"
+#include "audio/AudioManager.hpp"
+#include "saves/SaveManager.hpp"
+#include "core/SceneDataHub.hpp"
+#include <memory>
+#include <vector>
+#include <iostream>
+#include <cmath>
+#include <fstream>
+#include <sstream>
+#include "core/Game.hpp"
+
+void ItemSelectionScene::setData(const std::vector<Item *> &Items, const std::string &newkey)
+{
+    items = Items;
+    scenekey = newkey;
+    if (firstDeserialize == false)
+    {
+        selected.clear();
+    }
+}
+
+void ItemSelectionScene::onEnter()
+{
+    background = TextureManager::getInstance().getOrLoadTexture(
+        "ItemSelection", "assets/images/background/item_selection.png");
+    font = LoadFont("assets/fonts/simple.ttf");
+    SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
+
+    if (!items.empty())
+    {
+        hero = Game::getInstance().getCurrentHero();
+        location = items[0]->get_location();
+    }
+
+    createLabels();
+    createButtons();
+
+    if (!items.empty())
+    {
+        createActionButtons();
+    }
+    else
+    {
+        creatErroreLabels();
+    }
+
+    std::sort(items.begin(), items.end(), [](Item *a, Item *b)
+              {
+        auto colorOrder = [](COlOR c) {
+            switch(c) {
+                case COlOR::red: return 0;
+                case COlOR::yellow: return 1;
+                case COlOR::blue: return 2;
+                default: return 3;
+            }
+        };
+        return colorOrder(a->get_color()) < colorOrder(b->get_color()); });
+
+    loadItemTextures();
+
+    int maxItems = (int)std::min(items.size(), size_t(32));
+    int cols = 8;
+    int rows = 4;
+    float spacing = 10.0f;
+
+    float totalWidth = 1600.0f;
+    float itemSize = (totalWidth - (cols - 1) * spacing) / cols * 0.8f;
+
+    float totalItemsWidth = cols * itemSize + (cols - 1) * spacing;
+    float startX = (1600.0f - totalItemsWidth) / 2.0f;
+    float startY = 120.0f;
+
+    for (int i = 0; i < maxItems; ++i)
+    {
+        int row = i / cols;
+        int col = i % cols;
+        Rectangle rect = {
+            startX + col * (itemSize + spacing),
+            startY + row * (itemSize + spacing),
+            itemSize,
+            itemSize};
+        itemRects.push_back(rect);
+    }
+}
+
+void ItemSelectionScene::onExit()
+{
+    UnloadFont(font);
+    ui.clear();
+    selected.clear();
+    items.clear();
+    itemRects.clear();
+    itemTextures.clear();
+}
+
+void ItemSelectionScene::update(float deltaTime)
+{
+    AudioManager::getInstance().update();
+    Vector2 mousePos = GetMousePosition();
+
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    {
+        for (size_t i = 0; i < itemRects.size(); ++i)
+        {
+            if (CheckCollisionPointRec(mousePos, itemRects[i]))
+            {
+                toggleSelection(items[i]);
+                break;
+            }
+        }
+    }
+
+    confirmButtonFocused = CheckCollisionPointRec(mousePos, confirmButtonRect);
+    ui.update();
+}
+
+void ItemSelectionScene::render()
+{
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    DrawTexturePro(background,
+                   Rectangle{0, 0, (float)background.width, (float)background.height},
+                   Rectangle{0, 0, 1600, 900},
+                   Vector2{0, 0}, 0.0f, WHITE);
+
+    Vector2 mousePos = GetMousePosition();
+
+    for (size_t i = 0; i < itemTextures.size(); ++i)
+    {
+        DrawTexturePro(itemTextures[i],
+                       Rectangle{0, 0, (float)itemTextures[i].width, (float)itemTextures[i].height},
+                       itemRects[i],
+                       Vector2{0, 0}, 0.0f, WHITE);
+
+        if (std::find(selected.begin(), selected.end(), items[i]) != selected.end())
+        {
+            DrawRectangleLinesEx(itemRects[i], 5, RAYWHITE);
+        }
+        else if (CheckCollisionPointRec(mousePos, itemRects[i]))
+        {
+            DrawRectangleLinesEx(itemRects[i], 2, GRAY);
+        }
+    }
+
+    ui.render();
+    EndDrawing();
+}
+
+void ItemSelectionScene::createLabels()
+{
+    const char *text = "Please Select Item";
+    int fontSize = 35;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+    Color clickcolor = {85, 65, 45, 255};
+
+    auto selectText = std::make_unique<UILabel>(
+        Vector2{(1600 - textSize.x) / 2.0f, 50}, text, fontSize, 0.0f, textcolor);
+    selectText->setFont(font);
+    ui.add(std::move(selectText));
+
+    auto tempLabel = std::make_unique<UILabel>(Vector2{800, 750}, "", 30, 3.0f, WHITE, WHITE, true);
+    tempLabel->setFont(font);
+
+    errorLabel = tempLabel.get();
+
+    ui.add(std::move(tempLabel));
+}
+
+void ItemSelectionScene::loadItemTextures()
+{
+    itemTextures.clear();
+    for (auto *item : items)
+    {
+        std::string folder;
+        switch (item->get_color())
+        {
+        case COlOR::red:
+            folder = "assets/images/Items/Red/";
+            break;
+        case COlOR::blue:
+            folder = "assets/images/Items/Blue/";
+            break;
+        case COlOR::yellow:
+            folder = "assets/images/Items/Yellow/";
+            break;
+        default:
+            folder = "assets/images/items/";
+            break;
+        }
+        std::string path = folder + item->get_name() + ".png";
+        Texture2D tex = TextureManager::getInstance().getOrLoadTexture(item->get_name(), path);
+        itemTextures.push_back(tex);
+    }
+}
+
+void ItemSelectionScene::toggleSelection(Item *item)
+{
+    auto it = std::find(selected.begin(), selected.end(), item);
+    if (it == selected.end())
+        selected.push_back(item);
+    else
+        selected.erase(it);
+}
+
+std::vector<Item *> &ItemSelectionScene::getSelectedItems()
+{
+    return selected;
+}
+
+void ItemSelectionScene::creatErroreLabels()
+{
+    const char *text = "There are no items to display";
+    int fontSize = 40;
+    Vector2 textSize = MeasureTextEx(font, text, fontSize, 1);
+
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+
+    auto errorText = std::make_unique<UILabel>(
+        Vector2{(1600 - textSize.x) / 2.0f, 250}, text, fontSize, 0.0f, textcolor, textcolor);
+    errorText->setFont(font);
+    errorText->enableBackground(labelcolor, 10.0f);
+    ui.add(std::move(errorText));
+}
+
+void ItemSelectionScene::createActionButtons()
+{
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+    Color clickcolor = {85, 65, 45, 255};
+    Color midCreamBrown = {140, 110, 70, 255};
+
+    auto nonBtn = std::make_unique<UIButton>(
+        Rectangle{570, 790, 130, 60}, "Non", 45,
+        labelcolor, textcolor, clickcolor, midCreamBrown);
+    nonBtn->setFont(font);
+    nonBtn->setOnClick([this]()
+                       {
+        AudioManager::getInstance().playSoundEffect("click");
+        this->selected.clear();
+        SceneDataHub::getInstance().setSelectedItems({}); 
+        SceneManager::getInstance().goTo(scenekey); });
+    ui.add(std::move(nonBtn));
+
+    auto submitBtn = std::make_unique<UIButton>(
+        Rectangle{900, 790, 130, 60}, "Submit", 45,
+        labelcolor, textcolor, clickcolor, midCreamBrown);
+    submitBtn->setFont(font);
+    submitBtn->setOnClick([this]()
+                          {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneDataHub::getInstance().setSelectedItems(this->getSelectedItems());
+        SceneManager::getInstance().goTo(scenekey); });
+    ui.add(std::move(submitBtn));
+}
+
+void ItemSelectionScene::showErrorMessage(const std::string &msg)
+{
+    if (!errorLabel)
+        return;
+
+    errorLabel->setText(msg);
+}
+
+void ItemSelectionScene::createButtons()
+{
+    Color textcolor = {245, 230, 196, 255};
+    Color labelcolor = {70, 50, 35, 255};
+    Color clickcolor = {85, 65, 45, 255};
+
+    auto menuBtn = std::make_unique<UIButton>(Rectangle{1450, 840, 120, 40}, "Main Menu", 20, textcolor, labelcolor, clickcolor, textcolor);
+    menuBtn->setFont(font);
+    menuBtn->setOnClick([]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        Game::getInstance().reset();
+        SceneManager::getInstance().goTo(SceneKeys::MAIN_MENU_SCENE); });
+
+    ui.add(std::move(menuBtn));
+
+    auto saveBtn = std::make_unique<UIButton>(Rectangle{1450, 740, 120, 40}, "Save", 20, textcolor, labelcolor, clickcolor, textcolor);
+    saveBtn->setFont(font);
+    saveBtn->setOnClick([this]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SaveManager::getInstance().saveGameToSlot("ItemSelectionScene");
+        const std::string msg = "The game was successfully saved!";
+                            showErrorMessage(msg); });
+
+    ui.add(std::move(saveBtn));
+
+    auto boardBtn = std::make_unique<UIButton>(Rectangle{1450, 790, 120, 40}, "Board Scene", 20, textcolor, labelcolor, clickcolor, textcolor);
+    boardBtn->setFont(font);
+    boardBtn->setOnClick([]()
+                         {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
+
+    ui.add(std::move(boardBtn));
+
+    auto backBtn = std::make_unique<UIButton>(Rectangle{1450, 690, 120, 40}, "Back", 20, textcolor, labelcolor, clickcolor, textcolor);
+    backBtn->setFont(font);
+    backBtn->setOnClick([this]()
+                        {
+        AudioManager::getInstance().playSoundEffect("click");
+        SceneManager::getInstance().goTo(scenekey); });
+
+    ui.add(std::move(backBtn));
+}
+
+std::vector<Item *> ItemSelectionScene::getItems() { return items; }
+std::string ItemSelectionScene::getscenekey() { return scenekey; }
+
+void ItemSelectionScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:ItemSelectionScene\n";
+    outFile << "ReturnKey:" << scenekey << "\n";
+
+    outFile << "Items:";
+    for (size_t i = 0; i < items.size(); ++i)
+    {
+        outFile << items[i]->get_name();
+        if (i != items.size() - 1)
+            outFile << ",";
+    }
+    outFile << "\n";
+
+    outFile << "Selected:";
+    for (size_t i = 0; i < selected.size(); ++i)
+    {
+        outFile << selected[i]->get_name();
+        if (i != selected.size() - 1)
+            outFile << ",";
+    }
+    outFile << "\n";
+
+    outFile.close();
+}
+
+void ItemSelectionScene::deserialize(const std::string &filename)
+{
+    hero = Game::getInstance().getCurrentHero();
+    for (auto *i : hero->getItems())
+    {
+        SaveManager::getInstance().getItemInter().push_back(i);
+    }
+
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    bool isItemSelectionScene = false;
+
+    while (std::getline(inFile, line))
+    {
+        if (!isItemSelectionScene)
+        {
+            if (line == "SceneKey:ItemSelectionScene")
+            {
+                isItemSelectionScene = true;
+            }
+            continue;
+        }
+
+        auto delimiterPos = line.find(':');
+        if (delimiterPos == std::string::npos)
+            continue;
+
+        std::string key = line.substr(0, delimiterPos);
+        std::string value = line.substr(delimiterPos + 1);
+
+        if (key == "ReturnKey")
+        {
+            scenekey = value;
+        }
+        else if (key == "Items")
+        {
+            items.clear();
+            std::stringstream ss(value);
+            std::string itemName;
+            while (std::getline(ss, itemName, ','))
+            {
+                for (auto item : SaveManager::getInstance().getItemInter())
+                {
+                    if (itemName == item->get_name() &&
+                        std::find(items.begin(), items.end(), item) == items.end())
+                    {
+                        items.push_back(item);
+                        break;
+                    }
+                }
+            }
+        }
+        else if (key == "Selected")
+        {
+            selected.clear();
+            std::stringstream ss(value);
+            std::string itemName;
+            while (std::getline(ss, itemName, ','))
+            {
+                for (auto item : items)
+                {
+                    if (itemName == item->get_name() &&
+                        std::find(selected.begin(), selected.end(), item) == selected.end())
+                    {
+                        selected.push_back(item);
+                        break;
+                    }
+                }
+            }
+
+            SceneDataHub::getInstance().setSelectedItems(selected);
+        }
+    }
+
+    firstDeserialize = false;
+    inFile.close();
+}

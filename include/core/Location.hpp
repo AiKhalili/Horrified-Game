@@ -45,5 +45,8 @@ class Location{
     bool isNeighbor(Location*) const;
     void clearAll();
 
+    std::string serialize() const;
+    static Location* deserialize(const std::string& in);
+
 };
 #endif

@@ -18,13 +18,17 @@ private:
     Location* getLocation(const std::string&);
     std::vector<Location*> getAllLocations() const;
     std::vector<Villager*> getAllVillagers() const;
+    std::vector<Item*> getAllItems() const;
 
     void addItemTo(const std::string&, Item*);
     void removeItemFrom(const std::string&, Item*);
+
     void addMonsterTo(const std::string&, Monster*);
     void removeMonsterFrom(const std::string&, Monster*);
+
     void addHeroTo(const std::string&, Hero*);
     void removeHeroFrom(const std::string&, Hero*);
+    
     void addVillager(const std::string&, Villager*);
     void removeVillagerFrom(const std::string&, Villager*);    
 };

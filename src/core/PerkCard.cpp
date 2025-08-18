@@ -16,13 +16,13 @@ string PerkCard::getName() const
     switch (type)
     {
     case PerkType::VISIT_FROM_THE_DETECTIVE:
-        return "Visit from the detective";
+        return "VisitFromTheDetective";
     case PerkType::BREAK_OF_DAWN:
-        return "Break of dawn";
+        return "BreakOfDawn";
     case PerkType::OVERSTOCK:
         return "Overstock";
     case PerkType::LATE_INTO_THE_NIGHT:
-        return "Late into the night";
+        return "LateIntoTheNight";
     case PerkType::REPEL:
         return "Repel";
     case PerkType::HURRY:
@@ -51,4 +51,46 @@ string PerkCard::getDescription() const
     default:
         return "Unknown effect.";
     }
+}
+
+std::string PerkCard::serialize() const
+{
+    return "PerkCard|" + getName();
+}
+
+PerkCard PerkCard::deserialize(const std::string &line)
+{
+    std::string cleanLine = line;
+
+    while (!cleanLine.empty() && std::isspace(cleanLine.front()))
+        cleanLine.erase(cleanLine.begin());
+    while (!cleanLine.empty() && std::isspace(cleanLine.back()))
+        cleanLine.pop_back();
+
+    if (cleanLine.length() < 9)
+    {
+        throw std::runtime_error("Invalid perk card format: line too short");
+    }
+
+    if (cleanLine.substr(0, 9) != "PerkCard|")
+    {
+        throw std::runtime_error("Invalid perk card format: must start with 'PerkCard|'");
+    }
+
+    std::string name = cleanLine.substr(9);
+
+    if (name == "VisitFromTheDetective")
+        return PerkCard(PerkType::VISIT_FROM_THE_DETECTIVE);
+    if (name == "BreakOfDawn")
+        return PerkCard(PerkType::BREAK_OF_DAWN);
+    if (name == "Overstock")
+        return PerkCard(PerkType::OVERSTOCK);
+    if (name == "LateIntoTheNight")
+        return PerkCard(PerkType::LATE_INTO_THE_NIGHT);
+    if (name == "Repel")
+        return PerkCard(PerkType::REPEL);
+    if (name == "Hurry")
+        return PerkCard(PerkType::HURRY);
+
+    throw std::runtime_error("Unknown perk card name: '" + name + "'");
 }

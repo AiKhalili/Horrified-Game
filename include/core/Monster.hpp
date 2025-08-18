@@ -11,6 +11,8 @@
 class Location;
 class Hero;
 class Villager;
+class Dracula;
+class Invisible_Man;
 
 enum class TargetType
 {
@@ -18,6 +20,14 @@ enum class TargetType
     Hero,
     Villager
 };
+
+struct PowerResult
+{
+    Hero *targetHero = nullptr;
+    Villager *targetVillager = nullptr;
+    bool villagerKilled = false;
+};
+
 
 class Monster
 {
@@ -42,7 +52,7 @@ public:
     void setFrenzyOrder(int);
 
     std::vector<Location *> findShortestPath(Location *, Location *);
-    Location *moveTowardTarget(std::vector<Hero *>, std::vector<Villager *>, int);
+    virtual Location *moveTowardTarget(std::vector<Hero *>, std::vector<Villager *>, int);
     virtual ~Monster() = default;
     
     virtual std::vector<Location *> getAdvanceLocation() = 0;
@@ -51,8 +61,12 @@ public:
     virtual std::vector<Item> getAdvanceRequirement() const = 0;
     virtual std::vector<Item> getDefeatRequirement() const = 0;
     virtual int getCounter() const = 0;
-    virtual void specialPower(Hero *) = 0;
+    virtual PowerResult specialPower(Hero *) = 0;
     virtual bool isAdvanceLocation(const std::string &) const = 0;
+
+    virtual std::string serialize() const = 0; // مخصوص هر هیولا
+    static Monster* deserialize(const std::string&); // تابع اصلی که خط فایل رو می‌خونه و هیولا می‌سازه
+
 
     
 };

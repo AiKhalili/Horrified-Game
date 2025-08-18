@@ -3,6 +3,10 @@
 #include "core/Hero.hpp"
 #include "core/Villager.hpp"
 #include <iostream>
+#include <sstream>
+#include "core/Map.hpp"
+#include "core/Dracula.hpp"
+#include "core/Invisible_Man.hpp"
 using namespace std;
 
 Monster::Monster(std::string name)
@@ -171,4 +175,71 @@ void Monster::setFrenzyOrder(int order){
 
 int Monster::getFrenzyOrder() const{
     return frenzyOrder;
+}
+
+Monster* Monster::deserialize(const std::string& line) {
+    std::stringstream ss(line);
+    std::string type, locationName, defeatedStr, extra;
+
+    std::getline(ss, type, '|');      
+    std::getline(ss, locationName, '|'); 
+    if (locationName == "null") {
+        // هیولا هیچ مکانی نداره یعنی مرده، لود نشه
+        return nullptr;
+    }
+    std::getline(ss, defeatedStr, '|');  
+    std::getline(ss, extra, '|');        
+    
+    Location* location = Map::get_instanse()->getLocation(locationName);
+    bool defeated = (defeatedStr == "1");
+
+    Monster* monster = nullptr;
+
+    if (type == "Dracula") {
+        Dracula* d = new Dracula();
+           Map::get_instanse()->removeMonsterFrom(d->get_location()->get_name(), d);
+        Map::get_instanse()->addMonsterTo(location->get_name(), d);
+        d->set_defeated(defeated);
+
+        std::map<std::string, bool> customCoffins;
+        std::stringstream coffins(extra);
+        std::string token;
+
+        while (std::getline(coffins, token, ',')) {
+            if (token.empty()) continue;
+            size_t pos = token.find(':');
+            std::string loc = token.substr(0, pos);
+            bool destroyed = (token.substr(pos + 1) == "1");
+            customCoffins[loc] = destroyed;
+        }
+
+        d->setCoffins(customCoffins);
+        monster = d;
+    }
+    else if (type == "InvisibleMan") {
+        Invisible_Man* im = new Invisible_Man();
+        Map::get_instanse()->removeMonsterFrom(im->get_location()->get_name(), im);
+        Map::get_instanse()->addMonsterTo(location->get_name(), im);
+        im->set_defeated(defeated);
+
+        std::map<std::string, bool> customEvidence;
+        std::stringstream evid(extra);
+        std::string token;
+
+        while (std::getline(evid, token, ',')) {
+            if (token.empty()) continue;
+            size_t pos = token.find(':');
+            std::string loc = token.substr(0, pos);
+            bool found = (token.substr(pos + 1) == "1");
+            customEvidence[loc] = found;
+        }
+
+        im->setEvidence(customEvidence);
+        monster = im;
+    }
+    else {
+        throw GameException("Unknown monster type: " + type);
+    }
+
+    return monster;
 }

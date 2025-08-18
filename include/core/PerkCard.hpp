@@ -25,6 +25,10 @@ public:
     PerkType getType() const;
     std::string getName() const;
     std::string getDescription() const;
+
+    std::string serialize() const;
+    static PerkCard deserialize(const std::string &line);
+
 };
 
 #endif

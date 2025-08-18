@@ -19,6 +19,7 @@ class MonsterCard{
     Face face;
 
     public:
+    MonsterCard() = default;
     MonsterCard(std::string , int,std::string,int,int,std::vector<std::string>);
 
     //توابعget
@@ -32,6 +33,10 @@ class MonsterCard{
 
     void updateFace();
     Face rollDie() const;
-    std::string faceToString(Face f) const;
+    std::string faceToString(Face) const;
+
+    std::string serialize() const;
+    static MonsterCard deserialize(const std::string&);
+
 };
 #endif

@@ -4,6 +4,8 @@
 #include <string>
 #include "core/Location.hpp"
 
+class Map;
+
 class Villager
 {
 private:
@@ -24,6 +26,10 @@ public:
     void kill();
     void markRescued();
     bool isRescued() const;
+
+    std::string serialize() const;
+    static Villager* deserialize(const std::string&);
+
 };
 
 #endif

@@ -6,7 +6,7 @@
 #include <iostream>
 using namespace std;
 
-Invisible_Man::Invisible_Man() : Monster("Invisible Man")
+Invisible_Man::Invisible_Man() : Monster("InvisibleMan")
 {
     setFrenzyOrder(6);
     evidence = {{"Inn", false}, {"Barn", false}, {"Laboratory", false}, {"Institute", false}, {"Mansion", false}};
@@ -53,41 +53,44 @@ bool Invisible_Man::canbedefeated() const
     return true;
 }
 
-void Invisible_Man::specialPower(Hero *)
+PowerResult Invisible_Man::specialPower(Hero *)
 {
-    Location* currentLoc = this->get_location();
+    PowerResult result;
+    Location *currentLoc = this->get_location();
 
-    vector<Villager*> villagers = Map::get_instanse()->getAllVillagers();
+    vector<Villager *> villagers = Map::get_instanse()->getAllVillagers();
 
-    if (villagers.empty()) {
-        cout << "No villagers on the map.\n";
-        return;
+    if (villagers.empty())
+    {
+        cerr << "No villagers on the map.\n";
+        return result;
     }
     // بررسی اینکه آیا الان با یک ویلیجر در یک مکان هست
-    for (Villager* v : villagers)
+    for (Villager *v : villagers)
     {
         if (v->isAlive() && v->getCurrentLocation() == currentLoc)
         {
-            cout << "Found villager '" << v->getName() << "' at same location.\n";
             v->kill();
-            cout << v->getName() << " was killed by Invisible Man (Power effect).\n";
             currentLoc->removeVillager(v);
             v->setLocation(nullptr);
-            return; // چون کشته شد، دیگه حرکت نمی‌کنیم
+            result.targetVillager = v;
+            result.villagerKilled = true;
+            return result; // چون کشته شد، دیگه حرکت نمی‌کنیم
         }
     }
 
     //  پیدا کردن نزدیک‌ترین ویلیجر زنده برای حرکت
-    Villager* closest = nullptr;
-    vector<Location*> shortestPath;
+    Villager *closest = nullptr;
+    vector<Location *> shortestPath;
     size_t minDist = INT_MAX;
 
-    for (Villager* v : villagers)
+    for (Villager *v : villagers)
     {
-        if (!v->isAlive()) continue;
+        if (!v->isAlive())
+            continue;
 
-        vector<Location*> path = findShortestPath(currentLoc, v->getCurrentLocation());
-        
+        vector<Location *> path = findShortestPath(currentLoc, v->getCurrentLocation());
+
         if (!path.empty() && path.size() < minDist)
         {
             minDist = path.size();
@@ -96,9 +99,9 @@ void Invisible_Man::specialPower(Hero *)
         }
     }
 
-    //حرکت جداکثر دو قدم
+    // حرکت جداکثر دو قدم
     int steps = std::min(2, (int)shortestPath.size() - 1);
-    Location* newLoc = (steps > 0) ? shortestPath[steps] : currentLoc;
+    Location *newLoc = (steps > 0) ? shortestPath[steps] : currentLoc;
 
     // به‌روزرسانی مکان
     currentLoc->removeMonster(this);
@@ -106,11 +109,12 @@ void Invisible_Man::specialPower(Hero *)
     newLoc->addMonster(this);
 
     // بررسی رسیدن بعد از حرکت (بدون kill)
-    if (newLoc == closest->getCurrentLocation()) {
-        cout << "Invisible Man reached the villager '" << closest->getName() << "' but did not kill (arrived after movement).\n";
+    if (newLoc == closest->getCurrentLocation())
+    {
+        result.targetVillager = closest;
     }
+    return result;
 }
-
 
 vector<Item> Invisible_Man::getAdvanceRequirement() const
 {
@@ -147,4 +151,70 @@ int Invisible_Man::getCounter() const
         }
     }
     return count;
+}
+
+string Invisible_Man::serialize() const
+{
+    string data = "InvisibleMan|";
+    data += (get_location() ? get_location()->get_name() : "null") + "|";
+    data += is_defeated() ? "1|" : "0|";
+
+    for (const auto &pair : evidence)
+    {
+        data += pair.first + ":" + (pair.second ? "1" : "0") + ",";
+    }
+
+    return data;
+}
+
+void Invisible_Man::setEvidence(const std::map<std::string, bool> &newEvidence)
+{
+    evidence = newEvidence;
+}
+
+Location *Invisible_Man::moveTowardTarget(vector<Hero *> heroes, vector<Villager *> villagers, int maxSteps)
+{
+    Location *currentLocation = this->get_location();
+
+    // اگه روستایی روی لوکیشن هست، حرکت نکن
+    for (Villager *v : villagers)
+    {
+        if (v->getCurrentLocation() == currentLocation)
+            return currentLocation;
+    }
+
+    // پیدا کردن نزدیک‌ترین روستایی
+    Location *target = nullptr;
+    vector<Location *> path;
+    size_t minDistance = INT_MAX;
+
+    for (Villager *v : villagers)
+    {
+        vector<Location *> p = findShortestPath(currentLocation, v->getCurrentLocation());
+        if (!p.empty() && p.size() < minDistance)
+        {
+            minDistance = p.size();
+            path = p;
+            target = v->getCurrentLocation();
+        }
+    }
+
+    if (!target)
+        return nullptr;
+
+    if ((int)path.size() <= maxSteps + 1)
+    {
+        this->get_location()->removeMonster(this);
+        this->set_location(target);
+        target->addMonster(this);
+        return target;
+    }
+    else
+    {
+        Location *intermediate = path[maxSteps];
+        this->get_location()->removeMonster(this);
+        this->set_location(intermediate);
+        intermediate->addMonster(this);
+        return nullptr;
+    }
 }

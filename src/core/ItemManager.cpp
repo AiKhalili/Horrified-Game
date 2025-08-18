@@ -3,6 +3,8 @@
 #include <ctime>
 #include <unordered_set>
 #include <algorithm>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -30,13 +32,13 @@ void ItemManager::initializeItems()
 
     std::vector<ItemInfo> items = {
         {"Dart", 2, "Inn", COlOR::red},
-        {"Fire Poker", 3, "Mansion", COlOR::red},
+        {"FirePoker", 3, "Mansion", COlOR::red},
         {"Rapier", 5, "Theatre", COlOR::red},
         {"Shovel", 2, "Graveyard", COlOR::red},
         {"Torch", 5, "Barn", COlOR::red},
         {"Pitchfork", 4, "Barn", COlOR::red},
         {"Rifle", 6, "Barn", COlOR::red},
-        {"Silver Cane", 6, "Shop", COlOR::red},
+        {"SilverCane", 6, "Shop", COlOR::red},
         {"Knife", 3, "Docks", COlOR::red},
         {"Pistol", 6, "Precinct", COlOR::red},
 
@@ -46,17 +48,17 @@ void ItemManager::initializeItems()
         {"Experiment", 2, "Laboratory", COlOR::blue},
         {"Analysis", 2, "Institute", COlOR::blue},
         {"Rotenone", 3, "Institute", COlOR::blue},
-        {"Cosmic Ray Diffuser", 3, "Tower", COlOR::blue},
+        {"CosmicRayDiffuser", 3, "Tower", COlOR::blue},
         {"Nebularium", 3, "Tower", COlOR::blue},
-        {"Monocane Mixture", 3, "Inn", COlOR::blue},
+        {"MonocaneMixture", 3, "Inn", COlOR::blue},
         {"Fossil", 3, "Camp", COlOR::blue},
 
         {"Flower", 2, "Docks", COlOR::yellow},
-        {"Tarot Deck", 3, "Camp", COlOR::yellow},
+        {"TarotDeck", 3, "Camp", COlOR::yellow},
         {"Garlic", 2, "Inn", COlOR::yellow},
-        {"Mirrored Box", 3, "Mansion", COlOR::yellow},
+        {"MirroredBox", 3, "Mansion", COlOR::yellow},
         {"Stake", 3, "Abbey", COlOR::yellow},
-        {"Scroll Of Thoth", 4, "Museum", COlOR::yellow},
+        {"ScrollOfThoth", 4, "Museum", COlOR::yellow},
         {"Violin", 3, "Camp", COlOR::yellow},
         {"Tablet", 3, "Museum", COlOR::yellow},
         {"Wolfsbane", 4, "Camp", COlOR::yellow},
@@ -155,4 +157,94 @@ void ItemManager::clear()
         }
     }
     usedItems.clear();
+}
+
+std::string ItemManager::serializeBag() const
+{
+    std::string result = "ItemBag|";
+    for (const Item *item : bag)
+    {
+        result += item->get_name() + "-" +
+                  std::to_string(item->get_strength()) + "-" +
+                  item->get_color_to_string() + "-" +
+                  item->get_pickedFrom() + ",";
+    }
+    return result;
+}
+
+std::string ItemManager::serializeUsed() const
+{
+    std::string result = "ItemUsed|";
+    for (const Item *item : usedItems)
+    {
+        result += item->get_name() + "-" +
+                  std::to_string(item->get_strength()) + "-" +
+                  item->get_color_to_string() + "-" +
+                  item->get_pickedFrom() + ",";
+    }
+    return result;
+}
+
+void ItemManager::deserializeBag(const std::string &line)
+{
+    bag.clear();
+    if (line.rfind("ItemBag|", 0) != 0)
+        return;
+
+    std::string content = line.substr(8); // بعد از "ItemBag|"
+    std::stringstream ss(content);
+    std::string token;
+
+    while (std::getline(ss, token, ','))
+    {
+        if (token.empty())
+            continue;
+
+        std::stringstream part(token);
+        std::string name, str, colorStr, pickedFrom;
+
+        std::getline(part, name, '-');
+        std::getline(part, str, '-');
+        std::getline(part, colorStr, '-');
+        std::getline(part, pickedFrom, '-');
+
+        COlOR color = Item::stringToColor(colorStr);
+        Location *loc = Map::get_instanse()->getLocation(pickedFrom);
+
+        Item *item = new Item(std::stoi(str), color, name, loc);
+        item->set_pickedFrom(pickedFrom);
+        bag.push_back(item);
+    }
+}
+
+void ItemManager::deserializeUsed(const std::string &line)
+{
+    usedItems.clear();
+    if (line.rfind("ItemUsed|", 0) != 0)
+        return;
+
+    std::string content = line.substr(9); // بعد از "ItemUsed|"
+    std::stringstream ss(content);
+    std::string token;
+
+    while (std::getline(ss, token, ','))
+    {
+        if (token.empty())
+            continue;
+
+        std::stringstream part(token);
+        std::string name, str, colorStr, pickedFrom;
+
+        std::getline(part, name, '-');
+        std::getline(part, str, '-');
+        std::getline(part, colorStr, '-');
+        std::getline(part, pickedFrom, '-');
+
+        COlOR color = Item::stringToColor(colorStr);
+        Location *loc = Map::get_instanse()->getLocation(pickedFrom);
+
+        Item *item = new Item(std::stoi(str), color, name, loc);
+        item->set_pickedFrom(pickedFrom);
+        usedItems.push_back(item);
+    }
 }

@@ -5,6 +5,8 @@
 #include "core/Game.hpp"
 #include <algorithm>
 #include <iostream>
+#include <sstream>
+#include <fstream>
 
 using namespace std;
 
@@ -57,29 +59,29 @@ void Hero::guide(vector<Villager *> villager, Location *destination)
     { // بررسی وجود اکشن
         throw GameException("No actions left!\n");
     }
-    if (!villager[0] || !destination)
+    if (villager.empty() || !villager[0] || !destination)
     { // بررسی معتبر بودن ورودی ها
         throw GameException("Invalid villager or destination!\n");
     }
-    if (villager.size() > 1)
+    if (villager.size() != 1)
     {
         throw GameException("You should choose one villager to guide!\n");
     }
 
     Location *villagerLocation = villager[0]->getCurrentLocation();
+    Location *heroLocation = location;
 
-    if (villagerLocation->isNeighbor(location) && destination == location)
+    if (villagerLocation->isNeighbor(heroLocation) && destination == heroLocation)
     { // بررسی مجاور بودن محلی نسبت به قهرمان
-        villager[0]->getCurrentLocation()->removeVillager(villager[0]);
+        villagerLocation->removeVillager(villager[0]);
         location->addVillager(villager[0]);
         useAction();
         cout << "The select villager move to the hero's place!\n";
     }
-
-    else if (villagerLocation == location && location->isNeighbor(destination))
+    else if (villagerLocation == heroLocation && heroLocation->isNeighbor(destination))
     { // بررسی هم مکان بودن محلی و قهرمان
-        villager[0]->getCurrentLocation()->removeVillager(villager[0]);
-        location->addVillager(villager[0]);
+        villagerLocation->removeVillager(villager[0]);
+        destination->addVillager(villager[0]);
         useAction();
         cout << "The select villager move to the select place!\n";
     }
@@ -163,7 +165,7 @@ void Hero::advanced(Monster *monster, const vector<Item *> &selectedItems)
         throw GameException("You are not in a valid location to advance this monster's task!\n");
     }
 
-    if (monster->get_name() == "Invisible Man")
+    if (monster->get_name() == "InvisibleMan")
     {
         const vector<Item> &reqs = monster->getAdvanceRequirement(); // شامل لوکیشن‌هایی که هنوز advance نشدن
         for (const Item &required : reqs)
@@ -290,7 +292,7 @@ int Hero::getActionsLeft() const
     return actionsLeft;
 }
 
-vector<Item *> Hero::getItems() const
+vector<Item *> & Hero::getItems()
 {
     return items;
 }
@@ -545,4 +547,146 @@ void Hero::removeItem(Item *item)
 vector<string> Hero::getAction() const
 {
     return {"Move", "Guide", "Pick Up", "Advance", "Defeat"};
+}
+
+string Hero::serialize() const {
+    string data = "Hero|";
+    data += getClassName() + "|";                      // نوع قهرمان
+    data += name + "|";                                // نام قهرمان
+    data += location->get_name() + "|";                // مکان فعلی
+    data += to_string(maxActions) + "|";
+    data += to_string(actionsLeft) + "|";
+
+    // آیتم‌ها
+    for (size_t i = 0; i < items.size(); ++i) {
+        data += items[i]->get_name() + "-" +
+                to_string(items[i]->get_strength()) + "-" +
+                items[i]->get_color_to_string() + "-" +
+                items[i]->get_pickedFrom();
+        if (i != items.size() - 1) data += ",";
+    }
+    data += "|";
+
+    // کارت‌های پرک
+    for (size_t i = 0; i < perkcards.size(); ++i) {
+        data += perkcards[i].getName();
+        if (i != perkcards.size() - 1) data += ",";
+    }
+
+    return data;
+}
+
+
+
+Hero* Hero::deserialize(const string& line) {
+    stringstream ss(line);
+    string part;
+
+   if (line.substr(0, 5) != "Hero|") return nullptr;
+
+    getline(ss, part, '|'); // "Hero"
+    getline(ss, part, '|');
+    string className = part;
+
+    getline(ss, part, '|');
+    string name = part;
+
+    getline(ss, part, '|');
+    Location* location = Map::get_instanse()->getLocation(part);
+    if (!location) throw GameException("Invalid hero location: " + part);
+
+    getline(ss, part, '|');
+    int maxActions = part.empty() ? 0 : stoi(part);
+
+    getline(ss, part, '|');
+    int actionsLeft = part.empty() ? 0 : stoi(part);
+    if (actionsLeft == 0) {
+        actionsLeft = maxActions; // ← اگر صفر بود، از نو مقداردهی کن
+    }
+
+    // ساخت هیرو
+    Hero* hero = nullptr;
+    if (className == "Mayor") {
+        hero = new Mayor(name, Map::get_instanse());
+    } else if (className == "Archaeologist") {
+        hero = new Archaeologist(name, Map::get_instanse());
+    } 
+    else if(className == "Courier"){
+        hero = new Courier(name,Map::get_instanse());
+    }
+    else if(className == "Scientist"){
+        hero = new Scientist(name, Map::get_instanse());
+    }
+    else {
+        throw GameException("Unknown hero class: " + className);
+    }
+
+    // اطمینان از قرارگیری در مکان درست
+    if (hero->getLocation() != location) {
+        Map::get_instanse()->removeHeroFrom(hero->getLocation()->get_name(), hero);
+        hero->setLocation(location);
+        Map::get_instanse()->addHeroTo(location->get_name(), hero);
+    }
+
+    // تنظیم اکشن‌ها
+    hero->setActionsLeft(actionsLeft);
+
+    // آیتم‌ها
+    getline(ss, part, '|');
+    if (!part.empty()) {
+        stringstream itemStream(part);
+        string itemData;
+        while (getline(itemStream, itemData, ',')) {
+            stringstream itemParts(itemData);
+            string itemName, strengthStr, colorStr, pickedFrom;
+
+            getline(itemParts, itemName, '-');
+            getline(itemParts, strengthStr, '-');
+            getline(itemParts, colorStr, '-');
+            getline(itemParts, pickedFrom);
+
+            COlOR color;
+            if (colorStr == "Red") color = COlOR::red;
+            else if (colorStr == "Blue") color = COlOR::blue;
+            else if (colorStr == "Yellow") color = COlOR::yellow;
+            else throw GameException("Invalid color: " + colorStr);
+
+            Location* from = Map::get_instanse()->getLocation(pickedFrom);
+            if (!from) throw GameException("Invalid pickedFrom location: " + pickedFrom);
+
+            Item* item = new Item(stoi(strengthStr), color, itemName, from);
+            item->set_pickedFrom(pickedFrom);
+            hero->getItems().push_back(item);
+        }
+    }
+    
+    // پرک‌کارت‌ها
+    getline(ss, part, '|');
+    if (!part.empty()) {
+        stringstream perkStream(part);
+        string perkName;
+        while (getline(perkStream, perkName, ',')) {
+            PerkType type;
+            if (perkName == "VisitFromTheDetective") type = PerkType::VISIT_FROM_THE_DETECTIVE;
+            else if (perkName == "BreakOfDawn")       type = PerkType::BREAK_OF_DAWN;
+            else if (perkName == "Overstock")           type = PerkType::OVERSTOCK;
+            else if (perkName == "LateIntoTheNight") type = PerkType::LATE_INTO_THE_NIGHT;
+            else if (perkName == "Repel")               type = PerkType::REPEL;
+            else if (perkName == "Hurry")               type = PerkType::HURRY;
+            else throw GameException("Unknown perk: " + perkName);
+
+            hero->addPerkCard(PerkCard(type));
+        }
+    }
+
+    return hero;
+}
+
+
+void Hero::setActionsLeft(int actions) {
+    this->actionsLeft = actions;
+}
+
+void Hero::addPerkCard(const PerkCard& card) {
+    perkcards.push_back(card);
 }
