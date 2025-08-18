@@ -81,7 +81,7 @@ void RescueResultScene::createUI()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
                             SaveManager::getInstance().saveGameToSlot(SceneKeys::RESCUE_RESULT_SCENE);
-                                                        Vector2 pos = {780,800};
+                                                        Vector2 pos = {200,800};
                             auto saveLabel = std::make_unique<UILabel>(pos,"The game was successfully saved!",
                                                                     45,3.0f,WHITE,WHITE,true);
                             saveLabel->setFont(font);
