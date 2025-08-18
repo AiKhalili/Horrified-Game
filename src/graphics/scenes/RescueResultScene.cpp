@@ -6,6 +6,8 @@
 #include "graphics/ui/UILabel.hpp"
 #include "audio/AudioManager.hpp"
 #include "saves/SaveManager.hpp"
+#include <fstream>
+#include <sstream>
 
 void RescueResultScene::onEnter()
 {
@@ -75,10 +77,15 @@ void RescueResultScene::createUI()
         Color{100, 50, 10, 255});
 
     saveBtn->setFont(font);
-    saveBtn->setOnClick([]()
+    saveBtn->setOnClick([this]()
                         {
                             AudioManager::getInstance().playSoundEffect("click");
-                            SaveManager::getInstance().saveGameToSlot(SceneKeys::RESCUE_RESULT_SCENE); });
+                            SaveManager::getInstance().saveGameToSlot(SceneKeys::RESCUE_RESULT_SCENE);
+                                                        Vector2 pos = {780,800};
+                            auto saveLabel = std::make_unique<UILabel>(pos,"The game was successfully saved!",
+                                                                    45,3.0f,WHITE,WHITE,true);
+                            saveLabel->setFont(font);
+                            uiManager.add(std::move(saveLabel)); });
 
     uiManager.add(std::move(saveBtn));
 }
@@ -168,4 +175,94 @@ void RescueResultScene::render()
         Rectangle dest = {pos.x, pos.y, drawW, drawH};
         DrawTexturePro(perkTex, src, dest, {0, 0}, 0.0f, WHITE);
     }
+}
+
+void RescueResultScene::serialize(const std::string &filename)
+{
+    std::ofstream outFile(filename, std::ios::app);
+    if (!outFile.is_open())
+        return;
+
+    outFile << "SceneKey:RescueResultScene\n";
+    outFile << "SceneData:\n";
+
+    outFile << "Villager:";
+    if (rescuedVillager)
+        outFile << rescuedVillager->getName();
+    else
+        outFile << "None";
+    outFile << "\n";
+
+    outFile << "PerkCard:";
+    if (!perkCard.getName().empty())
+        outFile << perkCard.getName();
+    else
+        outFile << "None";
+    outFile << "\n";
+
+    outFile << "EndScene\n";
+    outFile.close();
+}
+
+void RescueResultScene::deserialize(const std::string &filename)
+{
+    currentHero = Game::getInstance().getCurrentHero();
+    std::ifstream inFile(filename);
+    if (!inFile.is_open())
+        return;
+
+    std::string line;
+    std::string currentScene;
+
+    while (std::getline(inFile, line))
+    {
+        if (line.rfind("SceneKey:", 0) == 0)
+        {
+            currentScene = line.substr(9);
+        }
+        else if (line == "SceneData:" && currentScene == "RescueResultScene")
+        {
+            while (std::getline(inFile, line) && line != "EndScene")
+            {
+                auto pos = line.find(':');
+                if (pos != std::string::npos)
+                {
+                    std::string key = line.substr(0, pos);
+                    std::string value = line.substr(pos + 1);
+
+                    key.erase(0, key.find_first_not_of(" \t\n\r"));
+                    key.erase(key.find_last_not_of(" \t\n\r") + 1);
+                    value.erase(0, value.find_first_not_of(" \t\n\r"));
+                    value.erase(value.find_last_not_of(" \t\n\r") + 1);
+
+                    if (key == "Villager" && value != "None")
+                    {
+                        for (auto &v : Game::getInstance().getVillagers())
+                        {
+                            if (v->getName() == value)
+                            {
+                                rescuedVillager = v;
+                                Game::getInstance().setLastRescuedVillager(rescuedVillager);
+                                break;
+                            }
+                        }
+                    }
+                    else if (key == "PerkCard" && value != "None")
+                    {
+                        for (const auto &c : Game::getInstance().getPerkDeck())
+                        {
+                            if (c.getName() == value)
+                            {
+                                perkCard = c;
+                                Game::getInstance().setLastRewardedPerkCard(perkCard);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    inFile.close();
 }
