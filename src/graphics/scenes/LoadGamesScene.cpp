@@ -77,7 +77,7 @@ void LoadGamesScene::createButtons()
     }
     else
     {
-        size_t maxSlots = std::min(slots.size(),(size_t)10);
+        size_t maxSlots = std::min(slots.size(), (size_t)10);
         for (size_t i = 0; i < maxSlots; ++i)
         {
             int row = i / maxPerRow;
@@ -97,8 +97,7 @@ void LoadGamesScene::createButtons()
             button->setOnClick([slotNumber]()
                                {
             AudioManager::getInstance().playSoundEffect("click");
-            Game::getInstance().startLoadedGame(slotNumber);
-            SceneManager::getInstance().goTo(SceneKeys::BOARD_SCENE); });
+            Game::getInstance().startLoadedGame(slotNumber); });
 
             ui.add(std::move(button));
         }
