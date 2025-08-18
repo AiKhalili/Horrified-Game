@@ -32,7 +32,7 @@ public:
     void set_location(Location *);
     void set_pickedFrom(const std::string &);
     void set_strength(int);
-
+  
     static COlOR stringToColor(const std::string&);
     
     std::string serialize() const;

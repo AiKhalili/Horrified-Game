@@ -38,7 +38,7 @@ public:
     virtual void defeat(Monster *, const std::vector<Item *> &);
     virtual void specialAction(const std::vector<Item *> &) = 0;
 
-    void resetActions(); // پس از هر فاز هیولا تعداد امشن ها reset می شود
+    void resetActions(); // پس از هر فاز هیولا تعداد اکشن ها reset می شود
     void useAction();
     bool hasActionsLeft() const; // آیا اکشنی برای استفاده مانده یا نه؟
 
@@ -62,12 +62,12 @@ public:
     void addPerkCard(const PerkCard& card);
 
     PerkCard usePerkCard(int);
+
     void addAction(int);
     void removeItem(Item *);
 
     std::string serialize() const;
     static Hero* deserialize(const std::string&);
-
 };
 
 #endif

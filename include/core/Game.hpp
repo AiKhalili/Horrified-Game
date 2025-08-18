@@ -170,6 +170,15 @@ private:
     void handleSpecialAction(Location *selectedLocation, const std::vector<Item *> &selectedItems);
     void usePerkCard(int, std::vector<Location *>);
 
+    // توابع اکشن هیرو
+    void handleMove(Hero *);
+    void handlePickUP(Hero *);
+    void handleAdvance(Hero *);
+    void handleDefeat(Hero *);
+    void handleGuide(Hero *);
+    void handleHelp();
+    void handleSpecialAction(Hero *);
+
 public:
     static Game &getInstance();
 
@@ -186,6 +195,7 @@ public:
     Hero *getCurrentHero();
     Monster *getFrenzy() const;
     std::vector<Hero *> getAllHeroes() const;
+
     GameState getGameState() const;
     Villager *getLastRescuedVillager() const;
     PerkCard getLastRewardedPerkCard() const;

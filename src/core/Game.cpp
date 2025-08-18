@@ -285,6 +285,7 @@ void Game::setupHeroes()
         throw GameException("Invalid hero class for Player 1!");
     }
 
+    // ساخت هیروی بازیکن دوم
     if (player2.heroClass == "Mayor")
     {
         hero2 = new Mayor(player2.name, map);
@@ -293,7 +294,6 @@ void Game::setupHeroes()
     {
         hero2 = new Archaeologist(player2.name, map);
     }
-
     else if (player2.heroClass == "Courier")
     {
         hero2 = new Courier(player2.name, map);
