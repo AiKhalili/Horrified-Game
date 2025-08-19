@@ -734,6 +734,12 @@ vector<Item *> Game::placeItemsOnMap()
 void Game::setupMonsterStrike()
 {
     targetMonster = nullptr;
+
+    if(currentStrikeIndex >= MonstersStrike.size()){
+        std::cerr << "INFO: No more strikes left (index " << currentStrikeIndex << " / size " << MonstersStrike.size() << ")\n";
+        return;
+    }
+
     if (MonstersStrike[currentStrikeIndex] == "Frenzied Monster")
     {
         targetMonster = frenzy;
