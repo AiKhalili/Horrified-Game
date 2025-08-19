@@ -50,24 +50,26 @@ string MonsterCard::faceToString(Face f) const
     switch (f)
     {
     case Face::EMPTY:
-        return "blank";
+        return "Blank";
     case Face::STRIKE:
-        return "*";
+        return "Strike";
     case Face::POWER:
-        return "!";
+        return "Power";
     default:
         return "Unknown";
     }
 }
 
-std::string MonsterCard::serialize() const {
+std::string MonsterCard::serialize() const
+{
     std::string result = "MonsterCard|";
     result += name + "|";
     result += std::to_string(useItem) + "|";
 
     std::string safeEvent = event;
     size_t pos = 0;
-    while ((pos = safeEvent.find('\n', pos)) != std::string::npos) {
+    while ((pos = safeEvent.find('\n', pos)) != std::string::npos)
+    {
         safeEvent.replace(pos, 1, "\\n");
         pos += 2;
     }
@@ -76,7 +78,8 @@ std::string MonsterCard::serialize() const {
     result += std::to_string(numMovement) + "|";
     result += std::to_string(diceCount) + "|";
 
-    for (size_t i = 0; i < strikeTargets.size(); ++i) {
+    for (size_t i = 0; i < strikeTargets.size(); ++i)
+    {
         result += strikeTargets[i];
         if (i != strikeTargets.size() - 1)
             result += ",";
@@ -85,36 +88,47 @@ std::string MonsterCard::serialize() const {
     return result;
 }
 
-
-MonsterCard MonsterCard::deserialize(const std::string& line) {
+MonsterCard MonsterCard::deserialize(const std::string &line)
+{
     std::vector<std::string> parts;
     std::string current;
-    for (char c : line) {
-        if (c == '|') {
+    for (char c : line)
+    {
+        if (c == '|')
+        {
             parts.push_back(current);
             current.clear();
-        } else {
+        }
+        else
+        {
             current += c;
         }
     }
     parts.push_back(current);
 
-    if (parts.size() < 7) {
+    if (parts.size() < 7)
+    {
         throw std::runtime_error("Invalid MonsterCard format: expected at least 7 fields");
     }
 
     std::string restoredEvent = parts[3];
     size_t pos = 0;
-    while ((pos = restoredEvent.find("\\n", pos)) != std::string::npos) {
+    while ((pos = restoredEvent.find("\\n", pos)) != std::string::npos)
+    {
         restoredEvent.replace(pos, 2, "\n");
         pos += 1;
     }
 
-    auto safe_stoi = [](const std::string& s, const std::string& field) {
-        if (s.empty()) return 0;
-        try {
+    auto safe_stoi = [](const std::string &s, const std::string &field)
+    {
+        if (s.empty())
+            return 0;
+        try
+        {
             return std::stoi(s);
-        } catch (...) {
+        }
+        catch (...)
+        {
             throw std::runtime_error("Invalid " + field + " value: '" + s + "'");
         }
     };
@@ -126,24 +140,34 @@ MonsterCard MonsterCard::deserialize(const std::string& line) {
     std::vector<std::string> targets;
     std::string targetStr = parts[6];
     std::string currentTarget;
-    for (char c : targetStr) {
-        if (c == ',') {
-            if (!currentTarget.empty()) {
-                currentTarget.erase(std::remove_if(currentTarget.begin(), currentTarget.end(), 
-                    [](char ch) { return ch == '\n' || ch == '\r'; }), currentTarget.end());
+    for (char c : targetStr)
+    {
+        if (c == ',')
+        {
+            if (!currentTarget.empty())
+            {
+                currentTarget.erase(std::remove_if(currentTarget.begin(), currentTarget.end(),
+                                                   [](char ch)
+                                                   { return ch == '\n' || ch == '\r'; }),
+                                    currentTarget.end());
                 currentTarget.erase(0, currentTarget.find_first_not_of(" "));
                 currentTarget.erase(currentTarget.find_last_not_of(" ") + 1);
                 if (!currentTarget.empty())
                     targets.push_back(currentTarget);
                 currentTarget.clear();
             }
-        } else {
+        }
+        else
+        {
             currentTarget += c;
         }
     }
-    if (!currentTarget.empty()) {
-        currentTarget.erase(std::remove_if(currentTarget.begin(), currentTarget.end(), 
-            [](char ch) { return ch == '\n' || ch == '\r'; }), currentTarget.end());
+    if (!currentTarget.empty())
+    {
+        currentTarget.erase(std::remove_if(currentTarget.begin(), currentTarget.end(),
+                                           [](char ch)
+                                           { return ch == '\n' || ch == '\r'; }),
+                            currentTarget.end());
         currentTarget.erase(0, currentTarget.find_first_not_of(" "));
         currentTarget.erase(currentTarget.find_last_not_of(" ") + 1);
         if (!currentTarget.empty())
@@ -151,11 +175,11 @@ MonsterCard MonsterCard::deserialize(const std::string& line) {
     }
 
     return MonsterCard(
-        parts[1],        // name
-        useItem,         // useItem
-        restoredEvent,   // event
-        numMove,         // numMove
-        diceCount,       // diceCount
-        targets          // strikeTargets
+        parts[1],      // name
+        useItem,       // useItem
+        restoredEvent, // event
+        numMove,       // numMove
+        diceCount,     // diceCount
+        targets        // strikeTargets
     );
 }
