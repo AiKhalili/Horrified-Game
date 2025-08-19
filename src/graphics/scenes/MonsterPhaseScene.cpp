@@ -63,6 +63,10 @@ void MonsterPhaseScene::onExit()
     powerTargetVillager = nullptr;
     locationLabel = nullptr;
 
+    game.MonstersStrike.clear();
+    game.currentStrikeIndex = 0;
+    game.targetMonster = nullptr;
+
     while (!messageQueue.empty())
     {
         messageQueue.pop();
